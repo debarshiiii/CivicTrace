@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CivicTrace - Resolution Verification</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-container": "#406b5f",
+                      "surface-container-highest": "#dde1fd",
+                      "tertiary-fixed": "#80f8d1",
+                      "primary-fixed-dim": "#b5c4ff",
+                      "on-secondary-fixed": "#00201a",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-low": "#f3f2ff",
+                      "primary-container": "#5870c1",
+                      "on-surface": "#151b2e",
+                      "on-primary-fixed-variant": "#274190",
+                      "secondary": "#3c665b",
+                      "outline-variant": "#c5c5d3",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed-variant": "#00513e",
+                      "on-tertiary-fixed": "#002117",
+                      "secondary-fixed-dim": "#a3d0c2",
+                      "on-error": "#ffffff",
+                      "surface-bright": "#faf8ff",
+                      "outline": "#757682",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-container": "#000604",
+                      "surface-variant": "#dde1fd",
+                      "on-secondary-fixed-variant": "#234e44",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-container": "#fffbff",
+                      "inverse-surface": "#2a2f44",
+                      "inverse-on-surface": "#eff0ff",
+                      "tertiary-fixed-dim": "#62dbb5",
+                      "on-surface-variant": "#444651",
+                      "surface-container": "#ebedff",
+                      "secondary-container": "#bbe9db",
+                      "background": "#faf8ff",
+                      "primary": "#3f57a6",
+                      "on-background": "#151b2e",
+                      "inverse-primary": "#b5c4ff",
+                      "surface-tint": "#415aa9",
+                      "surface-dim": "#d4d9f4",
+                      "on-error-container": "#93000a",
+                      "secondary-fixed": "#beecde",
+                      "on-primary": "#ffffff",
+                      "primary-fixed": "#dce1ff",
+                      "surface-container-high": "#e4e7ff",
+                      "error": "#ba1a1a",
+                      "tertiary": "#006b53",
+                      "on-primary-fixed": "#00164e",
+                      "tertiary-container": "#008769",
+                      "surface": "#faf8ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "base": "4px",
+                      "gutter": "24px",
+                      "container-max": "1280px",
+                      "unit-6": "1.5rem",
+                      "margin-mobile": "16px",
+                      "unit-4": "1rem",
+                      "unit-2": "0.5rem",
+                      "unit-1": "0.25rem",
+                      "unit-12": "3rem",
+                      "unit-8": "2rem"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "tabular-nums": ["Inter"],
+                      "headline-xl": ["Inter"],
+                      "label-md": ["Inter"],
+                      "body-md": ["Inter"],
+                      "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-lg": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "tabular-nums": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-xl": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-md": ["14px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background h-screen flex flex-col overflow-hidden font-body-md text-body-md">
+<!-- TopNavBar -->
+<header class="sticky top-0 w-full z-50 flex justify-between items-center px-gutter h-16 bg-surface-container-lowest border-b border-outline-variant flat no shadows">
+<div class="flex items-center gap-unit-6">
+<span class="text-headline-md font-headline-md font-bold text-primary">CivicTrace</span>
+<nav aria-label="Main Navigation" class="hidden md:flex gap-unit-4">
+<a class="text-secondary font-medium font-label-md text-label-md hover:text-primary-container transition-colors" href="#">Map</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md hover:text-primary-container transition-colors" href="#">Report</a>
+<a class="text-secondary font-medium font-label-md text-label-md hover:text-primary-container transition-colors" href="#">Track</a>
+<a class="text-secondary font-medium font-label-md text-label-md hover:text-primary-container transition-colors" href="#">About</a>
+</nav>
+</div>
+<div class="flex items-center gap-unit-4">
+<button aria-label="Notifications" class="text-secondary hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button aria-label="Account" class="text-secondary hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<main class="flex-1 w-full max-w-[1280px] mx-auto px-gutter py-unit-6 grid grid-cols-12 gap-gutter h-[calc(100vh-64px)] overflow-hidden">
+<!-- LEFT: Case Info & Audit Timeline -->
+<section class="col-span-3 flex flex-col gap-unit-4 h-full overflow-y-auto pr-unit-2">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-unit-4">
+<h1 class="text-headline-md font-headline-md mb-unit-1">Case CVT-KOL-1042</h1>
+<div class="flex items-center gap-unit-2 mb-unit-4">
+<span class="bg-surface-container-highest text-on-surface-variant px-unit-2 py-unit-1 rounded font-label-sm text-label-sm">RESOLUTION CLAIMED</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-unit-4">Large pothole on Elm St causing traffic hazard.</p>
+<div class="text-label-sm font-label-sm text-outline mb-unit-1">Location</div>
+<div class="text-body-sm font-body-sm mb-unit-4">123 Elm St, Downtown</div>
+<div class="text-label-sm font-label-sm text-outline mb-unit-1">Reported By</div>
+<div class="text-body-sm font-body-sm">Citizen #8492</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-unit-4 flex-1">
+<h2 class="text-label-md font-label-md font-bold mb-unit-4 border-b border-outline-variant pb-unit-2">Audit Timeline</h2>
+<ul class="space-y-unit-4 relative before:absolute before:inset-y-0 before:left-3 before:w-0.5 before:bg-outline-variant">
+<li class="relative pl-unit-8">
+<span class="absolute left-1 top-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[10px] text-on-primary" data-icon="check">check</span>
+</span>
+<div class="font-label-sm text-label-sm text-outline">Today, 09:00 AM</div>
+<div class="text-body-sm font-body-sm">Resolution evidence submitted by Contractor ABC.</div>
+</li>
+<li class="relative pl-unit-8">
+<span class="absolute left-1 top-1 w-4 h-4 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center">
+</span>
+<div class="font-label-sm text-label-sm text-outline">Yesterday, 14:30 PM</div>
+<div class="text-body-sm font-body-sm">Work order assigned to Contractor ABC.</div>
+</li>
+<li class="relative pl-unit-8">
+<span class="absolute left-1 top-1 w-4 h-4 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center">
+</span>
+<div class="font-label-sm text-label-sm text-outline">Oct 24, 11:15 AM</div>
+<div class="text-body-sm font-body-sm">Issue verified by municipal inspector.</div>
+</li>
+<li class="relative pl-unit-8">
+<span class="absolute left-1 top-1 w-4 h-4 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center">
+</span>
+<div class="font-label-sm text-label-sm text-outline">Oct 23, 08:45 AM</div>
+<div class="text-body-sm font-body-sm">Report submitted by citizen.</div>
+</li>
+</ul>
+</div>
+</section>
+<!-- CENTER: Evidence Comparison -->
+<section class="col-span-6 flex flex-col gap-unit-4 h-full">
+<h2 class="text-headline-md font-headline-md">Evidence Comparison</h2>
+<div class="flex-1 grid grid-cols-2 gap-unit-4">
+<!-- Original Report -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col overflow-hidden">
+<div class="p-unit-2 border-b border-outline-variant bg-surface-container-low">
+<h3 class="font-label-md text-label-md text-center">Original Report</h3>
+</div>
+<div class="flex-1 bg-surface-container-high relative p-unit-2">
+<img alt="Original Pothole Image" class="w-full h-full object-cover rounded border border-outline-variant" data-alt="A detailed, realistic photograph of a large, deep pothole in the middle of an asphalt road on Elm Street. The lighting is bright daylight, showing the rough edges of the asphalt and small debris around the hole. The mood is utilitarian and civic, highlighting an infrastructure problem in a modern, light-mode style interface context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWcdSkscZxSuvOhAR36Pf9iKfEVHfmkAftTfNrpLu2nGKzwUKKrfLJgwTwMU4pLE9gxy72gzfawlGDqSKy44BFoTKfGttO0LqAGgtSE_WPpQbqOVOR8OZzdxgzyeKCbl7t-CPYg4Bkrri87KDmmdYtJXgNU1lDXf77kdfZ20rkMjQvdTeiCR2ijmUwEHJ_YNMR2bzJU22k_2ye3iNQDwoJounnZCOTEiieZdFM_ff0p1ul6qJbYu6i"/>
+<div class="absolute bottom-unit-4 left-unit-4 bg-surface-container-lowest/80 backdrop-blur-sm p-unit-2 rounded border border-outline-variant text-label-sm font-label-sm">Oct 23, 08:45 AM</div>
+</div>
+</div>
+<!-- Contractor Resolution -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col overflow-hidden">
+<div class="p-unit-2 border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+<h3 class="font-label-md text-label-md ml-auto mr-auto">Contractor Resolution</h3>
+<span class="material-symbols-outlined text-primary text-sm" data-icon="verified">verified</span>
+</div>
+<div class="flex-1 bg-surface-container-high relative p-unit-2">
+<img alt="Repaired Pothole Image" class="w-full h-full object-cover rounded border border-outline-variant" data-alt="A detailed, realistic photograph of a freshly patched section of asphalt road on Elm Street, exactly where a pothole used to be. The new asphalt is darker and smoother than the surrounding road. The lighting is bright daylight. The mood is resolved and civic, demonstrating infrastructure repair in a modern, light-mode style interface context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoUazBHEVG4DIsKSiL1QKSBbMLG0yFFd9ltgDm6__3UZo_KjYQVu8btBxQ3-8auUoa0HryFiFtJNded4ne_IHE81-_dDt9A6Xtejo43Uqb2pjhZcs6Zj0cVzYXAWVrGpLkDPZNcWYSnRxFKid29bDo3AszowwIJk2xcIdxV2TC_o0FIUslPpBBGZKW0MEw7_jvFBvGrh1nb4a6whorOIdGQnqfr9_8al__fL61jry2ZcsBgp-FoOGc"/>
+<div class="absolute bottom-unit-4 left-unit-4 bg-surface-container-lowest/80 backdrop-blur-sm p-unit-2 rounded border border-outline-variant text-label-sm font-label-sm">Today, 09:00 AM</div>
+</div>
+</div>
+</div>
+<div class="bg-secondary-container/30 text-on-secondary-container border border-secondary-container p-unit-4 rounded-lg flex items-start gap-unit-2">
+<span class="material-symbols-outlined mt-0.5" data-icon="info">info</span>
+<p class="font-body-sm text-body-sm">Review the contractor's provided evidence against your original report to verify if the issue has been adequately resolved.</p>
+</div>
+</section>
+<!-- RIGHT: Verification Panel -->
+<section class="col-span-3 flex flex-col gap-unit-4 h-full">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-unit-6 flex-1 flex flex-col">
+<h2 class="text-headline-md font-headline-md mb-unit-6 text-center">Has this issue actually been fixed?</h2>
+<div class="flex flex-col gap-unit-4 mb-unit-8">
+<button class="bg-primary text-on-primary font-label-md text-label-md h-[44px] rounded-lg w-full flex items-center justify-center gap-unit-2 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined" data-icon="thumb_up">thumb_up</span>
+                        Looks Resolved
+                    </button>
+<button class="border border-secondary text-secondary font-label-md text-label-md h-[44px] rounded-lg w-full flex items-center justify-center gap-unit-2 hover:bg-surface-container transition-colors" id="challengeBtn">
+<span class="material-symbols-outlined" data-icon="thumb_down">thumb_down</span>
+                        Problem Still Exists
+                    </button>
+</div>
+<!-- Hidden Challenge Area -->
+<div class="hidden flex-col gap-unit-4 flex-1 border-t border-outline-variant pt-unit-4 mt-auto" id="challengeArea">
+<h3 class="font-label-md text-label-md text-error">Challenge Resolution</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Please provide new photo evidence to dispute this claim.</p>
+<div class="border-2 border-dashed border-outline-variant rounded-lg p-unit-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-container-low transition-colors flex-1">
+<span class="material-symbols-outlined text-outline text-[32px] mb-unit-2" data-icon="cloud_upload">cloud_upload</span>
+<div class="font-label-md text-label-md text-primary mb-unit-1">Click to upload or drag &amp; drop</div>
+<div class="font-label-sm text-label-sm text-outline">JPG, PNG up to 10MB</div>
+</div>
+<button class="bg-error text-on-error font-label-md text-label-md h-[44px] rounded-lg w-full mt-unit-2">
+                        Submit Challenge
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<script>
+        document.getElementById('challengeBtn').addEventListener('click', function() {
+            document.getElementById('challengeArea').classList.remove('hidden');
+            document.getElementById('challengeArea').classList.add('flex');
+            // Hide standard buttons for focus
+            this.parentElement.style.display = 'none';
+        });
+    </script>
+</body></html>

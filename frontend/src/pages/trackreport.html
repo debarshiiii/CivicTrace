@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Track Report - CivicTrace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --success: #059669;
+      --warning: #d97706;
+      --danger: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 20px;
+      margin: 0 0 16px;
+      text-align: center;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .error {
+      color: var(--danger);
+      font-size: 14px;
+      margin-top: 8px;
+      text-align: center;
+    }
+    .result {
+      margin-top: 16px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .label {
+      color: var(--muted);
+    }
+    .value {
+      font-weight: 500;
+      text-align: right;
+      word-break: break-word;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .status.received { background: var(--primary); }
+    .status.assigned { background: var(--warning); }
+    .status.resolved { background: var(--success); }
+    .status.rejected { background: var(--danger); }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      font-size: 14px;
+      color: var(--primary);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Track Your Report</h1>
+
+    <label for="caseId">Case ID</label>
+    <input id="caseId" placeholder="e.g. CVT-KOL-2453" />
+
+    <button id="trackBtn">Track</button>
+    <div id="error" class="error"></div>
+
+    <div id="result" class="result" style="display:none;">
+      <div class="row">
+        <div class="label">Case ID</div>
+        <div class="value" id="rId"></div>
+      </div>
+      <div class="row">
+        <div class="label">Title</div>
+        <div class="value" id="rTitle"></div>
+      </div>
+      <div class="row">
+        <div class="label">Category</div>
+        <div class="value" id="rCategory"></div>
+      </div>
+      <div class="row">
+        <div class="label">Status</div>
+        <div class="value">
+          <span id="rStatus" class="status"></span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="label">Created</div>
+        <div class="value" id="rCreated"></div>
+      </div>
+      <div class="row">
+        <div class="label">Description</div>
+        <div class="value" id="rDescription" style="text-align:left; max-width: 70%;"></div>
+      </div>
+    </div>
+
+    <a href="login.html" class="back-link">Back to Login</a>
+  </div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000/api";
+
+    const caseIdInput = document.getElementById("caseId");
+    const trackBtn = document.getElementById("trackBtn");
+    const errorDiv = document.getElementById("error");
+    const resultDiv = document.getElementById("result");
+
+    const rId = document.getElementById("rId");
+    const rTitle = document.getElementById("rTitle");
+    const rCategory = document.getElementById("rCategory");
+    const rStatus = document.getElementById("rStatus");
+    const rCreated = document.getElementById("rCreated");
+    const rDescription = document.getElementById("rDescription");
+
+    trackBtn.addEventListener("click", async () => {
+      errorDiv.textContent = "";
+      resultDiv.style.display = "none";
+
+      const caseId = caseIdInput.value.trim();
+      if (!caseId) {
+        errorDiv.textContent = "Please enter a Case ID.";
+        return;
+      }
+
+      trackBtn.disabled = true;
+      trackBtn.textContent = "Loading...";
+
+      try {
+        const res = await fetch(`${API_BASE}/cases/${caseId}`);
+        if (!res.ok) {
+          if (res.status === 404) {
+            throw new Error("Case not found. Check the ID.");
+          }
+          throw new Error("Failed to fetch case.");
+        }
+        const data = await res.json();
+
+        rId.textContent = data.id;
+        rTitle.textContent = data.title;
+        rCategory.textContent = data.category;
+        rStatus.textContent = data.status;
+        rStatus.className = "status " + data.status; // e.g. status received
+        rCreated.textContent = new Date(data.created_at).toLocaleString();
+        rDescription.textContent = data.description;
+
+        resultDiv.style.display = "block";
+      } catch (err) {
+        errorDiv.textContent = err.message;
+      } finally {
+        trackBtn.disabled = false;
+        trackBtn.textContent = "Track";
+      }
+    });
+  </script>
+</body>
+</html>

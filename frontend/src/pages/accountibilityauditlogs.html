@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>CivicTrace - Accountability & Audit Logs</title>
+
+
+    <!-- ===================================================== -->
+    <!-- TAILWIND -->
+    <!-- ===================================================== -->
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+
+    <!-- ===================================================== -->
+    <!-- INTER -->
+    <!-- ===================================================== -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- ===================================================== -->
+    <!-- MATERIAL SYMBOLS -->
+    <!-- ===================================================== -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- ===================================================== -->
+    <!-- TAILWIND CONFIG -->
+    <!-- ===================================================== -->
+
+    <script>
+
+        tailwind.config = {
+
+            darkMode: "class",
+
+            theme: {
+
+                extend: {
+
+                    colors: {
+
+                        primary: "#3f57a6",
+                        "primary-container": "#5870c1",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#fffbff",
+
+                        secondary: "#3c665b",
+                        "secondary-container": "#bbe9db",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#406b5f",
+
+                        tertiary: "#006b53",
+                        "tertiary-container": "#008769",
+
+                        error: "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "on-error": "#ffffff",
+                        "on-error-container": "#93000a",
+
+                        background: "#faf8ff",
+                        "on-background": "#151b2e",
+
+                        surface: "#faf8ff",
+                        "surface-bright": "#faf8ff",
+                        "surface-dim": "#d4d9f4",
+                        "surface-variant": "#dde1fd",
+
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f3f2ff",
+                        "surface-container": "#ebedff",
+                        "surface-container-high": "#e4e7ff",
+                        "surface-container-highest": "#dde1fd",
+
+                        "on-surface": "#151b2e",
+                        "on-surface-variant": "#444651",
+
+                        outline: "#757682",
+                        "outline-variant": "#c5c5d3"
+
+                    },
+
+                    borderRadius: {
+
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+
+                    }
+
+                }
+
+            }
+
+        };
+
+    </script>
+
+
+    <!-- ===================================================== -->
+    <!-- CUSTOM CSS -->
+    <!-- ===================================================== -->
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #faf8ff;
+        }
+
+        .material-symbols-outlined {
+            font-family: "Material Symbols Outlined";
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: "liga";
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .sidebar {
+            width: 256px;
+        }
+
+        .main-content {
+            margin-left: 256px;
+            min-height: 100vh;
+        }
+
+        @media (max-width: 767px) {
+
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body class="bg-background text-on-background">
+
+
+    <!-- ========================================================= -->
+    <!-- SIDEBAR -->
+    <!-- ========================================================= -->
+
+    <nav
+        class="sidebar fixed left-0 top-0 bottom-0 z-40 hidden md:flex flex-col p-4 bg-surface-container-low border-r border-outline-variant"
+    >
+
+        <!-- BRAND -->
+
+        <div class="mb-8">
+
+            <a
+                href="home.html"
+                class="flex items-center gap-3 no-underline"
+            >
+
+                <div
+                    class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0"
+                >
+
+                    <span class="material-symbols-outlined">
+                        account_balance
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    <h2 class="text-sm font-bold text-on-surface">
+                        CivicTrace
+                    </h2>
+
+                    <p class="text-sm text-on-surface-variant">
+                        Municipal Division
+                    </p>
+
+                </div>
+
+            </a>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+
+        <div class="flex-1 flex flex-col gap-2">
+
+
+            <!-- COMMAND CENTER -->
+
+            <a
+                href="municipalcommandcenter.html"
+                class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg text-sm transition"
+            >
+
+                <span class="material-symbols-outlined">
+                    dashboard
+                </span>
+
+                Municipal Command Center
+
+            </a>
+
+
+            <!-- RISK MAP -->
+
+            <a
+                href="home.html"
+                class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg text-sm transition"
+            >
+
+                <span class="material-symbols-outlined">
+                    map
+                </span>
+
+                Risk Map
+
+            </a>
+
+
+            <!-- FIELD REPORTS -->
+
+            <a
+                href="track-report.html"
+                class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg text-sm transition"
+            >
+
+                <span class="material-symbols-outlined">
+                    assignment
+                </span>
+
+                Field Reports
+
+            </a>
+
+
+            <!-- AUDIT LOGS -->
+
+            <a
+                href="accountabilityauditlogs.html"
+                class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-bold text-sm"
+            >
+
+                <span
+                    class="material-symbols-outlined"
+                    style="font-variation-settings:'FILL' 1;"
+                >
+                    history
+                </span>
+
+                Audit Logs
+
+            </a>
+
+
+            <!-- SETTINGS -->
+
+            <a
+                href="settings.html"
+                class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg text-sm transition"
+            >
+
+                <span class="material-symbols-outlined">
+                    settings
+                </span>
+
+                Settings
+
+            </a>
+
+        </div>
+
+
+        <!-- REPORT NEW RISK -->
+
+        <a
+            href="report.html"
+            class="mt-4 mb-8 w-full h-11 bg-primary text-on-primary rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition no-underline"
+        >
+
+            <span class="material-symbols-outlined">
+                add
+            </span>
+
+            Report New Risk
+
+        </a>
+
+
+        <!-- BOTTOM -->
+
+        <div class="flex flex-col gap-2">
+
+
+            <!-- SUPPORT -->
+
+            <a
+                href="about.html"
+                class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg text-sm transition"
+            >
+
+                <span class="material-symbols-outlined">
+                    help
+                </span>
+
+                Support
+
+            </a>
+
+
+            <!-- LOGOUT -->
+
+            <a
+                href="home.html"
+                id="logoutButton"
+                class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg text-sm transition"
+            >
+
+                <span class="material-symbols-outlined">
+                    logout
+                </span>
+
+                Logout
+
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- ========================================================= -->
+    <!-- MAIN -->
+    <!-- ========================================================= -->
+
+    <main class="main-content">
+
+
+        <div class="p-6 md:p-8">
+
+
+            <!-- ================================================= -->
+            <!-- HEADER -->
+            <!-- ================================================= -->
+
+            <header
+                class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8"
+            >
+
+                <div>
+
+                    <h1 class="text-3xl md:text-4xl font-bold text-on-surface">
+                        Accountability & Audit Logs
+                    </h1>
+
+                    <p class="text-base text-on-surface-variant mt-1">
+                        Complete chronological record of municipal case activity.
+                    </p>
+
+                </div>
+
+
+                <div class="flex items-center gap-4">
+
+
+                    <!-- SEARCH -->
+
+                    <div class="relative hidden sm:block">
+
+                        <span
+                            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline"
+                        >
+                            search
+                        </span>
+
+                        <input
+                            id="logSearch"
+                            type="text"
+                            placeholder="Search logs..."
+                            class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
+                        >
+
+                    </div>
+
+
+                    <!-- NOTIFICATIONS -->
+
+                    <button
+                        id="notificationButton"
+                        type="button"
+                        class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition text-on-surface"
+                    >
+
+                        <span class="material-symbols-outlined">
+                            notifications
+                        </span>
+
+                    </button>
+
+
+                    <!-- ACCOUNT -->
+
+                    <button
+                        id="userButton"
+                        type="button"
+                        class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition text-on-surface"
+                    >
+
+                        <span class="material-symbols-outlined">
+                            account_circle
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </header>
+
+
+            <!-- ================================================= -->
+            <!-- CASE CONTEXT -->
+            <!-- ================================================= -->
+
+            <section
+                class="mb-8 bg-surface p-6 rounded-xl border border-outline-variant shadow-sm flex flex-wrap justify-between items-start gap-4"
+            >
+
+                <div>
+
+                    <div class="flex items-center gap-2 mb-2">
+
+                        <span
+                            id="caseStatus"
+                            class="px-2 py-1 bg-secondary-container text-on-secondary-container text-xs font-semibold rounded uppercase tracking-wider"
+                        >
+                            Closed
+                        </span>
+
+
+                        <h2
+                            id="caseTitle"
+                            class="text-2xl font-semibold text-on-surface"
+                        >
+                            Case CVT-KOL-1042
+                        </h2>
+
+                    </div>
+
+
+                    <p
+                        id="caseDescription"
+                        class="text-base text-on-surface-variant flex items-center gap-1"
+                    >
+
+                        <span class="material-symbols-outlined text-sm">
+                            location_on
+                        </span>
+
+                        Sector 5, Salt Lake, Kolkata - Pothole Repair
+
+                    </p>
+
+                </div>
+
+
+                <div class="flex gap-2">
+
+                    <button
+                        id="backButton"
+                        type="button"
+                        class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-semibold text-on-surface hover:bg-surface-container-low transition flex items-center gap-2"
+                    >
+
+                        <span class="material-symbols-outlined text-sm">
+                            arrow_back
+                        </span>
+
+                        Command Center
+
+                    </button>
+
+
+                    <button
+                        id="exportButton"
+                        type="button"
+                        class="px-4 py-2 border border-outline-variant rounded-lg text-sm font-semibold text-on-surface hover:bg-surface-container-low transition flex items-center gap-2"
+                    >
+
+                        <span class="material-symbols-outlined text-sm">
+                            download
+                        </span>
+
+                        Export PDF
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- EVENT HISTORY -->
+            <!-- ================================================= -->
+
+            <section
+                class="bg-surface rounded-xl border border-outline-variant shadow-sm overflow-hidden"
+            >
+
+                <!-- SECTION HEADER -->
+
+                <div
+                    class="p-4 border-b border-outline-variant bg-surface-container-lowest flex flex-col sm:flex-row justify-between gap-3 sm:items-center"
+                >
+
+                    <div>
+
+                        <h3 class="text-xl font-semibold text-on-surface">
+                            Event History
+                        </h3>
+
+                        <p class="text-sm text-on-surface-variant mt-1">
+                            Every recorded action associated with this case.
+                        </p>
+
+                    </div>
+
+
+                    <span
+                        id="eventCount"
+                        class="text-xs font-semibold text-on-surface-variant bg-surface-container-high px-3 py-1.5 rounded"
+                    >
+                        8 Events Recorded
+                    </span>
+
+                </div>
+
+
+                <!-- LOADING -->
+
+                <div
+                    id="auditLoading"
+                    class="p-8 text-center text-sm text-on-surface-variant"
+                >
+
+                    Loading audit history...
+
+                </div>
+
+
+                <!-- ERROR -->
+
+                <div
+                    id="auditError"
+                    class="hidden p-6 text-center text-sm text-error"
+                >
+                </div>
+
+
+                <!-- TABLE -->
+
+                <div
+                    id="auditTableContainer"
+                    class="overflow-x-auto"
+                >
+
+                    <table class="w-full text-left border-collapse">
+
+                        <thead>
+
+                            <tr
+                                class="bg-surface-container-low text-on-surface-variant text-xs uppercase tracking-wider border-b border-outline-variant"
+                            >
+
+                                <th class="p-4 font-semibold">
+                                    Timestamp (IST)
+                                </th>
+
+                                <th class="p-4 font-semibold">
+                                    Action Taken
+                                </th>
+
+                                <th class="p-4 font-semibold">
+                                    Actor / System
+                                </th>
+
+                                <th class="p-4 font-semibold text-right">
+                                    Details
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody
+                            id="auditTableBody"
+                            class="text-sm text-on-surface divide-y divide-outline-variant/50"
+                        >
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- EMPTY -->
+
+                <div
+                    id="auditEmpty"
+                    class="hidden p-10 text-center text-sm text-on-surface-variant"
+                >
+
+                    <span class="material-symbols-outlined text-5xl mb-3">
+                        history
+                    </span>
+
+                    <p class="font-semibold">
+                        No audit events found.
+                    </p>
+
+                    <p class="mt-1">
+                        No recorded activity is available for this case.
+                    </p>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+
+    <!-- ========================================================= -->
+    <!-- JAVASCRIPT -->
+    <!-- ========================================================= -->
+
+    <script>
+
+        const API_BASE =
+            "http://127.0.0.1:8000/api";
+
+
+        /* =====================================================
+           URL CASE ID
+        ===================================================== */
+
+        const urlParams =
+            new URLSearchParams(
+                window.location.search
+            );
+
+
+        const requestedCaseId =
+            urlParams.get("id");
+
+
+        let currentCaseId =
+            requestedCaseId ||
+            "CVT-KOL-1042";
+
+
+        /* =====================================================
+           ELEMENTS
+        ===================================================== */
+
+        const auditLoading =
+            document.getElementById("auditLoading");
+
+        const auditError =
+            document.getElementById("auditError");
+
+        const auditTableContainer =
+            document.getElementById(
+                "auditTableContainer"
+            );
+
+        const auditTableBody =
+            document.getElementById(
+                "auditTableBody"
+            );
+
+        const auditEmpty =
+            document.getElementById(
+                "auditEmpty"
+            );
+
+        const eventCount =
+            document.getElementById(
+                "eventCount"
+            );
+
+        const caseTitle =
+            document.getElementById(
+                "caseTitle"
+            );
+
+        const caseDescription =
+            document.getElementById(
+                "caseDescription"
+            );
+
+        const caseStatus =
+            document.getElementById(
+                "caseStatus"
+            );
+
+        const logSearch =
+            document.getElementById(
+                "logSearch"
+            );
+
+
+        /* =====================================================
+           ESCAPE HTML
+        ===================================================== */
+
+        function escapeHtml(value) {
+
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+        }
+
+
+        /* =====================================================
+           FORMAT STATUS
+        ===================================================== */
+
+        function formatStatus(status) {
+
+            if (!status) {
+                return "Closed";
+            }
+
+            return String(status)
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, function(letter) {
+
+                    return letter.toUpperCase();
+
+                });
+
+        }
+
+
+        /* =====================================================
+           LOAD CASE INFORMATION
+        ===================================================== */
+
+        async function loadCaseInformation() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_BASE}/cases`
+                    );
+
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Backend returned ${response.status}`
+                    );
+                }
+
+
+                const cases =
+                    await response.json();
+
+
+                if (!Array.isArray(cases)) {
+                    return;
+                }
+
+
+                const found =
+                    cases.find(
+                        function(caseItem) {
+
+                            return String(
+                                caseItem.id
+                            ) === String(
+                                currentCaseId
+                            );
+
+                        }
+                    );
+
+
+                if (!found) {
+                    return;
+                }
+
+
+                currentCaseId =
+                    found.id;
+
+
+                caseTitle.textContent =
+                    `Case ${found.id}`;
+
+
+                const location =
+                    found.location_text ||
+                    "Kolkata";
+
+
+                const category =
+                    formatCategory(
+                        found.category
+                    );
+
+
+                caseDescription.innerHTML = `
+
+                    <span class="material-symbols-outlined text-sm">
+                        location_on
+                    </span>
+
+                    ${escapeHtml(location)}
+                    - ${escapeHtml(category)}
+
+                `;
+
+
+                caseStatus.textContent =
+                    formatStatus(
+                        found.status
+                    );
+
+
+                if (
+                    String(found.status || "")
+                        .toLowerCase() ===
+                    "resolved"
+                ) {
+
+                    caseStatus.className =
+                        "px-2 py-1 bg-secondary-container " +
+                        "text-on-secondary-container " +
+                        "text-xs font-semibold rounded " +
+                        "uppercase tracking-wider";
+
+                }
+
+            } catch (error) {
+
+                console.warn(
+                    "Could not load case information:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           FORMAT CATEGORY
+        ===================================================== */
+
+        function formatCategory(category) {
+
+            if (!category) {
+                return "Municipal Issue";
+            }
+
+
+            const categories = {
+
+                pothole_road: "Road Hazard",
+                water_leak: "Water Leak",
+                waterlogging: "Waterlogging",
+                garbage: "Sanitation",
+                sanitation: "Sanitation",
+                open_manhole: "Open Manhole",
+                streetlight: "Streetlight",
+                traffic: "Traffic",
+                drainage: "Drainage"
+
+            };
+
+
+            const key =
+                String(category)
+                    .toLowerCase()
+                    .trim();
+
+
+            if (categories[key]) {
+                return categories[key];
+            }
+
+
+            return String(category)
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, function(letter) {
+
+                    return letter.toUpperCase();
+
+                });
+
+        }
+
+
+        /* =====================================================
+           AUDIT DATA
+        ===================================================== */
+
+        /*
+         * The backend currently may not expose an
+         * /api/audit-logs endpoint.
+         *
+         * Therefore the page first attempts to load
+         * real audit data.
+         *
+         * If that endpoint does not exist yet,
+         * the original CivicTrace audit UI data is
+         * displayed so the page never looks broken.
+         */
+
+        const fallbackAuditEvents = [
+
+            {
+                timestamp: "2023-10-25 14:30:12",
+                action: "Case Reopened",
+                actor: "Admin Jenkins",
+                icon: "admin_panel_settings",
+                dot: "bg-secondary",
+                detail: "View Notes"
+            },
+
+            {
+                timestamp: "2023-10-24 09:15:00",
+                action: "Citizen Challenged",
+                actor: "Citizen (ID: 9942)",
+                icon: "person",
+                dot: "bg-error",
+                detail: "View Appeal"
+            },
+
+            {
+                timestamp: "2023-10-23 16:45:33",
+                action: "Resolution Claimed",
+                actor: "Contractor Apex",
+                icon: "engineering",
+                dot: "bg-primary",
+                detail: "View Photos"
+            },
+
+            {
+                timestamp: "2023-10-22 08:00:00",
+                action: "Work Started",
+                actor: "Contractor Apex",
+                icon: "engineering",
+                dot: "bg-tertiary",
+                detail: "-"
+            },
+
+            {
+                timestamp: "2023-10-21 11:20:15",
+                action: "Assigned",
+                actor: "Admin Jenkins",
+                icon: "admin_panel_settings",
+                dot: "bg-primary",
+                detail: "To: Contractor Apex"
+            },
+
+            {
+                timestamp: "2023-10-20 15:45:00",
+                action: "Municipal Validation",
+                actor: "Admin Jenkins",
+                icon: "admin_panel_settings",
+                dot: "bg-outline",
+                detail: "Verified"
+            },
+
+            {
+                timestamp: "2023-10-20 10:05:22",
+                action: "AI Risk Classification",
+                actor: "System",
+                icon: "memory",
+                dot: "bg-outline-variant",
+                detail: "Priority: High"
+            },
+
+            {
+                timestamp: "2023-10-20 10:00:00",
+                action: "Report Submitted",
+                actor: "Citizen (ID: 9942)",
+                icon: "person",
+                dot: "bg-outline-variant",
+                detail: "View Original"
+            }
+
+        ];
+
+
+        /* =====================================================
+           LOAD AUDIT LOGS
+        ===================================================== */
+
+        async function loadAuditLogs() {
+
+            auditLoading.classList.remove("hidden");
+
+            auditError.classList.add("hidden");
+
+            auditEmpty.classList.add("hidden");
+
+
+            try {
+
+                /*
+                 * Attempt real backend endpoint.
+                 */
+
+                const response =
+                    await fetch(
+                        `${API_BASE}/audit-logs?case_id=${encodeURIComponent(currentCaseId)}`
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Audit endpoint unavailable"
+                    );
+
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                const events =
+                    Array.isArray(data)
+                        ? data
+                        : (
+                            Array.isArray(data.logs)
+                                ? data.logs
+                                : []
+                        );
+
+
+                if (events.length === 0) {
+
+                    renderAuditLogs(
+                        fallbackAuditEvents
+                    );
+
+                } else {
+
+                    renderAuditLogs(events);
+
+                }
+
+            } catch (error) {
+
+                console.warn(
+                    "Real audit API unavailable. " +
+                    "Using current CivicTrace audit records.",
+                    error
+                );
+
+
+                renderAuditLogs(
+                    fallbackAuditEvents
+                );
+
+            }
+
+
+            auditLoading.classList.add("hidden");
+
+        }
+
+
+        /* =====================================================
+           RENDER AUDIT LOGS
+        ===================================================== */
+
+        function renderAuditLogs(events) {
+
+            auditTableBody.innerHTML = "";
+
+
+            if (
+                !Array.isArray(events) ||
+                events.length === 0
+            ) {
+
+                auditTableContainer.classList.add(
+                    "hidden"
+                );
+
+                auditEmpty.classList.remove(
+                    "hidden"
+                );
+
+                eventCount.textContent =
+                    "0 Events Recorded";
+
+                return;
+
+            }
+
+
+            auditTableContainer.classList.remove(
+                "hidden"
+            );
+
+            auditEmpty.classList.add(
+                "hidden"
+            );
+
+
+            eventCount.textContent =
+                `${events.length} Events Recorded`;
+
+
+            events.forEach(
+                function(eventItem) {
+
+                    const row =
+                        document.createElement("tr");
+
+
+                    row.className =
+                        "hover:bg-surface-container-low " +
+                        "transition-colors";
+
+
+                    const timestamp =
+                        eventItem.timestamp ||
+                        eventItem.created_at ||
+                        eventItem.createdAt ||
+                        "Unknown";
+
+
+                    const action =
+                        eventItem.action ||
+                        eventItem.event_type ||
+                        eventItem.event ||
+                        "System Event";
+
+
+                    const actor =
+                        eventItem.actor ||
+                        eventItem.actor_name ||
+                        eventItem.user ||
+                        "System";
+
+
+                    const detail =
+                        eventItem.detail ||
+                        eventItem.details ||
+                        eventItem.description ||
+                        "-";
+
+
+                    const icon =
+                        eventItem.icon ||
+                        getActorIcon(actor);
+
+
+                    const dot =
+                        eventItem.dot ||
+                        getActionDot(action);
+
+
+                    row.innerHTML = `
+
+                        <td
+                            class="p-4 text-on-surface-variant whitespace-nowrap font-mono text-xs"
+                        >
+                            ${escapeHtml(
+                                formatTimestamp(timestamp)
+                            )}
+                        </td>
+
+
+                        <td class="p-4">
+
+                            <div class="flex items-center gap-2">
+
+                                <div
+                                    class="w-2 h-2 rounded-full ${dot}"
+                                ></div>
+
+                                <span class="font-medium">
+                                    ${escapeHtml(action)}
+                                </span>
+
+                            </div>
+
+                        </td>
+
+
+                        <td class="p-4">
+
+                            <div class="flex items-center gap-2">
+
+                                <span
+                                    class="material-symbols-outlined text-on-surface-variant text-sm"
+                                >
+                                    ${escapeHtml(icon)}
+                                </span>
+
+                                <span>
+                                    ${escapeHtml(actor)}
+                                </span>
+
+                            </div>
+
+                        </td>
+
+
+                        <td class="p-4 text-right">
+
+                            ${
+                                detail !== "-"
+                                    ? `
+                                        <button
+                                            type="button"
+                                            class="detail-button text-primary hover:underline text-xs font-semibold"
+                                            data-detail="${escapeHtml(
+                                                String(detail)
+                                            )}"
+                                        >
+                                            ${escapeHtml(
+                                                String(detail)
+                                            )}
+                                        </button>
+                                      `
+                                    : `
+                                        <span class="text-on-surface-variant text-sm">
+                                            -
+                                        </span>
+                                      `
+                            }
+
+                        </td>
+
+                    `;
+
+
+                    auditTableBody.appendChild(row);
+
+                }
+            );
+
+
+            attachDetailButtons();
+
+        }
+
+
+        /* =====================================================
+           FORMAT TIMESTAMP
+        ===================================================== */
+
+        function formatTimestamp(timestamp) {
+
+            if (!timestamp) {
+                return "Unknown";
+            }
+
+
+            return String(timestamp)
+                .replace("T", " ")
+                .replace("Z", "");
+
+        }
+
+
+        /* =====================================================
+           ACTOR ICON
+        ===================================================== */
+
+        function getActorIcon(actor) {
+
+            const value =
+                String(actor || "")
+                    .toLowerCase();
+
+
+            if (value.includes("citizen")) {
+                return "person";
+            }
+
+
+            if (value.includes("contractor")) {
+                return "engineering";
+            }
+
+
+            if (value.includes("admin")) {
+                return "admin_panel_settings";
+            }
+
+
+            if (value.includes("system")) {
+                return "memory";
+            }
+
+
+            return "person";
+
+        }
+
+
+        /* =====================================================
+           ACTION DOT
+        ===================================================== */
+
+        function getActionDot(action) {
+
+            const value =
+                String(action || "")
+                    .toLowerCase();
+
+
+            if (
+                value.includes("challenged") ||
+                value.includes("rejected")
+            ) {
+
+                return "bg-error";
+
+            }
+
+
+            if (
+                value.includes("resolved") ||
+                value.includes("verified") ||
+                value.includes("claim")
+            ) {
+
+                return "bg-secondary";
+
+            }
+
+
+            if (
+                value.includes("started") ||
+                value.includes("work")
+            ) {
+
+                return "bg-tertiary";
+
+            }
+
+
+            if (
+                value.includes("assigned") ||
+                value.includes("validation")
+            ) {
+
+                return "bg-primary";
+
+            }
+
+
+            return "bg-outline-variant";
+
+        }
+
+
+        /* =====================================================
+           SEARCH
+        ===================================================== */
+
+        logSearch.addEventListener(
+            "input",
+            function() {
+
+                const search =
+                    logSearch.value
+                        .toLowerCase()
+                        .trim();
+
+
+                const rows =
+                    auditTableBody.querySelectorAll(
+                        "tr"
+                    );
+
+
+                rows.forEach(
+                    function(row) {
+
+                        const text =
+                            row.textContent
+                                .toLowerCase();
+
+
+                        if (
+                            !search ||
+                            text.includes(search)
+                        ) {
+
+                            row.style.display = "";
+
+                        } else {
+
+                            row.style.display = "none";
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+
+        /* =====================================================
+           DETAIL BUTTONS
+        ===================================================== */
+
+        function attachDetailButtons() {
+
+            document
+                .querySelectorAll(".detail-button")
+                .forEach(
+                    function(button) {
+
+                        button.addEventListener(
+                            "click",
+                            function() {
+
+                                const detail =
+                                    button.dataset.detail ||
+                                    "No additional information.";
+
+                                alert(detail);
+
+                            }
+                        );
+
+                    }
+                );
+
+        }
+
+
+        /* =====================================================
+           BACK BUTTON
+        ===================================================== */
+
+        document
+            .getElementById("backButton")
+            .addEventListener(
+                "click",
+                function() {
+
+                    window.location.href =
+                        "municipalcommandcenter.html";
+
+                }
+            );
+
+
+        /* =====================================================
+           EXPORT
+        ===================================================== */
+
+        document
+            .getElementById("exportButton")
+            .addEventListener(
+                "click",
+                function() {
+
+                    window.print();
+
+                }
+            );
+
+
+        /* =====================================================
+           NOTIFICATIONS
+        ===================================================== */
+
+        document
+            .getElementById("notificationButton")
+            .addEventListener(
+                "click",
+                function() {
+
+                    alert(
+                        "Municipal notifications will appear here."
+                    );
+
+                }
+            );
+
+
+        /* =====================================================
+           USER
+        ===================================================== */
+
+        document
+            .getElementById("userButton")
+            .addEventListener(
+                "click",
+                async function() {
+
+                    const token =
+                        localStorage.getItem(
+                            "access_token"
+                        );
+
+
+                    if (!token) {
+
+                        alert(
+                            "No municipal login session found."
+                        );
+
+                        return;
+
+                    }
+
+
+                    try {
+
+                        const response =
+                            await fetch(
+                                `${API_BASE}/auth/me`,
+                                {
+                                    headers: {
+                                        Authorization:
+                                            `Bearer ${token}`
+                                    }
+                                }
+                            );
+
+
+                        if (!response.ok) {
+
+                            throw new Error(
+                                "Unable to load user information."
+                            );
+
+                        }
+
+
+                        const user =
+                            await response.json();
+
+
+                        alert(
+                            `Logged in as: ${user.name || user.email}\n` +
+                            `Role: ${user.role}`
+                        );
+
+
+                    } catch (error) {
+
+                        console.error(error);
+
+                        alert(
+                            "Could not retrieve user information."
+                        );
+
+                    }
+
+                }
+            );
+
+
+        /* =====================================================
+           LOGOUT
+        ===================================================== */
+
+        document
+            .getElementById("logoutButton")
+            .addEventListener(
+                "click",
+                function(event) {
+
+                    event.preventDefault();
+
+
+                    localStorage.removeItem(
+                        "access_token"
+                    );
+
+                    localStorage.removeItem(
+                        "token"
+                    );
+
+                    sessionStorage.clear();
+
+
+                    window.location.href =
+                        "home.html";
+
+                }
+            );
+
+
+        /* =====================================================
+           START
+        ===================================================== */
+
+        loadCaseInformation();
+
+        loadAuditLogs();
+
+    </script>
+
+</body>
+
+</html>

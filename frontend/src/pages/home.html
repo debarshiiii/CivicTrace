@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kolkata Live Civic Risk Map</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+<!-- Leaflet CSS -->
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin=""
+/>
+
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "on-secondary-container": "#406b5f",
+        "surface-container-highest": "#dde1fd",
+        "tertiary-fixed": "#80f8d1",
+        "primary-fixed-dim": "#b5c4ff",
+        "on-secondary-fixed": "#00201a",
+        "on-tertiary": "#ffffff",
+        "surface-container-low": "#f3f2ff",
+        "primary-container": "#5870c1",
+        "on-surface": "#151b2e",
+        "on-primary-fixed-variant": "#274190",
+        "secondary": "#3c665b",
+        "outline-variant": "#c5c5d3",
+        "error-container": "#ffdad6",
+        "on-tertiary-fixed-variant": "#00513e",
+        "on-tertiary-fixed": "#002117",
+        "secondary-fixed-dim": "#a3d0c2",
+        "on-error": "#ffffff",
+        "surface-bright": "#faf8ff",
+        "outline": "#757682",
+        "on-secondary": "#ffffff",
+        "on-tertiary-container": "#000604",
+        "surface-variant": "#dde1fd",
+        "on-secondary-fixed-variant": "#234e44",
+        "surface-container-lowest": "#ffffff",
+        "on-primary-container": "#fffbff",
+        "inverse-surface": "#2a2f44",
+        "inverse-on-surface": "#eff0ff",
+        "tertiary-fixed-dim": "#62dbb5",
+        "on-surface-variant": "#444651",
+        "surface-container": "#ebedff",
+        "secondary-container": "#bbe9db",
+        "background": "#faf8ff",
+        "primary": "#3f57a6",
+        "on-background": "#151b2e",
+        "inverse-primary": "#b5c4ff",
+        "surface-tint": "#415aa9",
+        "surface-dim": "#d4d9f4",
+        "on-error-container": "#93000a",
+        "secondary-fixed": "#beecde",
+        "on-primary": "#ffffff",
+        "primary-fixed": "#dce1ff",
+        "surface-container-high": "#e4e7ff",
+        "error": "#ba1a1a",
+        "tertiary": "#006b53",
+        "on-primary-fixed": "#00164e",
+        "tertiary-container": "#008769",
+        "surface": "#faf8ff"
+      },
+
+      "borderRadius": {
+        "DEFAULT": "0.25rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "full": "9999px"
+      },
+
+      "spacing": {
+        "base": "4px",
+        "gutter": "24px",
+        "container-max": "1280px",
+        "unit-6": "1.5rem",
+        "margin-mobile": "16px",
+        "unit-4": "1rem",
+        "unit-2": "0.5rem",
+        "unit-1": "0.25rem",
+        "unit-12": "3rem",
+        "unit-8": "2rem"
+      },
+
+      "fontFamily": {
+        "headline-lg-mobile": ["Inter"],
+        "headline-md": ["Inter"],
+        "label-sm": ["Inter"],
+        "body-sm": ["Inter"],
+        "headline-lg": ["Inter"],
+        "tabular-nums": ["Inter"],
+        "headline-xl": ["Inter"],
+        "label-md": ["Inter"],
+        "body-md": ["Inter"],
+        "body-lg": ["Inter"]
+      },
+
+      "fontSize": {
+        "headline-lg-mobile": ["24px", {
+          "lineHeight": "32px",
+          "fontWeight": "600"
+        }],
+
+        "headline-md": ["20px", {
+          "lineHeight": "28px",
+          "fontWeight": "600"
+        }],
+
+        "label-sm": ["12px", {
+          "lineHeight": "16px",
+          "fontWeight": "500"
+        }],
+
+        "body-sm": ["14px", {
+          "lineHeight": "20px",
+          "fontWeight": "400"
+        }],
+
+        "headline-lg": ["28px", {
+          "lineHeight": "36px",
+          "letterSpacing": "-0.01em",
+          "fontWeight": "600"
+        }],
+
+        "tabular-nums": ["14px", {
+          "lineHeight": "20px",
+          "fontWeight": "400"
+        }],
+
+        "headline-xl": ["36px", {
+          "lineHeight": "44px",
+          "letterSpacing": "-0.02em",
+          "fontWeight": "700"
+        }],
+
+        "label-md": ["14px", {
+          "lineHeight": "16px",
+          "letterSpacing": "0.05em",
+          "fontWeight": "600"
+        }],
+
+        "body-md": ["16px", {
+          "lineHeight": "24px",
+          "fontWeight": "400"
+        }],
+
+        "body-lg": ["18px", {
+          "lineHeight": "28px",
+          "fontWeight": "400"
+        }]
+      }
+    }
+  }
+}
+</script>
+
+<style>
+#map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+</style>
+
+</head>
+
+<body class="bg-background text-on-background h-screen w-full flex flex-col overflow-hidden">
+
+<!-- ========================================================= -->
+<!-- TOP NAVIGATION -->
+<!-- ========================================================= -->
+
+<header class="sticky top-0 w-full z-50 flex justify-between items-center px-gutter h-16 bg-white dark:bg-surface-dim border-b border-outline-variant dark:border-outline">
+
+  <!-- Logo + Navigation -->
+
+  <div class="flex items-center gap-unit-6">
+
+    <span
+      class="text-headline-md font-headline-md font-bold text-primary dark:text-primary-fixed"
+    >
+      CivicTrace
+    </span>
+
+    <nav class="hidden md:flex gap-unit-6">
+
+      <a
+        class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 font-bold text-label-md font-label-md hover:text-primary-container transition-colors"
+        href="home.html"
+      >
+        Map
+      </a>
+
+      <a
+        class="text-secondary dark:text-secondary-fixed-dim font-medium text-label-md font-label-md hover:text-primary-container transition-colors"
+        href="report.html"
+      >
+        Report
+      </a>
+
+      <a
+        class="text-secondary dark:text-secondary-fixed-dim font-medium text-label-md font-label-md hover:text-primary-container transition-colors"
+        href="track-report.html"
+      >
+        Track
+      </a>
+
+      <a
+        class="text-secondary dark:text-secondary-fixed-dim font-medium text-label-md font-label-md hover:text-primary-container transition-colors"
+        href="about.html"
+      >
+        About
+      </a>
+
+    </nav>
+
+  </div>
+
+
+  <!-- ========================================================= -->
+  <!-- TOP RIGHT ICONS -->
+  <!-- ========================================================= -->
+
+  <div class="flex items-center gap-unit-4 text-primary dark:text-primary-fixed-dim">
+
+    <!-- Notifications -->
+
+    <button
+      class="hover:text-primary-container transition-colors"
+      title="Notifications"
+      type="button"
+    >
+
+      <span
+        class="material-symbols-outlined"
+        data-icon="notifications"
+      >
+        notifications
+      </span>
+
+    </button>
+
+
+    <!-- LOGIN / ACCOUNT -->
+
+    <!-- Clicking this takes the user to login.html -->
+
+    <a
+      href="login.html"
+      class="hover:text-primary-container transition-colors"
+      title="Login"
+    >
+
+      <span
+        class="material-symbols-outlined"
+        data-icon="account_circle"
+      >
+        account_circle
+      </span>
+
+    </a>
+
+  </div>
+
+</header>
+
+
+<!-- ========================================================= -->
+<!-- MAIN CONTENT -->
+<!-- ========================================================= -->
+
+<main class="flex-1 flex overflow-hidden">
+
+
+  <!-- ========================================================= -->
+  <!-- LEFT SIDEBAR -->
+  <!-- ========================================================= -->
+
+  <aside
+    class="w-64 bg-surface-container-low border-r border-outline-variant flex flex-col p-4 shrink-0 overflow-y-auto z-10"
+  >
+
+    <h2 class="text-label-md font-label-md font-bold mb-4">
+      Filters
+    </h2>
+
+
+    <!-- Risk Level -->
+
+    <div class="mb-6">
+
+      <h3 class="text-label-sm font-label-sm text-outline mb-2">
+        Risk Level
+      </h3>
+
+      <div class="flex flex-col gap-2">
+
+        <label class="flex items-center gap-2 cursor-pointer">
+
+          <input
+            checked
+            class="rounded border-outline text-error focus:ring-error risk-filter"
+            data-risk="critical"
+            type="checkbox"
+          />
+
+          <span class="text-body-sm font-body-sm">
+            Critical
+          </span>
+
+        </label>
+
+
+        <label class="flex items-center gap-2 cursor-pointer">
+
+          <input
+            checked
+            class="rounded border-outline text-orange-500 focus:ring-orange-500 risk-filter"
+            data-risk="high"
+            type="checkbox"
+          />
+
+          <span class="text-body-sm font-body-sm">
+            High
+          </span>
+
+        </label>
+
+
+        <label class="flex items-center gap-2 cursor-pointer">
+
+          <input
+            checked
+            class="rounded border-outline text-yellow-500 focus:ring-yellow-500 risk-filter"
+            data-risk="moderate"
+            type="checkbox"
+          />
+
+          <span class="text-body-sm font-body-sm">
+            Moderate
+          </span>
+
+        </label>
+
+
+        <label class="flex items-center gap-2 cursor-pointer">
+
+          <input
+            checked
+            class="rounded border-outline text-tertiary focus:ring-tertiary risk-filter"
+            data-risk="low"
+            type="checkbox"
+          />
+
+          <span class="text-body-sm font-body-sm">
+            Low
+          </span>
+
+        </label>
+
+      </div>
+
+    </div>
+
+
+    <!-- Category -->
+
+    <div>
+
+      <h3 class="text-label-sm font-label-sm text-outline mb-2">
+        Category
+      </h3>
+
+      <div class="flex flex-col gap-2">
+
+        <label class="flex items-center gap-2 cursor-pointer">
+
+          <input
+            checked
+            class="rounded border-outline text-primary focus:ring-primary cat-filter"
+            data-cat="pothole_road"
+            type="checkbox"
+          />
+
+          <span class="text-body-sm font-body-sm">
+            Road Hazards
+          </span>
+
+        </label>
+
+
+        <label class="flex items-center gap-2 cursor-pointer">
+
+          <input
+            checked
+            class="rounded border-outline text-primary focus:ring-primary cat-filter"
+            data-cat="water_leak"
+            type="checkbox"
+          />
+
+          <span class="text-body-sm font-body-sm">
+            Waterlogging
+          </span>
+
+        </label>
+
+
+        <label class="flex items-center gap-2 cursor-pointer">
+
+          <input
+            checked
+            class="rounded border-outline text-primary focus:ring-primary cat-filter"
+            data-cat="garbage"
+            type="checkbox"
+          />
+
+          <span class="text-body-sm font-body-sm">
+            Sanitation
+          </span>
+
+        </label>
+
+      </div>
+
+    </div>
+
+  </aside>
+
+
+  <!-- ========================================================= -->
+  <!-- MAP AREA -->
+  <!-- ========================================================= -->
+
+  <section class="flex-1 relative bg-surface-container-lowest">
+
+    <div id="map"></div>
+
+
+    <!-- Legend -->
+
+    <div
+      class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg border border-outline-variant shadow-sm z-[1000]"
+    >
+
+      <h4 class="text-label-sm font-label-sm font-bold mb-2 uppercase tracking-wider">
+        Risk Legend
+      </h4>
+
+
+      <div class="flex items-center gap-2 mb-1">
+
+        <div class="w-3 h-3 rounded-full bg-error"></div>
+
+        <span class="text-body-sm font-body-sm text-on-surface-variant">
+          Critical (Immediate)
+        </span>
+
+      </div>
+
+
+      <div class="flex items-center gap-2 mb-1">
+
+        <div class="w-3 h-3 rounded-full bg-orange-500"></div>
+
+        <span class="text-body-sm font-body-sm text-on-surface-variant">
+          High (48h)
+        </span>
+
+      </div>
+
+
+      <div class="flex items-center gap-2 mb-1">
+
+        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+
+        <span class="text-body-sm font-body-sm text-on-surface-variant">
+          Moderate (1w)
+        </span>
+
+      </div>
+
+
+      <div class="flex items-center gap-2">
+
+        <div class="w-3 h-3 rounded-full bg-tertiary"></div>
+
+        <span class="text-body-sm font-body-sm text-on-surface-variant">
+          Low (Routine)
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- BOTTOM CTA -->
+    <!-- ========================================================= -->
+
+    <div class="absolute bottom-6 right-6 flex flex-col items-end gap-4 z-[1000]">
+
+      <div
+        class="bg-surface-container-highest p-2 rounded-lg border border-outline-variant text-label-sm font-label-sm text-on-surface-variant shadow-sm flex items-center gap-2"
+      >
+
+        <span
+          class="material-symbols-outlined text-sm"
+          data-icon="handshake"
+        >
+          handshake
+        </span>
+
+        Supported by Kolkata Municipal Corporation
+
+      </div>
+
+
+      <a
+        href="report.html"
+        class="bg-primary text-on-primary h-11 px-6 rounded-lg font-label-md text-label-md flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-md no-underline"
+      >
+
+        <span
+          class="material-symbols-outlined"
+          data-icon="add_location"
+        >
+          add_location
+        </span>
+
+        Report Issue
+
+      </a>
+
+    </div>
+
+  </section>
+
+
+  <!-- ========================================================= -->
+  <!-- RIGHT LIVE FEED -->
+  <!-- ========================================================= -->
+
+  <aside
+    class="w-80 bg-surface border-l border-outline-variant flex flex-col shrink-0 overflow-hidden z-10"
+  >
+
+    <div class="p-4 border-b border-outline-variant bg-surface-container-low">
+
+      <h2 class="text-headline-md font-headline-md font-bold text-on-surface">
+        Live Issues
+      </h2>
+
+      <p class="text-body-sm font-body-sm text-outline">
+        Kolkata Metro Area
+      </p>
+
+    </div>
+
+
+    <div
+      id="feedList"
+      class="flex-1 overflow-y-auto p-4 flex flex-col gap-3"
+    ></div>
+
+  </aside>
+
+</main>
+
+
+<!-- ========================================================= -->
+<!-- LEAFLET JS -->
+<!-- ========================================================= -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Leaflet Heatmap -->
+
+<script src="https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
+
+
+<!-- ========================================================= -->
+<!-- APPLICATION JAVASCRIPT -->
+<!-- ========================================================= -->
+
+<script>
+
+if (typeof L === 'undefined') {
+
+  document.body.innerHTML = `
+    <div style="
+      padding:24px;
+      font-family:system-ui,sans-serif;
+    ">
+      Map library failed to load.
+      Check your internet connection and browser console.
+    </div>
+  `;
+
+} else {
+
+  // =========================================================
+  // API
+  // =========================================================
+
+  const API_BASE = "http://127.0.0.1:8000/api";
+
+
+  // =========================================================
+  // CREATE MAP
+  // =========================================================
+
+  const map = L.map("map", {
+
+    center: [22.5726, 88.3639],
+
+    zoom: 12,
+
+    zoomControl: {
+      position: "bottomright"
+    }
+
+  });
+
+
+  // =========================================================
+  // OPENSTREETMAP
+  // =========================================================
+
+  L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      maxZoom: 19,
+
+      attribution:
+        "© OpenStreetMap contributors"
+    }
+  ).addTo(map);
+
+
+  // =========================================================
+  // ELEMENTS
+  // =========================================================
+
+  const feedList =
+    document.getElementById("feedList");
+
+  const riskFilters =
+    document.querySelectorAll(".risk-filter");
+
+  const catFilters =
+    document.querySelectorAll(".cat-filter");
+
+
+  // =========================================================
+  // VARIABLES
+  // =========================================================
+
+  let allCases = [];
+
+  let markers = [];
+
+  let heatLayer = null;
+
+
+  // =========================================================
+  // LOAD CASES FROM BACKEND
+  // =========================================================
+
+  (async () => {
+
+    try {
+
+      const res =
+        await fetch(`${API_BASE}/cases`);
+
+      if (!res.ok) {
+
+        throw new Error(
+          "Failed to load cases"
+        );
+
+      }
+
+      const cases =
+        await res.json();
+
+      allCases = cases;
+
+      initMapData(cases);
+
+      setupFilterListeners();
+
+    }
+
+    catch (err) {
+
+      console.error(err);
+
+      feedList.innerHTML = `
+        <div class="text-body-sm text-error">
+          Error loading cases:
+          ${err.message}
+        </div>
+      `;
+
+    }
+
+  })();
+
+
+  // =========================================================
+  // INITIALIZE MAP DATA
+  // =========================================================
+
+  function initMapData(cases) {
+
+    const heatPoints = [];
+
+    feedList.innerHTML = "";
+
+
+    // Remove existing markers
+
+    markers.forEach(
+      m => m.marker.remove()
+    );
+
+    markers = [];
+
+
+    // Create marker for every case
+
+    cases.forEach(c => {
+
+      let lat = c.latitude;
+
+      let lng = c.longitude;
+
+
+      // If location doesn't exist,
+      // temporarily place around Kolkata
+
+      if (
+        lat == null ||
+        lng == null
+      ) {
+
+        const dLat =
+          (Math.random() - 0.5) * 0.05;
+
+        const dLng =
+          (Math.random() - 0.5) * 0.05;
+
+        lat =
+          22.5726 + dLat;
+
+        lng =
+          88.3639 + dLng;
+
+      }
+
+
+      // Risk intensity
+
+      const intensity =
+        (c.risk_score || 50) / 100;
+
+
+      heatPoints.push([
+        lat,
+        lng,
+        intensity
+      ]);
+
+
+      // =====================================================
+      // MARKER
+      // =====================================================
+
+      const marker =
+        L.marker([lat, lng])
+        .addTo(map);
+
+
+      // =====================================================
+      // POPUP
+      // =====================================================
+
+      const popupContent = `
+
+        <div style="min-width:180px;">
+
+          <div
+            style="
+              font-weight:bold;
+              margin-bottom:4px;
+            "
+          >
+            ${c.title}
+          </div>
+
+
+          <div
+            style="
+              font-size:12px;
+              margin-bottom:2px;
+            "
+          >
+            ID: ${c.id}
+          </div>
+
+
+          <div
+            style="
+              font-size:12px;
+              margin-bottom:2px;
+            "
+          >
+            Category: ${c.category}
+          </div>
+
+
+          <div
+            style="
+              font-size:12px;
+              margin-bottom:4px;
+            "
+          >
+            Status: ${c.status}
+          </div>
+
+
+          <a
+            href="track-report.html?id=${c.id}"
+            target="_blank"
+            style="font-size:12px;"
+          >
+            Track this case
+          </a>
+
+        </div>
+
+      `;
+
+
+      marker.bindPopup(
+        popupContent
+      );
+
+
+      // Store marker
+
+      markers.push({
+
+        marker: marker,
+
+        case: c,
+
+        lat: lat,
+
+        lng: lng
+
+      });
+
+
+      // Create feed card
+
+      const card =
+        createFeedCard(
+          c,
+          lat,
+          lng,
+          marker
+        );
+
+
+      feedList.appendChild(card);
+
+    });
+
+
+    // =====================================================
+    // HEATMAP
+    // =====================================================
+
+    if (heatLayer) {
+
+      map.removeLayer(
+        heatLayer
+      );
+
+    }
+
+
+    if (heatPoints.length > 0) {
+
+      heatLayer =
+        L.heatLayer(
+          heatPoints,
+          {
+
+            radius: 25,
+
+            blur: 15,
+
+            maxZoom: 15,
+
+            gradient: {
+
+              0.0: "white",
+
+              0.3: "yellow",
+
+              0.6: "orange",
+
+              1.0: "red"
+
+            }
+
+          }
+        ).addTo(map);
+
+    }
+
+
+    // No cases
+
+    if (cases.length === 0) {
+
+      feedList.innerHTML = `
+
+        <div
+          class="text-body-sm text-on-surface-variant"
+        >
+          No cases yet.
+          Be the first to report!
+        </div>
+
+      `;
+
+    }
+
+
+    applyFilters();
+
+  }
+
+
+  // =========================================================
+  // CREATE FEED CARD
+  // =========================================================
+
+  function createFeedCard(
+    c,
+    lat,
+    lng,
+    marker
+  ) {
+
+    const card =
+      document.createElement("div");
+
+
+    card.className =
+      "bg-white rounded-lg border border-outline-variant p-3 shadow-sm hover:border-primary cursor-pointer transition-colors";
+
+
+    const riskLabel =
+      getRiskLabel(
+        c.risk_score
+      );
+
+
+    const riskClass =
+      getRiskClass(
+        c.risk_score
+      );
+
+
+    card.innerHTML = `
+
+      <div
+        class="flex justify-between items-start mb-2"
+      >
+
+        <span
+          class="${riskClass}
+          text-label-sm
+          font-label-sm
+          px-2
+          py-0.5
+          rounded
+          font-bold"
+        >
+          ${riskLabel}
+        </span>
+
+
+        <span
+          class="text-label-sm
+          font-label-sm
+          text-outline"
+        >
+          ${formatTime(c.created_at)}
+        </span>
+
+      </div>
+
+
+      <h4
+        class="text-label-md
+        font-label-md
+        font-bold
+        mb-1"
+      >
+        ${c.title}
+      </h4>
+
+
+      <p
+        class="text-body-sm
+        font-body-sm
+        text-on-surface-variant
+        mb-2"
+      >
+        ${c.description}
+      </p>
+
+
+      <div
+        class="text-label-sm
+        font-label-sm
+        text-outline
+        font-mono"
+      >
+        ID: ${c.id}
+      </div>
+
+    `;
+
+
+    // Click card -> map marker
+
+    card.addEventListener(
+      "click",
+      () => {
+
+        map.setView(
+          [lat, lng],
+          15
+        );
+
+        marker.openPopup();
+
+      }
+    );
+
+
+    return card;
+
+  }
+
+
+  // =========================================================
+  // FILTER LISTENERS
+  // =========================================================
+
+  function setupFilterListeners() {
+
+    riskFilters.forEach(
+      cb =>
+        cb.addEventListener(
+          "change",
+          applyFilters
+        )
+    );
+
+
+    catFilters.forEach(
+      cb =>
+        cb.addEventListener(
+          "change",
+          applyFilters
+        )
+    );
+
+  }
+
+
+  // =========================================================
+  // APPLY FILTERS
+  // =========================================================
+
+  function applyFilters() {
+
+    const selectedRisks =
+      Array.from(riskFilters)
+
+        .filter(
+          cb => cb.checked
+        )
+
+        .map(
+          cb => cb.dataset.risk
+        );
+
+
+    const selectedCats =
+      Array.from(catFilters)
+
+        .filter(
+          cb => cb.checked
+        )
+
+        .map(
+          cb => cb.dataset.cat
+        );
+
+
+    // Filter markers
+
+    markers.forEach(
+      ({
+        marker,
+        case: c
+      }) => {
+
+        const riskOk =
+          riskMatches(
+            c,
+            selectedRisks
+          );
+
+
+        const catOk =
+          catMatches(
+            c,
+            selectedCats
+          );
+
+
+        if (
+          riskOk &&
+          catOk
+        ) {
+
+          if (
+            !map.hasLayer(marker)
+          ) {
+
+            marker.addTo(map);
+
+          }
+
+        } else {
+
+          if (
+            map.hasLayer(marker)
+          ) {
+
+            marker.remove();
+
+          }
+
+        }
+
+      }
+    );
+
+
+    // =====================================================
+    // REBUILD FEED
+    // =====================================================
+
+    feedList.innerHTML = "";
+
+
+    markers.forEach(
+      ({
+        marker,
+        case: c,
+        lat,
+        lng
+      }) => {
+
+        if (
+          !map.hasLayer(marker)
+        ) {
+
+          return;
+
+        }
+
+
+        const card =
+          createFeedCard(
+            c,
+            lat,
+            lng,
+            marker
+          );
+
+
+        feedList.appendChild(card);
+
+      }
+    );
+
+
+    // =====================================================
+    // UPDATE HEATMAP
+    // =====================================================
+
+    const visiblePoints =
+      markers
+
+        .filter(
+          ({ marker }) =>
+            map.hasLayer(marker)
+        )
+
+        .map(
+          ({
+            case: c,
+            lat,
+            lng
+          }) => {
+
+            const intensity =
+              (c.risk_score || 50)
+              / 100;
+
+            return [
+              lat,
+              lng,
+              intensity
+            ];
+
+          }
+        );
+
+
+    if (heatLayer) {
+
+      map.removeLayer(
+        heatLayer
+      );
+
+    }
+
+
+    if (
+      visiblePoints.length > 0
+    ) {
+
+      heatLayer =
+        L.heatLayer(
+          visiblePoints,
+          {
+
+            radius: 25,
+
+            blur: 15,
+
+            maxZoom: 15,
+
+            gradient: {
+
+              0.0: "white",
+
+              0.3: "yellow",
+
+              0.6: "orange",
+
+              1.0: "red"
+
+            }
+
+          }
+        ).addTo(map);
+
+    }
+
+  }
+
+
+  // =========================================================
+  // RISK MATCH
+  // =========================================================
+
+  function riskMatches(
+    c,
+    selectedRisks
+  ) {
+
+    const score =
+      c.risk_score || 0;
+
+
+    let riskLevel;
+
+
+    if (score >= 75) {
+
+      riskLevel = "critical";
+
+    }
+
+    else if (score >= 50) {
+
+      riskLevel = "high";
+
+    }
+
+    else if (score >= 25) {
+
+      riskLevel = "moderate";
+
+    }
+
+    else {
+
+      riskLevel = "low";
+
+    }
+
+
+    return (
+      selectedRisks.length === 0 ||
+      selectedRisks.includes(
+        riskLevel
+      )
+    );
+
+  }
+
+
+  // =========================================================
+  // CATEGORY MATCH
+  // =========================================================
+
+  function catMatches(
+    c,
+    selectedCats
+  ) {
+
+    const cat =
+      c.category || "";
+
+
+    return (
+      selectedCats.length === 0 ||
+      selectedCats.includes(cat)
+    );
+
+  }
+
+
+  // =========================================================
+  // RISK LABEL
+  // =========================================================
+
+  function getRiskLabel(
+    score
+  ) {
+
+    if (!score) {
+
+      return "LOW";
+
+    }
+
+
+    if (score >= 75) {
+
+      return "CRITICAL";
+
+    }
+
+
+    if (score >= 50) {
+
+      return "HIGH";
+
+    }
+
+
+    if (score >= 25) {
+
+      return "MODERATE";
+
+    }
+
+
+    return "LOW";
+
+  }
+
+
+  // =========================================================
+  // RISK CSS
+  // =========================================================
+
+  function getRiskClass(
+    score
+  ) {
+
+    if (!score) {
+
+      return "bg-tertiary text-on-tertiary";
+
+    }
+
+
+    if (score >= 75) {
+
+      return "bg-error text-on-error";
+
+    }
+
+
+    if (score >= 50) {
+
+      return "bg-orange-500 text-white";
+
+    }
+
+
+    if (score >= 25) {
+
+      return "bg-yellow-500 text-white";
+
+    }
+
+
+    return "bg-tertiary text-on-tertiary";
+
+  }
+
+
+  // =========================================================
+  // FORMAT TIME
+  // =========================================================
+
+  function formatTime(
+    isoString
+  ) {
+
+    if (!isoString) {
+
+      return "";
+
+    }
+
+
+    const d =
+      new Date(isoString);
+
+
+    const now =
+      new Date();
+
+
+    const diffMs =
+      now - d;
+
+
+    const mins =
+      Math.floor(
+        diffMs / 60000
+      );
+
+
+    if (mins < 1) {
+
+      return "Just now";
+
+    }
+
+
+    if (mins < 60) {
+
+      return `${mins}m ago`;
+
+    }
+
+
+    const hrs =
+      Math.floor(
+        mins / 60
+      );
+
+
+    if (hrs < 24) {
+
+      return `${hrs}h ago`;
+
+    }
+
+
+    const days =
+      Math.floor(
+        hrs / 24
+      );
+
+
+    return `${days}d ago`;
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>

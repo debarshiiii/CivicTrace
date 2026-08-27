@@ -1,0 +1,4019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CivicTrace - Municipal Command Center</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL,wght@0,400;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+
+<script>
+tailwind.config = {
+    darkMode: "class",
+
+    theme: {
+        extend: {
+
+            colors: {
+                "primary": "#3f57a6",
+                "primary-container": "#5870c1",
+
+                "secondary": "#3c665b",
+                "secondary-container": "#bbe9db",
+
+                "tertiary": "#006b53",
+                "tertiary-container": "#008769",
+
+                "error": "#ba1a1a",
+                "error-container": "#ffdad6",
+
+                "background": "#faf8ff",
+                "surface": "#faf8ff",
+
+                "surface-container-lowest": "#ffffff",
+                "surface-container-low": "#f3f2ff",
+                "surface-container": "#ebedff",
+                "surface-container-high": "#e4e7ff",
+                "surface-container-highest": "#dde1fd",
+
+                "outline": "#757682",
+                "outline-variant": "#c5c5d3",
+
+                "on-background": "#151b2e",
+                "on-surface": "#151b2e",
+                "on-surface-variant": "#444651",
+
+                "on-primary": "#ffffff",
+                "on-secondary": "#ffffff",
+                "on-tertiary": "#ffffff"
+            },
+
+            borderRadius: {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "2xl": "1rem",
+                "full": "9999px"
+            },
+
+            spacing: {
+                "unit-1": "0.25rem",
+                "unit-2": "0.5rem",
+                "unit-4": "1rem",
+                "unit-6": "1.5rem",
+                "unit-8": "2rem",
+                "unit-12": "3rem",
+                "gutter": "24px"
+            },
+
+            fontFamily: {
+                "sans": ["Inter", "sans-serif"]
+            }
+        }
+    }
+};
+</script>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #faf8ff;
+    color: #151b2e;
+    font-family: Inter, sans-serif;
+}
+
+.material-symbols-outlined {
+    font-variation-settings:
+        'FILL' 1,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c5c5d3;
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #757682;
+}
+
+.nav-active {
+    background: #bbe9db;
+    color: #234e44;
+    font-weight: 700;
+}
+
+.case-row {
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.case-row:hover {
+    background: #f3f2ff;
+}
+
+.modal-backdrop {
+    background: rgba(21, 27, 46, 0.45);
+    backdrop-filter: blur(3px);
+}
+
+.status-received {
+    background: #e4e7ff;
+    color: #274190;
+}
+
+.status-validated {
+    background: #e4e7ff;
+    color: #274190;
+}
+
+.status-assigned {
+    background: #bbe9db;
+    color: #234e44;
+}
+
+.status-in_progress {
+    background: #dce1ff;
+    color: #274190;
+}
+
+.status-resolution_claimed {
+    background: #fff0cf;
+    color: #765500;
+}
+
+.status-verifying {
+    background: #fff0cf;
+    color: #765500;
+}
+
+.status-resolved {
+    background: #bbe9db;
+    color: #234e44;
+}
+
+.status-rejected {
+    background: #ffdad6;
+    color: #93000a;
+}
+
+.toast {
+    animation: toastIn 0.25s ease forwards;
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #c5c5d3;
+    border-top-color: #3f57a6;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+</style>
+</head>
+
+<body class="min-h-screen flex bg-background text-on-background">
+
+<!-- ========================================================= -->
+<!-- MOBILE OVERLAY -->
+<!-- ========================================================= -->
+
+<div
+    id="mobileOverlay"
+    class="hidden fixed inset-0 bg-black/30 z-40 md:hidden"
+    onclick="closeMobileSidebar()">
+</div>
+
+
+<!-- ========================================================= -->
+<!-- SIDEBAR -->
+<!-- ========================================================= -->
+
+<aside
+    id="sidebar"
+    class="fixed md:sticky top-0 left-0 z-50 md:z-10
+           hidden md:flex
+           flex-col
+           h-screen
+           w-64
+           flex-shrink-0
+           bg-surface-container-low
+           border-r border-outline-variant
+           p-4">
+
+    <!-- Logo -->
+
+    <div class="mb-6 px-2 flex items-center gap-3">
+
+        <div
+            class="w-10 h-10 rounded-xl bg-primary
+                   flex items-center justify-center">
+
+            <span class="material-symbols-outlined text-white">
+                policy
+            </span>
+
+        </div>
+
+        <div>
+
+            <h1 class="font-bold text-on-surface">
+                Command Center
+            </h1>
+
+            <p class="text-xs text-on-surface-variant">
+                Kolkata Municipal
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- Navigation -->
+
+    <nav class="flex-1 space-y-1">
+
+        <a
+            href="municipalcommandcenter.html"
+            class="nav-active flex items-center gap-3 px-4 py-3 rounded-lg">
+
+            <span class="material-symbols-outlined">
+                dashboard
+            </span>
+
+            <span class="text-sm">
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <a
+            href="kolkataliveriskmap.html"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg
+                   text-on-surface-variant
+                   hover:bg-surface-container-high">
+
+            <span class="material-symbols-outlined">
+                map
+            </span>
+
+            <span class="text-sm">
+                Risk Map
+            </span>
+
+        </a>
+
+
+        <a
+            href="fieldworkerdashboard.html"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg
+                   text-on-surface-variant
+                   hover:bg-surface-container-high">
+
+            <span class="material-symbols-outlined">
+                assignment
+            </span>
+
+            <span class="text-sm">
+                Field Reports
+            </span>
+
+        </a>
+
+
+        <a
+            href="accountabilityauditlogs.html"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg
+                   text-on-surface-variant
+                   hover:bg-surface-container-high">
+
+            <span class="material-symbols-outlined">
+                history
+            </span>
+
+            <span class="text-sm">
+                Audit Logs
+            </span>
+
+        </a>
+
+    </nav>
+
+
+    <!-- Bottom -->
+
+    <div class="border-t border-outline-variant pt-4 space-y-1">
+
+        <a
+            href="#"
+            onclick="showComingSoon(event, 'Settings')"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg
+                   text-on-surface-variant
+                   hover:bg-surface-container-high">
+
+            <span class="material-symbols-outlined">
+                settings
+            </span>
+
+            <span class="text-sm">
+                Settings
+            </span>
+
+        </a>
+
+
+        <a
+            href="#"
+            onclick="showComingSoon(event, 'Support')"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg
+                   text-on-surface-variant
+                   hover:bg-surface-container-high">
+
+            <span class="material-symbols-outlined">
+                help
+            </span>
+
+            <span class="text-sm">
+                Support
+            </span>
+
+        </a>
+
+
+        <button
+            onclick="logout()"
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-lg
+                   text-error
+                   hover:bg-error-container">
+
+            <span class="material-symbols-outlined">
+                logout
+            </span>
+
+            <span class="text-sm">
+                Logout
+            </span>
+
+        </button>
+
+    </div>
+
+</aside>
+
+
+<!-- ========================================================= -->
+<!-- MAIN -->
+<!-- ========================================================= -->
+
+<main class="flex-1 min-w-0 flex flex-col">
+
+    <!-- ===================================================== -->
+    <!-- TOP BAR -->
+    <!-- ===================================================== -->
+
+    <header
+        class="sticky top-0 z-30
+               h-16
+               bg-surface
+               border-b border-outline-variant
+               flex items-center
+               justify-between
+               px-4 md:px-8">
+
+        <div class="flex items-center gap-3">
+
+            <button
+                onclick="openMobileSidebar()"
+                class="md:hidden text-on-surface-variant">
+
+                <span class="material-symbols-outlined">
+                    menu
+                </span>
+
+            </button>
+
+
+            <div>
+
+                <h2 class="text-lg md:text-xl font-semibold">
+                    Municipal Command Center
+                </h2>
+
+                <p class="hidden sm:block text-xs text-on-surface-variant">
+                    CivicTrace operational dashboard
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="flex items-center gap-3">
+
+            <!-- Search -->
+
+            <div class="relative hidden md:block">
+
+                <span
+                    class="material-symbols-outlined
+                           absolute left-3 top-1/2
+                           -translate-y-1/2
+                           text-outline">
+
+                    search
+
+                </span>
+
+                <input
+                    id="globalSearch"
+                    type="text"
+                    placeholder="Search cases..."
+                    oninput="filterCases()"
+                    class="w-64 pl-10 pr-4 py-2
+                           bg-surface-container-low
+                           border border-outline-variant
+                           rounded-full
+                           text-sm
+                           focus:outline-none
+                           focus:border-primary
+                           focus:ring-1
+                           focus:ring-primary">
+
+            </div>
+
+
+            <!-- Refresh -->
+
+            <button
+                onclick="loadDashboard()"
+                title="Refresh"
+                class="w-9 h-9 rounded-full
+                       flex items-center justify-center
+                       text-on-surface-variant
+                       hover:bg-surface-container">
+
+                <span class="material-symbols-outlined">
+                    refresh
+                </span>
+
+            </button>
+
+
+            <!-- Notifications -->
+
+            <button
+                onclick="showComingSoon(event, 'Notifications')"
+                class="w-9 h-9 rounded-full
+                       flex items-center justify-center
+                       text-on-surface-variant
+                       hover:bg-surface-container">
+
+                <span class="material-symbols-outlined">
+                    notifications
+                </span>
+
+            </button>
+
+
+            <!-- Account -->
+
+            <div
+                class="w-9 h-9 rounded-full
+                       bg-primary
+                       text-white
+                       flex items-center justify-center
+                       font-bold text-sm">
+
+                <span id="userInitial">
+                    O
+                </span>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- ===================================================== -->
+    <!-- CONTENT -->
+    <!-- ===================================================== -->
+
+    <div class="p-4 md:p-8 space-y-6 overflow-y-auto">
+
+
+        <!-- ================================================= -->
+        <!-- WELCOME -->
+        <!-- ================================================= -->
+
+        <section
+            class="flex flex-col lg:flex-row
+                   lg:items-center
+                   lg:justify-between
+                   gap-4">
+
+            <div>
+
+                <p class="text-sm text-primary font-semibold">
+                    CIVICTRACE
+                </p>
+
+                <h1
+                    id="welcomeTitle"
+                    class="text-2xl md:text-3xl font-bold mt-1">
+
+                    Municipal Operations
+
+                </h1>
+
+                <p
+                    id="welcomeSubtitle"
+                    class="text-sm text-on-surface-variant mt-1">
+
+                    Monitor civic reports, risk and resolution activity.
+
+                </p>
+
+            </div>
+
+
+            <div class="flex gap-2">
+
+                <button
+                    onclick="loadDashboard()"
+                    class="px-4 py-2
+                           bg-primary
+                           text-white
+                           rounded-lg
+                           text-sm
+                           font-semibold
+                           flex items-center gap-2
+                           hover:bg-primary-container">
+
+                    <span class="material-symbols-outlined text-[18px]">
+                        sync
+                    </span>
+
+                    Refresh Data
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- API STATUS -->
+        <!-- ================================================= -->
+
+        <div
+            id="apiStatus"
+            class="hidden px-4 py-3 rounded-lg
+                   border
+                   text-sm">
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- STATISTICS -->
+        <!-- ================================================= -->
+
+        <section
+            class="grid grid-cols-1
+                   sm:grid-cols-2
+                   xl:grid-cols-4
+                   gap-4">
+
+            <!-- Total -->
+
+            <div
+                class="bg-surface
+                       border border-outline-variant
+                       rounded-xl
+                       p-5
+                       shadow-sm">
+
+                <div class="flex justify-between">
+
+                    <div>
+
+                        <p class="text-sm text-on-surface-variant">
+                            Total Cases
+                        </p>
+
+                        <p
+                            id="totalCases"
+                            class="text-3xl font-bold mt-2">
+
+                            —
+
+                        </p>
+
+                    </div>
+
+                    <div
+                        class="w-10 h-10 rounded-lg
+                               bg-primary/10
+                               text-primary
+                               flex items-center justify-center">
+
+                        <span class="material-symbols-outlined">
+                            folder
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <p class="text-xs text-on-surface-variant mt-3">
+                    All registered civic cases
+                </p>
+
+            </div>
+
+
+            <!-- Active -->
+
+            <div
+                class="bg-surface
+                       border border-outline-variant
+                       rounded-xl
+                       p-5
+                       shadow-sm">
+
+                <div class="flex justify-between">
+
+                    <div>
+
+                        <p class="text-sm text-on-surface-variant">
+                            Active Cases
+                        </p>
+
+                        <p
+                            id="activeCases"
+                            class="text-3xl font-bold mt-2">
+
+                            —
+
+                        </p>
+
+                    </div>
+
+                    <div
+                        class="w-10 h-10 rounded-lg
+                               bg-secondary-container
+                               text-secondary
+                               flex items-center justify-center">
+
+                        <span class="material-symbols-outlined">
+                            pending_actions
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <p class="text-xs text-on-surface-variant mt-3">
+                    Currently requiring action
+                </p>
+
+            </div>
+
+
+            <!-- High Risk -->
+
+            <div
+                class="bg-surface
+                       border border-outline-variant
+                       rounded-xl
+                       p-5
+                       shadow-sm">
+
+                <div class="flex justify-between">
+
+                    <div>
+
+                        <p class="text-sm text-on-surface-variant">
+                            High Risk
+                        </p>
+
+                        <p
+                            id="highRiskCases"
+                            class="text-3xl font-bold mt-2">
+
+                            —
+
+                        </p>
+
+                    </div>
+
+                    <div
+                        class="w-10 h-10 rounded-lg
+                               bg-error-container
+                               text-error
+                               flex items-center justify-center">
+
+                        <span class="material-symbols-outlined">
+                            warning
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <p class="text-xs text-on-surface-variant mt-3">
+                    Risk score ≥ 70
+                </p>
+
+            </div>
+
+
+            <!-- Resolved -->
+
+            <div
+                class="bg-surface
+                       border border-outline-variant
+                       rounded-xl
+                       p-5
+                       shadow-sm">
+
+                <div class="flex justify-between">
+
+                    <div>
+
+                        <p class="text-sm text-on-surface-variant">
+                            Resolved
+                        </p>
+
+                        <p
+                            id="resolvedCases"
+                            class="text-3xl font-bold mt-2">
+
+                            —
+
+                        </p>
+
+                    </div>
+
+                    <div
+                        class="w-10 h-10 rounded-lg
+                               bg-tertiary-container/20
+                               text-tertiary
+                               flex items-center justify-center">
+
+                        <span class="material-symbols-outlined">
+                            task_alt
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <p class="text-xs text-on-surface-variant mt-3">
+                    Successfully verified
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- CASE MANAGEMENT -->
+        <!-- ================================================= -->
+
+        <section
+            class="bg-surface
+                   border border-outline-variant
+                   rounded-xl
+                   shadow-sm
+                   overflow-hidden">
+
+            <!-- Header -->
+
+            <div
+                class="p-4 md:p-5
+                       border-b border-outline-variant
+                       flex flex-col
+                       lg:flex-row
+                       lg:items-center
+                       lg:justify-between
+                       gap-4">
+
+                <div>
+
+                    <h2 class="text-lg font-semibold">
+                        Civic Case Management
+                    </h2>
+
+                    <p class="text-sm text-on-surface-variant mt-1">
+                        Live cases retrieved from CivicTrace backend.
+                    </p>
+
+                </div>
+
+
+                <div class="flex flex-wrap gap-2">
+
+                    <select
+                        id="statusFilter"
+                        onchange="filterCases()"
+                        class="rounded-lg
+                               border border-outline-variant
+                               bg-surface
+                               text-sm
+                               px-3 py-2">
+
+                        <option value="all">
+                            All statuses
+                        </option>
+
+                        <option value="received">
+                            Received
+                        </option>
+
+                        <option value="validated">
+                            Validated
+                        </option>
+
+                        <option value="assigned">
+                            Assigned
+                        </option>
+
+                        <option value="in_progress">
+                            In Progress
+                        </option>
+
+                        <option value="resolution_claimed">
+                            Resolution Claimed
+                        </option>
+
+                        <option value="verifying">
+                            Verifying
+                        </option>
+
+                        <option value="resolved">
+                            Resolved
+                        </option>
+
+                        <option value="rejected">
+                            Rejected
+                        </option>
+
+                    </select>
+
+
+                    <button
+                        onclick="loadDashboard()"
+                        class="px-3 py-2
+                               rounded-lg
+                               border border-outline-variant
+                               text-sm
+                               flex items-center gap-2
+                               hover:bg-surface-container-low">
+
+                        <span class="material-symbols-outlined text-[18px]">
+                            refresh
+                        </span>
+
+                        Reload
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- Loading -->
+
+            <div
+                id="casesLoading"
+                class="p-10
+                       flex items-center
+                       justify-center
+                       gap-3
+                       text-sm
+                       text-on-surface-variant">
+
+                <div class="spinner"></div>
+
+                Loading cases...
+
+            </div>
+
+
+            <!-- Empty -->
+
+            <div
+                id="casesEmpty"
+                class="hidden p-12 text-center">
+
+                <span
+                    class="material-symbols-outlined
+                           text-5xl
+                           text-outline-variant">
+
+                    inbox
+
+                </span>
+
+                <p class="font-semibold mt-3">
+                    No cases found
+                </p>
+
+                <p class="text-sm text-on-surface-variant mt-1">
+                    Try changing your filters.
+                </p>
+
+            </div>
+
+
+            <!-- Table -->
+
+            <div
+                id="casesTableWrapper"
+                class="hidden overflow-x-auto">
+
+                <table class="w-full text-left">
+
+                    <thead>
+
+                        <tr
+                            class="bg-surface-container-low
+                                   border-b border-outline-variant">
+
+                            <th
+                                class="px-5 py-4
+                                       text-xs
+                                       uppercase
+                                       tracking-wide
+                                       text-on-surface-variant">
+
+                                Case
+
+                            </th>
+
+                            <th
+                                class="px-5 py-4
+                                       text-xs
+                                       uppercase
+                                       tracking-wide
+                                       text-on-surface-variant">
+
+                                Category
+
+                            </th>
+
+                            <th
+                                class="px-5 py-4
+                                       text-xs
+                                       uppercase
+                                       tracking-wide
+                                       text-on-surface-variant">
+
+                                Location
+
+                            </th>
+
+                            <th
+                                class="px-5 py-4
+                                       text-xs
+                                       uppercase
+                                       tracking-wide
+                                       text-on-surface-variant">
+
+                                Risk
+
+                            </th>
+
+                            <th
+                                class="px-5 py-4
+                                       text-xs
+                                       uppercase
+                                       tracking-wide
+                                       text-on-surface-variant">
+
+                                Status
+
+                            </th>
+
+                            <th class="px-5 py-4"></th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody
+                        id="casesTableBody"
+                        class="divide-y divide-outline-variant">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- RECENT ACTIVITY -->
+        <!-- ================================================= -->
+
+        <section
+            class="grid grid-cols-1
+                   xl:grid-cols-2
+                   gap-6">
+
+
+            <!-- Recent cases -->
+
+            <div
+                class="bg-surface
+                       border border-outline-variant
+                       rounded-xl
+                       shadow-sm
+                       overflow-hidden">
+
+                <div
+                    class="p-5
+                           border-b border-outline-variant
+                           flex justify-between items-center">
+
+                    <div>
+
+                        <h2 class="font-semibold">
+                            Recent Cases
+                        </h2>
+
+                        <p class="text-xs text-on-surface-variant mt-1">
+                            Latest reports received
+                        </p>
+
+                    </div>
+
+                    <span
+                        class="material-symbols-outlined
+                               text-primary">
+
+                        history
+
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="recentCases"
+                    class="divide-y divide-outline-variant">
+
+                </div>
+
+            </div>
+
+
+            <!-- Quick Actions -->
+
+            <div
+                class="bg-surface
+                       border border-outline-variant
+                       rounded-xl
+                       shadow-sm
+                       p-5">
+
+                <h2 class="font-semibold">
+                    Command Center Actions
+                </h2>
+
+                <p class="text-sm text-on-surface-variant mt-1 mb-5">
+                    Access connected CivicTrace operations.
+                </p>
+
+
+                <div
+                    class="grid grid-cols-1 sm:grid-cols-2
+                           gap-3">
+
+                    <a
+                        href="kolkataliveriskmap.html"
+                        class="p-4 rounded-xl
+                               border border-outline-variant
+                               hover:bg-surface-container-low
+                               transition
+                               flex items-center gap-3">
+
+                        <div
+                            class="w-10 h-10
+                                   rounded-lg
+                                   bg-primary/10
+                                   text-primary
+                                   flex items-center justify-center">
+
+                            <span class="material-symbols-outlined">
+                                map
+                            </span>
+
+                        </div>
+
+                        <div>
+
+                            <p class="font-semibold text-sm">
+                                Risk Map
+                            </p>
+
+                            <p class="text-xs text-on-surface-variant">
+                                View civic risk zones
+                            </p>
+
+                        </div>
+
+                    </a>
+
+
+                    <a
+                        href="fieldworkerdashboard.html"
+                        class="p-4 rounded-xl
+                               border border-outline-variant
+                               hover:bg-surface-container-low
+                               transition
+                               flex items-center gap-3">
+
+                        <div
+                            class="w-10 h-10
+                                   rounded-lg
+                                   bg-secondary-container
+                                   text-secondary
+                                   flex items-center justify-center">
+
+                            <span class="material-symbols-outlined">
+                                engineering
+                            </span>
+
+                        </div>
+
+                        <div>
+
+                            <p class="font-semibold text-sm">
+                                Field Reports
+                            </p>
+
+                            <p class="text-xs text-on-surface-variant">
+                                Manage field operations
+                            </p>
+
+                        </div>
+
+                    </a>
+
+
+                    <a
+                        href="accountabilityauditlogs.html"
+                        class="p-4 rounded-xl
+                               border border-outline-variant
+                               hover:bg-surface-container-low
+                               transition
+                               flex items-center gap-3">
+
+                        <div
+                            class="w-10 h-10
+                                   rounded-lg
+                                   bg-tertiary-container/20
+                                   text-tertiary
+                                   flex items-center justify-center">
+
+                            <span class="material-symbols-outlined">
+                                history
+                            </span>
+
+                        </div>
+
+                        <div>
+
+                            <p class="font-semibold text-sm">
+                                Audit Logs
+                            </p>
+
+                            <p class="text-xs text-on-surface-variant">
+                                Track system activity
+                            </p>
+
+                        </div>
+
+                    </a>
+
+
+                    <button
+                        onclick="showComingSoon(event, 'Analytics')"
+                        class="text-left p-4 rounded-xl
+                               border border-outline-variant
+                               hover:bg-surface-container-low
+                               transition
+                               flex items-center gap-3">
+
+                        <div
+                            class="w-10 h-10
+                                   rounded-lg
+                                   bg-surface-container-high
+                                   text-primary
+                                   flex items-center justify-center">
+
+                            <span class="material-symbols-outlined">
+                                analytics
+                            </span>
+
+                        </div>
+
+                        <div>
+
+                            <p class="font-semibold text-sm">
+                                Analytics
+                            </p>
+
+                            <p class="text-xs text-on-surface-variant">
+                                Operational insights
+                            </p>
+
+                        </div>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Footer -->
+
+        <footer
+            class="pt-2 pb-6
+                   flex flex-col sm:flex-row
+                   justify-between
+                   gap-2
+                   text-xs
+                   text-on-surface-variant">
+
+            <span>
+                CivicTrace Municipal Command Center
+            </span>
+
+            <span>
+                Connected to CivicTrace API
+            </span>
+
+        </footer>
+
+    </div>
+
+</main>
+
+
+<!-- ========================================================= -->
+<!-- CASE DETAILS MODAL -->
+<!-- ========================================================= -->
+
+<div
+    id="caseModal"
+    class="hidden fixed inset-0 z-[100]
+           modal-backdrop
+           items-center
+           justify-center
+           p-4">
+
+    <div
+        class="bg-surface
+               w-full
+               max-w-5xl
+               max-h-[92vh]
+               overflow-hidden
+               rounded-2xl
+               shadow-2xl
+               border border-outline-variant
+               flex flex-col">
+
+
+        <!-- Modal Header -->
+
+        <div
+            class="p-5
+                   border-b border-outline-variant
+                   flex items-center
+                   justify-between">
+
+            <div>
+
+                <p
+                    id="modalCaseId"
+                    class="text-xs
+                           text-primary
+                           font-semibold">
+
+                </p>
+
+                <h2
+                    id="modalCaseTitle"
+                    class="text-xl
+                           font-bold
+                           mt-1">
+
+                </h2>
+
+            </div>
+
+
+            <button
+                onclick="closeCaseModal()"
+                class="w-9 h-9 rounded-full
+                       flex items-center justify-center
+                       hover:bg-surface-container">
+
+                <span class="material-symbols-outlined">
+                    close
+                </span>
+
+            </button>
+
+        </div>
+
+
+        <!-- Modal Body -->
+
+        <div
+            class="overflow-y-auto
+                   p-5
+                   space-y-6">
+
+
+            <!-- Case information -->
+
+            <div
+                class="grid grid-cols-1
+                       md:grid-cols-3
+                       gap-4">
+
+
+                <div
+                    class="md:col-span-2
+                           rounded-xl
+                           bg-surface-container-low
+                           p-4">
+
+                    <p class="text-xs text-on-surface-variant">
+                        Description
+                    </p>
+
+                    <p
+                        id="modalDescription"
+                        class="text-sm mt-2">
+
+                    </p>
+
+                </div>
+
+
+                <div
+                    class="rounded-xl
+                           bg-surface-container-low
+                           p-4">
+
+                    <p class="text-xs text-on-surface-variant">
+                        Risk Score
+                    </p>
+
+                    <p
+                        id="modalRisk"
+                        class="text-3xl font-bold mt-2">
+
+                    </p>
+
+                    <p
+                        id="modalRiskLabel"
+                        class="text-xs mt-1">
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- Metadata -->
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+                <div class="p-4 border border-outline-variant rounded-xl">
+
+                    <p class="text-xs text-on-surface-variant">
+                        Category
+                    </p>
+
+                    <p
+                        id="modalCategory"
+                        class="font-semibold text-sm mt-1">
+
+                    </p>
+
+                </div>
+
+
+                <div class="p-4 border border-outline-variant rounded-xl">
+
+                    <p class="text-xs text-on-surface-variant">
+                        Status
+                    </p>
+
+                    <div id="modalStatus" class="mt-2"></div>
+
+                </div>
+
+
+                <div class="p-4 border border-outline-variant rounded-xl">
+
+                    <p class="text-xs text-on-surface-variant">
+                        Location
+                    </p>
+
+                    <p
+                        id="modalLocation"
+                        class="font-semibold text-sm mt-1">
+
+                    </p>
+
+                </div>
+
+
+                <div class="p-4 border border-outline-variant rounded-xl">
+
+                    <p class="text-xs text-on-surface-variant">
+                        Created
+                    </p>
+
+                    <p
+                        id="modalCreated"
+                        class="font-semibold text-sm mt-1">
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- Status Control -->
+
+            <div
+                class="border border-outline-variant
+                       rounded-xl
+                       p-4">
+
+                <div
+                    class="flex flex-col
+                           md:flex-row
+                           md:items-center
+                           md:justify-between
+                           gap-3">
+
+                    <div>
+
+                        <h3 class="font-semibold">
+                            Case Status
+                        </h3>
+
+                        <p class="text-xs text-on-surface-variant">
+                            Update using the authenticated government account.
+                        </p>
+
+                    </div>
+
+
+                    <div class="flex gap-2">
+
+                        <select
+                            id="modalStatusSelect"
+                            class="rounded-lg
+                                   border border-outline-variant
+                                   bg-surface
+                                   px-3 py-2
+                                   text-sm">
+
+                            <option value="received">
+                                Received
+                            </option>
+
+                            <option value="validated">
+                                Validated
+                            </option>
+
+                            <option value="assigned">
+                                Assigned
+                            </option>
+
+                            <option value="in_progress">
+                                In Progress
+                            </option>
+
+                            <option value="resolution_claimed">
+                                Resolution Claimed
+                            </option>
+
+                            <option value="verifying">
+                                Verifying
+                            </option>
+
+                            <option value="resolved">
+                                Resolved
+                            </option>
+
+                            <option value="rejected">
+                                Rejected
+                            </option>
+
+                        </select>
+
+
+                        <button
+                            onclick="updateCaseStatus()"
+                            class="px-4 py-2
+                                   rounded-lg
+                                   bg-primary
+                                   text-white
+                                   text-sm
+                                   font-semibold
+                                   hover:bg-primary-container">
+
+                            Update
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Evidence -->
+
+            <div
+                class="border border-outline-variant
+                       rounded-xl
+                       overflow-hidden">
+
+                <div
+                    class="p-4
+                           bg-surface-container-low
+                           border-b border-outline-variant
+                           flex justify-between">
+
+                    <div>
+
+                        <h3 class="font-semibold">
+                            Evidence
+                        </h3>
+
+                        <p class="text-xs text-on-surface-variant">
+                            Evidence associated with this case.
+                        </p>
+
+                    </div>
+
+                    <span
+                        id="evidenceCount"
+                        class="text-xs
+                               bg-surface-container-high
+                               px-2 py-1
+                               rounded">
+
+                        0
+
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="evidenceList"
+                    class="p-4">
+
+                    <p class="text-sm text-on-surface-variant">
+                        Loading evidence...
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- Resolution -->
+
+            <div
+                class="border border-outline-variant
+                       rounded-xl
+                       overflow-hidden">
+
+                <div
+                    class="p-4
+                           bg-surface-container-low
+                           border-b border-outline-variant">
+
+                    <h3 class="font-semibold">
+                        Resolution
+                    </h3>
+
+                </div>
+
+
+                <div
+                    id="resolutionDetails"
+                    class="p-4">
+
+                    <p class="text-sm text-on-surface-variant">
+                        Loading resolution information...
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- Audit Trail -->
+
+            <div
+                class="border border-outline-variant
+                       rounded-xl
+                       overflow-hidden">
+
+                <div
+                    class="p-4
+                           bg-surface-container-low
+                           border-b border-outline-variant
+                           flex items-center
+                           justify-between">
+
+                    <div>
+
+                        <h3 class="font-semibold">
+                            Audit Trail
+                        </h3>
+
+                        <p class="text-xs text-on-surface-variant">
+                            Immutable activity history for this case.
+                        </p>
+
+                    </div>
+
+                    <span
+                        id="auditCount"
+                        class="text-xs
+                               bg-surface-container-high
+                               px-2 py-1
+                               rounded">
+
+                        0 Events
+
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="auditLogs"
+                    class="divide-y divide-outline-variant">
+
+                    <div class="p-5 text-sm text-on-surface-variant">
+                        Loading audit history...
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- TOAST -->
+<!-- ========================================================= -->
+
+<div
+    id="toastContainer"
+    class="fixed
+           bottom-5
+           right-5
+           z-[200]
+           space-y-2
+           max-w-sm">
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================================================= -->
+
+<script>
+
+/* ============================================================
+   CIVICTRACE FRONTEND CONFIGURATION
+   ============================================================ */
+
+const API_BASE = "http://127.0.0.1:8000/api";
+
+let allCases = [];
+let filteredCases = [];
+let selectedCaseId = null;
+
+
+/* ============================================================
+   AUTH TOKEN
+   ============================================================ */
+
+function getToken() {
+
+    return (
+        localStorage.getItem("civicTraceToken") ||
+        localStorage.getItem("officialToken") ||
+        localStorage.getItem("access_token") ||
+        localStorage.getItem("token")
+    );
+
+}
+
+
+/* ============================================================
+   AUTH HEADER
+   ============================================================ */
+
+function authHeaders() {
+
+    const token = getToken();
+
+    if (!token) {
+        return {};
+    }
+
+    return {
+        "Authorization": "Bearer " + token
+    };
+
+}
+
+
+/* ============================================================
+   API REQUEST HELPER
+   ============================================================ */
+
+async function apiRequest(
+    endpoint,
+    options = {}
+) {
+
+    const headers = {
+        ...authHeaders(),
+        ...(options.headers || {})
+    };
+
+
+    if (
+        options.body &&
+        !(options.body instanceof FormData)
+    ) {
+
+        headers["Content-Type"] =
+            "application/json";
+
+    }
+
+
+    const response = await fetch(
+        API_BASE + endpoint,
+        {
+            ...options,
+            headers
+        }
+    );
+
+
+    if (response.status === 401) {
+
+        showToast(
+            "Your government session has expired. Please login again.",
+            "error"
+        );
+
+        setTimeout(() => {
+
+            logout();
+
+        }, 1200);
+
+        throw new Error(
+            "Authentication required"
+        );
+
+    }
+
+
+    let data = null;
+
+    const contentType =
+        response.headers.get("content-type") || "";
+
+
+    if (
+        contentType.includes(
+            "application/json"
+        )
+    ) {
+
+        data = await response.json();
+
+    } else {
+
+        data = await response.text();
+
+    }
+
+
+    if (!response.ok) {
+
+        let message =
+            "Request failed";
+
+        if (
+            data &&
+            typeof data === "object" &&
+            data.detail
+        ) {
+
+            message = data.detail;
+
+        }
+
+        throw new Error(message);
+
+    }
+
+
+    return data;
+
+}
+
+
+/* ============================================================
+   INITIALIZATION
+   ============================================================ */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async function() {
+
+        const token = getToken();
+
+        if (!token) {
+
+            showToast(
+                "Please login as a government official.",
+                "error"
+            );
+
+            setTimeout(() => {
+
+                window.location.href =
+                    "login.html";
+
+            }, 1200);
+
+            return;
+
+        }
+
+
+        await loadCurrentUser();
+
+        await loadDashboard();
+
+    }
+);
+
+
+/* ============================================================
+   CURRENT USER
+   ============================================================ */
+
+async function loadCurrentUser() {
+
+    try {
+
+        const user =
+            await apiRequest(
+                "/auth/me"
+            );
+
+
+        const name =
+            user.name ||
+            user.email ||
+            "Official";
+
+
+        document.getElementById(
+            "welcomeTitle"
+        ).textContent =
+            "Welcome, " + name;
+
+
+        document.getElementById(
+            "welcomeSubtitle"
+        ).textContent =
+            `${capitalize(user.role)} · Municipal Operations`;
+
+
+        const initial =
+            name
+                .charAt(0)
+                .toUpperCase();
+
+
+        document.getElementById(
+            "userInitial"
+        ).textContent =
+            initial;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "User loading failed:",
+            error
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   LOAD DASHBOARD
+   ============================================================ */
+
+async function loadDashboard() {
+
+    setApiStatus(
+        "loading",
+        "Connecting to CivicTrace backend..."
+    );
+
+
+    try {
+
+        allCases =
+            await apiRequest(
+                "/cases"
+            );
+
+
+        if (!Array.isArray(allCases)) {
+
+            allCases = [];
+
+        }
+
+
+        calculateStatistics();
+
+        filteredCases =
+            [...allCases];
+
+        renderCases();
+
+        renderRecentCases();
+
+
+        setApiStatus(
+            "success",
+            `Connected · ${allCases.length} cases loaded`
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Dashboard error:",
+            error
+        );
+
+
+        allCases = [];
+
+        filteredCases = [];
+
+
+        renderCases();
+
+        renderRecentCases();
+
+
+        setApiStatus(
+            "error",
+            "Could not connect to CivicTrace API: " +
+            error.message
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   STATISTICS
+   ============================================================ */
+
+function calculateStatistics() {
+
+    const total =
+        allCases.length;
+
+
+    const resolved =
+        allCases.filter(
+            c => c.status === "resolved"
+        ).length;
+
+
+    const active =
+        allCases.filter(
+            c =>
+                c.status !== "resolved" &&
+                c.status !== "rejected"
+        ).length;
+
+
+    const highRisk =
+        allCases.filter(
+            c =>
+                Number(c.risk_score || 0) >= 70
+        ).length;
+
+
+    document.getElementById(
+        "totalCases"
+    ).textContent =
+        total;
+
+
+    document.getElementById(
+        "activeCases"
+    ).textContent =
+        active;
+
+
+    document.getElementById(
+        "highRiskCases"
+    ).textContent =
+        highRisk;
+
+
+    document.getElementById(
+        "resolvedCases"
+    ).textContent =
+        resolved;
+
+}
+
+
+/* ============================================================
+   CASE FILTER
+   ============================================================ */
+
+function filterCases() {
+
+    const search =
+        (
+            document.getElementById(
+                "globalSearch"
+            ).value || ""
+        )
+        .toLowerCase()
+        .trim();
+
+
+    const status =
+        document.getElementById(
+            "statusFilter"
+        ).value;
+
+
+    filteredCases =
+        allCases.filter(
+            caseItem => {
+
+                const searchable = [
+
+                    caseItem.id,
+
+                    caseItem.title,
+
+                    caseItem.description,
+
+                    caseItem.category,
+
+                    caseItem.location_text
+
+                ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase();
+
+
+                const matchesSearch =
+                    !search ||
+                    searchable.includes(search);
+
+
+                const matchesStatus =
+                    status === "all" ||
+                    caseItem.status === status;
+
+
+                return (
+                    matchesSearch &&
+                    matchesStatus
+                );
+
+            }
+        );
+
+
+    renderCases();
+
+}
+
+
+/* ============================================================
+   RENDER CASES
+   ============================================================ */
+
+function renderCases() {
+
+    const loading =
+        document.getElementById(
+            "casesLoading"
+        );
+
+    const empty =
+        document.getElementById(
+            "casesEmpty"
+        );
+
+    const wrapper =
+        document.getElementById(
+            "casesTableWrapper"
+        );
+
+    const body =
+        document.getElementById(
+            "casesTableBody"
+        );
+
+
+    loading.classList.add(
+        "hidden"
+    );
+
+
+    body.innerHTML = "";
+
+
+    if (
+        filteredCases.length === 0
+    ) {
+
+        wrapper.classList.add(
+            "hidden"
+        );
+
+        empty.classList.remove(
+            "hidden"
+        );
+
+        return;
+
+    }
+
+
+    empty.classList.add(
+        "hidden"
+    );
+
+    wrapper.classList.remove(
+        "hidden"
+    );
+
+
+    filteredCases.forEach(
+        caseItem => {
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            row.className =
+                "case-row";
+
+
+            const risk =
+                Number(
+                    caseItem.risk_score || 0
+                );
+
+
+            const riskClass =
+                risk >= 70
+                    ? "text-error"
+                    : risk >= 40
+                        ? "text-primary"
+                        : "text-tertiary";
+
+
+            row.innerHTML = `
+
+                <td class="px-5 py-4">
+
+                    <div class="font-semibold text-sm">
+                        ${escapeHtml(
+                            caseItem.id || "—"
+                        )}
+                    </div>
+
+                    <div class="text-xs
+                                text-on-surface-variant
+                                mt-1
+                                max-w-xs
+                                truncate">
+
+                        ${escapeHtml(
+                            caseItem.title || "Untitled case"
+                        )}
+
+                    </div>
+
+                </td>
+
+
+                <td class="px-5 py-4">
+
+                    <span class="text-sm">
+
+                        ${escapeHtml(
+                            caseItem.category || "—"
+                        )}
+
+                    </span>
+
+                </td>
+
+
+                <td class="px-5 py-4">
+
+                    <div class="flex items-center gap-1
+                                max-w-xs">
+
+                        <span
+                            class="material-symbols-outlined
+                                   text-[17px]
+                                   text-outline">
+
+                            location_on
+
+                        </span>
+
+                        <span
+                            class="text-sm
+                                   truncate">
+
+                            ${escapeHtml(
+                                caseItem.location_text || "—"
+                            )}
+
+                        </span>
+
+                    </div>
+
+                </td>
+
+
+                <td class="px-5 py-4">
+
+                    <span
+                        class="font-bold
+                               ${riskClass}">
+
+                        ${risk}
+
+                    </span>
+
+                </td>
+
+
+                <td class="px-5 py-4">
+
+                    ${statusBadge(
+                        caseItem.status
+                    )}
+
+                </td>
+
+
+                <td class="px-5 py-4 text-right">
+
+                    <button
+                        class="text-primary
+                               text-sm
+                               font-semibold
+                               hover:underline">
+
+                        View
+
+                    </button>
+
+                </td>
+
+            `;
+
+
+            row.addEventListener(
+                "click",
+                () => openCase(caseItem.id)
+            );
+
+
+            body.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   RECENT CASES
+   ============================================================ */
+
+function renderRecentCases() {
+
+    const container =
+        document.getElementById(
+            "recentCases"
+        );
+
+
+    if (
+        allCases.length === 0
+    ) {
+
+        container.innerHTML = `
+
+            <div class="p-6
+                        text-sm
+                        text-on-surface-variant">
+
+                No cases available.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    const recent =
+        [...allCases]
+            .sort(
+                (a, b) =>
+                    new Date(
+                        b.created_at || 0
+                    ) -
+                    new Date(
+                        a.created_at || 0
+                    )
+            )
+            .slice(0, 6);
+
+
+    container.innerHTML = "";
+
+
+    recent.forEach(
+        caseItem => {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+
+            div.className =
+                "p-4 hover:bg-surface-container-low cursor-pointer";
+
+
+            div.innerHTML = `
+
+                <div class="flex items-start
+                            justify-between
+                            gap-3">
+
+                    <div class="min-w-0">
+
+                        <p class="font-semibold text-sm truncate">
+
+                            ${escapeHtml(
+                                caseItem.title || "Untitled case"
+                            )}
+
+                        </p>
+
+                        <p class="text-xs
+                                  text-on-surface-variant
+                                  mt-1">
+
+                            ${escapeHtml(
+                                caseItem.id || ""
+                            )}
+
+                            ·
+
+                            ${escapeHtml(
+                                caseItem.location_text || "Unknown location"
+                            )}
+
+                        </p>
+
+                    </div>
+
+                    ${statusBadge(
+                        caseItem.status
+                    )}
+
+                </div>
+
+            `;
+
+
+            div.addEventListener(
+                "click",
+                () =>
+                    openCase(
+                        caseItem.id
+                    )
+            );
+
+
+            container.appendChild(
+                div
+            );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   OPEN CASE
+   ============================================================ */
+
+async function openCase(
+    caseId
+) {
+
+    selectedCaseId =
+        caseId;
+
+
+    const modal =
+        document.getElementById(
+            "caseModal"
+        );
+
+
+    modal.classList.remove(
+        "hidden"
+    );
+
+    modal.classList.add(
+        "flex"
+    );
+
+
+    document.getElementById(
+        "modalCaseId"
+    ).textContent =
+        caseId;
+
+
+    document.getElementById(
+        "modalCaseTitle"
+    ).textContent =
+        "Loading case...";
+
+
+    document.getElementById(
+        "modalDescription"
+    ).textContent =
+        "Loading...";
+
+
+    document.getElementById(
+        "evidenceList"
+    ).innerHTML =
+        `<p class="text-sm text-on-surface-variant">
+            Loading evidence...
+        </p>`;
+
+
+    document.getElementById(
+        "auditLogs"
+    ).innerHTML =
+        `<div class="p-5 text-sm text-on-surface-variant">
+            Loading audit history...
+        </div>`;
+
+
+    try {
+
+        const [
+            caseData,
+            evidence,
+            resolution,
+            logs
+        ] =
+            await Promise.all([
+
+                apiRequest(
+                    `/cases/${encodeURIComponent(caseId)}`
+                ),
+
+                apiRequest(
+                    `/cases/${encodeURIComponent(caseId)}/evidence`
+                ),
+
+                apiRequest(
+                    `/cases/${encodeURIComponent(caseId)}/resolution`
+                ),
+
+                apiRequest(
+                    `/cases/${encodeURIComponent(caseId)}/audit-logs`
+                )
+
+            ]);
+
+
+        populateCaseModal(
+            caseData,
+            evidence,
+            resolution,
+            logs
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Case details error:",
+            error
+        );
+
+
+        showToast(
+            "Unable to load complete case details: " +
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   POPULATE CASE MODAL
+   ============================================================ */
+
+function populateCaseModal(
+    caseData,
+    evidence,
+    resolution,
+    logs
+) {
+
+    document.getElementById(
+        "modalCaseTitle"
+    ).textContent =
+        caseData.title ||
+        "Untitled case";
+
+
+    document.getElementById(
+        "modalDescription"
+    ).textContent =
+        caseData.description ||
+        "No description provided.";
+
+
+    document.getElementById(
+        "modalCategory"
+    ).textContent =
+        caseData.category ||
+        "—";
+
+
+    document.getElementById(
+        "modalLocation"
+    ).textContent =
+        caseData.location_text ||
+        "—";
+
+
+    document.getElementById(
+        "modalCreated"
+    ).textContent =
+        formatDate(
+            caseData.created_at
+        );
+
+
+    const risk =
+        Number(
+            caseData.risk_score || 0
+        );
+
+
+    document.getElementById(
+        "modalRisk"
+    ).textContent =
+        risk;
+
+
+    document.getElementById(
+        "modalRisk"
+    ).className =
+        "text-3xl font-bold mt-2 " +
+        (
+            risk >= 70
+                ? "text-error"
+                : risk >= 40
+                    ? "text-primary"
+                    : "text-tertiary"
+        );
+
+
+    document.getElementById(
+        "modalRiskLabel"
+    ).textContent =
+        risk >= 70
+            ? "High risk"
+            : risk >= 40
+                ? "Moderate risk"
+                : "Low risk";
+
+
+    document.getElementById(
+        "modalStatus"
+    ).innerHTML =
+        statusBadge(
+            caseData.status
+        );
+
+
+    document.getElementById(
+        "modalStatusSelect"
+    ).value =
+        caseData.status;
+
+
+    renderEvidence(
+        evidence || []
+    );
+
+
+    renderResolution(
+        resolution
+    );
+
+
+    renderAuditLogs(
+        logs || []
+    );
+
+}
+
+
+/* ============================================================
+   EVIDENCE
+   ============================================================ */
+
+function renderEvidence(
+    evidence
+) {
+
+    document.getElementById(
+        "evidenceCount"
+    ).textContent =
+        evidence.length;
+
+
+    const container =
+        document.getElementById(
+            "evidenceList"
+        );
+
+
+    if (
+        evidence.length === 0
+    ) {
+
+        container.innerHTML = `
+
+            <div class="text-sm
+                        text-on-surface-variant
+                        py-3">
+
+                No evidence has been recorded for this case.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    container.innerHTML = `
+
+        <div class="grid
+                    grid-cols-1
+                    sm:grid-cols-2
+                    lg:grid-cols-3
+                    gap-3">
+
+            ${evidence.map(
+                item => `
+
+                    <div
+                        class="border
+                               border-outline-variant
+                               rounded-xl
+                               overflow-hidden">
+
+                        ${
+                            item.url
+                                ? `
+                                <img
+                                    src="${getFileUrl(item.url)}"
+                                    alt="Evidence"
+                                    class="w-full
+                                           h-40
+                                           object-cover
+                                           bg-surface-container-low"
+                                    onerror="this.style.display='none'"
+                                >
+                                `
+                                : ""
+                        }
+
+                        <div class="p-3">
+
+                            <p class="text-sm font-semibold">
+
+                                ${escapeHtml(
+                                    item.type || "Evidence"
+                                )}
+
+                            </p>
+
+                            <p class="text-xs
+                                      text-on-surface-variant
+                                      mt-1">
+
+                                ${formatDate(
+                                    item.created_at
+                                )}
+
+                            </p>
+
+                            ${
+                                item.url
+                                    ? `
+                                    <a
+                                        href="${getFileUrl(item.url)}"
+                                        target="_blank"
+                                        class="text-xs
+                                               text-primary
+                                               font-semibold
+                                               hover:underline
+                                               inline-block
+                                               mt-2">
+
+                                        Open evidence
+
+                                    </a>
+                                    `
+                                    : ""
+                            }
+
+                        </div>
+
+                    </div>
+
+                `
+            ).join("")}
+
+        </div>
+
+    `;
+
+}
+
+
+/* ============================================================
+   RESOLUTION
+   ============================================================ */
+
+function renderResolution(
+    resolution
+) {
+
+    const container =
+        document.getElementById(
+            "resolutionDetails"
+        );
+
+
+    if (
+        !resolution ||
+        (
+            !resolution.claim &&
+            !resolution.verification
+        )
+    ) {
+
+        container.innerHTML = `
+
+            <div class="text-sm
+                        text-on-surface-variant">
+
+                No resolution activity has been recorded.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    let html = "";
+
+
+    if (resolution.claim) {
+
+        html += `
+
+            <div class="mb-4">
+
+                <p class="text-xs
+                          text-on-surface-variant">
+
+                    Resolution Claim
+
+                </p>
+
+                <p class="text-sm mt-1">
+
+                    ${escapeHtml(
+                        resolution.claim.description ||
+                        "No description provided."
+                    )}
+
+                </p>
+
+                <p class="text-xs
+                          text-on-surface-variant
+                          mt-2">
+
+                    Worker ID:
+                    ${escapeHtml(
+                        String(
+                            resolution.claim.worker_id
+                        )
+                    )}
+
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+
+    if (resolution.verification) {
+
+        html += `
+
+            <div
+                class="border-t
+                       border-outline-variant
+                       pt-4">
+
+                <p class="text-xs
+                          text-on-surface-variant">
+
+                    Verification
+
+                </p>
+
+                <div class="mt-2">
+
+                    <span
+                        class="inline-flex
+                               px-2 py-1
+                               rounded
+                               text-xs
+                               font-semibold
+                               ${
+                                   resolution.verification.decision === "accepted"
+                                       ? "bg-secondary-container text-on-secondary-container"
+                                       : "bg-error-container text-error"
+                               }">
+
+                        ${escapeHtml(
+                            resolution.verification.decision
+                        )}
+
+                    </span>
+
+                </div>
+
+                ${
+                    resolution.verification.notes
+                        ? `
+                        <p class="text-sm mt-3">
+
+                            ${escapeHtml(
+                                resolution.verification.notes
+                            )}
+
+                        </p>
+                        `
+                        : ""
+                }
+
+                <p class="text-xs
+                          text-on-surface-variant
+                          mt-2">
+
+                    Verified by:
+                    ${escapeHtml(
+                        String(
+                            resolution.verification.verifier_id
+                        )
+                    )}
+
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+
+    container.innerHTML =
+        html;
+
+}
+
+
+/* ============================================================
+   AUDIT LOGS
+   ============================================================ */
+
+function renderAuditLogs(
+    logs
+) {
+
+    document.getElementById(
+        "auditCount"
+    ).textContent =
+        `${logs.length} Event${logs.length === 1 ? "" : "s"}`;
+
+
+    const container =
+        document.getElementById(
+            "auditLogs"
+        );
+
+
+    if (
+        logs.length === 0
+    ) {
+
+        container.innerHTML = `
+
+            <div class="p-5
+                        text-sm
+                        text-on-surface-variant">
+
+                No audit events recorded for this case.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+        logs.map(
+            log => `
+
+                <div
+                    class="p-4
+                           hover:bg-surface-container-low">
+
+                    <div
+                        class="flex
+                               flex-col
+                               md:flex-row
+                               md:items-start
+                               gap-4">
+
+                        <div
+                            class="w-9 h-9
+                                   rounded-full
+                                   bg-primary/10
+                                   text-primary
+                                   flex items-center
+                                   justify-center
+                                   flex-shrink-0">
+
+                            <span
+                                class="material-symbols-outlined
+                                       text-[19px]">
+
+                                ${auditIcon(
+                                    log.actor_type
+                                )}
+
+                            </span>
+
+                        </div>
+
+
+                        <div class="flex-1 min-w-0">
+
+                            <div
+                                class="flex
+                                       flex-wrap
+                                       items-center
+                                       gap-2">
+
+                                <span
+                                    class="font-semibold
+                                           text-sm">
+
+                                    ${formatAction(
+                                        log.action
+                                    )}
+
+                                </span>
+
+                                <span
+                                    class="text-xs
+                                           px-2 py-1
+                                           rounded
+                                           bg-surface-container-high
+                                           text-on-surface-variant">
+
+                                    ${escapeHtml(
+                                        log.actor_type || "system"
+                                    )}
+
+                                </span>
+
+                            </div>
+
+
+                            <p
+                                class="text-xs
+                                       text-on-surface-variant
+                                       mt-1">
+
+                                ${
+                                    log.actor_id !== null &&
+                                    log.actor_id !== undefined
+                                        ? "Actor ID: " +
+                                          escapeHtml(
+                                              String(log.actor_id)
+                                          )
+                                        : "System event"
+                                }
+
+                            </p>
+
+
+                            ${
+                                log.metadata
+                                    ? `
+                                    <div
+                                        class="mt-3
+                                               p-3
+                                               rounded-lg
+                                               bg-surface-container-low">
+
+                                        <p
+                                            class="text-xs
+                                                   font-semibold
+                                                   mb-1">
+
+                                            Event details
+
+                                        </p>
+
+                                        <pre
+                                            class="text-xs
+                                                   whitespace-pre-wrap
+                                                   break-words
+                                                   text-on-surface-variant">
+
+${escapeHtml(
+    JSON.stringify(
+        log.metadata,
+        null,
+        2
+    )
+)}
+
+                                        </pre>
+
+                                    </div>
+                                    `
+                                    : ""
+                            }
+
+                        </div>
+
+
+                        <div
+                            class="text-xs
+                                   text-on-surface-variant
+                                   whitespace-nowrap">
+
+                            ${formatDate(
+                                log.timestamp
+                            )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            `
+        ).join("");
+
+}
+
+
+/* ============================================================
+   UPDATE CASE STATUS
+   ============================================================ */
+
+async function updateCaseStatus() {
+
+    if (!selectedCaseId) {
+
+        return;
+
+    }
+
+
+    const newStatus =
+        document.getElementById(
+            "modalStatusSelect"
+        ).value;
+
+
+    try {
+
+        await apiRequest(
+            `/cases/${encodeURIComponent(selectedCaseId)}`,
+            {
+                method: "PATCH",
+
+                body: JSON.stringify({
+                    status: newStatus
+                })
+            }
+        );
+
+
+        showToast(
+            "Case status updated successfully.",
+            "success"
+        );
+
+
+        await loadDashboard();
+
+        await openCase(
+            selectedCaseId
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Status update failed:",
+            error
+        );
+
+
+        showToast(
+            "Could not update case: " +
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   STATUS BADGE
+   ============================================================ */
+
+function statusBadge(
+    status
+) {
+
+    const safeStatus =
+        status || "unknown";
+
+
+    const label =
+        safeStatus
+            .replaceAll(
+                "_",
+                " "
+            )
+            .replace(
+                /\b\w/g,
+                char =>
+                    char.toUpperCase()
+            );
+
+
+    return `
+
+        <span
+            class="inline-flex
+                   px-2.5 py-1
+                   rounded-full
+                   text-xs
+                   font-semibold
+                   status-${escapeHtml(
+                       safeStatus
+                   )}">
+
+            ${escapeHtml(
+                label
+            )}
+
+        </span>
+
+    `;
+
+}
+
+
+/* ============================================================
+   AUDIT ICON
+   ============================================================ */
+
+function auditIcon(
+    actorType
+) {
+
+    if (
+        actorType === "citizen"
+    ) {
+
+        return "person";
+
+    }
+
+
+    if (
+        actorType === "gov_user"
+    ) {
+
+        return "admin_panel_settings";
+
+    }
+
+
+    if (
+        actorType === "system"
+    ) {
+
+        return "memory";
+
+    }
+
+
+    return "history";
+
+}
+
+
+/* ============================================================
+   ACTION FORMATTER
+   ============================================================ */
+
+function formatAction(
+    action
+) {
+
+    if (!action) {
+
+        return "System event";
+
+    }
+
+
+    const labels = {
+
+        "case.created":
+            "Report Submitted",
+
+        "case.updated":
+            "Case Updated",
+
+        "case.assigned":
+            "Case Assigned",
+
+        "evidence.created":
+            "Evidence Created",
+
+        "evidence.uploaded":
+            "Evidence Uploaded",
+
+        "resolution_claim.submitted":
+            "Resolution Claimed",
+
+        "resolution_verification.performed":
+            "Resolution Verified",
+
+        "user.login":
+            "Government Login",
+
+        "user.created":
+            "User Created",
+
+        "citizen_token.created":
+            "Citizen Token Created"
+
+    };
+
+
+    return labels[action] ||
+        action
+            .replaceAll(
+                ".",
+                " · "
+            )
+            .replaceAll(
+                "_",
+                " "
+            );
+
+}
+
+
+/* ============================================================
+   FILE URL
+   ============================================================ */
+
+function getFileUrl(
+    url
+) {
+
+    if (!url) {
+
+        return "";
+
+    }
+
+
+    if (
+        url.startsWith(
+            "http://"
+        ) ||
+        url.startsWith(
+            "https://"
+        )
+    ) {
+
+        return url;
+
+    }
+
+
+    return (
+        "http://127.0.0.1:8000" +
+        (
+            url.startsWith("/")
+                ? url
+                : "/" + url
+        )
+    );
+
+}
+
+
+/* ============================================================
+   DATE FORMAT
+   ============================================================ */
+
+function formatDate(
+    value
+) {
+
+    if (!value) {
+
+        return "—";
+
+    }
+
+
+    const date =
+        new Date(value);
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return String(value);
+
+    }
+
+
+    return date.toLocaleString(
+        "en-IN",
+        {
+            dateStyle: "medium",
+            timeStyle: "short",
+            timeZone: "Asia/Kolkata"
+        }
+    );
+
+}
+
+
+/* ============================================================
+   CAPITALIZE
+   ============================================================ */
+
+function capitalize(
+    value
+) {
+
+    if (!value) {
+
+        return "";
+
+    }
+
+
+    return value
+        .charAt(0)
+        .toUpperCase() +
+        value.slice(1);
+
+}
+
+
+/* ============================================================
+   ESCAPE HTML
+   ============================================================ */
+
+function escapeHtml(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    return String(value)
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
+
+
+/* ============================================================
+   API STATUS
+   ============================================================ */
+
+function setApiStatus(
+    type,
+    message
+) {
+
+    const element =
+        document.getElementById(
+            "apiStatus"
+        );
+
+
+    element.classList.remove(
+        "hidden"
+    );
+
+
+    element.className =
+        "px-4 py-3 rounded-lg border text-sm";
+
+
+    if (
+        type === "success"
+    ) {
+
+        element.classList.add(
+            "bg-secondary-container",
+            "text-on-secondary-container",
+            "border-secondary"
+        );
+
+    }
+
+    else if (
+        type === "error"
+    ) {
+
+        element.classList.add(
+            "bg-error-container",
+            "text-error",
+            "border-error"
+        );
+
+    }
+
+    else {
+
+        element.classList.add(
+            "bg-surface-container-low",
+            "text-on-surface-variant",
+            "border-outline-variant"
+        );
+
+    }
+
+
+    element.textContent =
+        message;
+
+}
+
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+
+function showToast(
+    message,
+    type = "info"
+) {
+
+    const container =
+        document.getElementById(
+            "toastContainer"
+        );
+
+
+    const toast =
+        document.createElement(
+            "div"
+        );
+
+
+    toast.className =
+        "toast px-4 py-3 rounded-xl shadow-lg border bg-surface text-sm flex items-start gap-3";
+
+
+    const icon =
+        type === "success"
+            ? "check_circle"
+            : type === "error"
+                ? "error"
+                : "info";
+
+
+    toast.innerHTML = `
+
+        <span
+            class="material-symbols-outlined
+                   ${
+                       type === "error"
+                           ? "text-error"
+                           : "text-primary"
+                   }">
+
+            ${icon}
+
+        </span>
+
+        <span class="flex-1">
+            ${escapeHtml(message)}
+        </span>
+
+    `;
+
+
+    container.appendChild(
+        toast
+    );
+
+
+    setTimeout(
+        () => {
+
+            toast.remove();
+
+        },
+        4000
+    );
+
+}
+
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+
+function logout() {
+
+    localStorage.removeItem(
+        "civicTraceToken"
+    );
+
+    localStorage.removeItem(
+        "civicTraceRole"
+    );
+
+    localStorage.removeItem(
+        "civicTraceEmail"
+    );
+
+    localStorage.removeItem(
+        "officialToken"
+    );
+
+    localStorage.removeItem(
+        "civicTraceOfficialEmail"
+    );
+
+    localStorage.removeItem(
+        "access_token"
+    );
+
+    localStorage.removeItem(
+        "token"
+    );
+
+
+    window.location.href =
+        "login.html";
+
+}
+
+
+/* ============================================================
+   MOBILE SIDEBAR
+   ============================================================ */
+
+function openMobileSidebar() {
+
+    const sidebar =
+        document.getElementById(
+            "sidebar"
+        );
+
+    const overlay =
+        document.getElementById(
+            "mobileOverlay"
+        );
+
+
+    sidebar.classList.remove(
+        "hidden"
+    );
+
+    sidebar.classList.add(
+        "flex"
+    );
+
+    overlay.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+function closeMobileSidebar() {
+
+    const sidebar =
+        document.getElementById(
+            "sidebar"
+        );
+
+    const overlay =
+        document.getElementById(
+            "mobileOverlay"
+        );
+
+
+    if (
+        window.innerWidth <
+        768
+    ) {
+
+        sidebar.classList.add(
+            "hidden"
+        );
+
+        sidebar.classList.remove(
+            "flex"
+        );
+
+    }
+
+
+    overlay.classList.add(
+        "hidden"
+    );
+
+}
+
+
+/* ============================================================
+   COMING SOON
+   ============================================================ */
+
+function showComingSoon(
+    event,
+    feature
+) {
+
+    event.preventDefault();
+
+    showToast(
+        feature +
+        " is not connected to a backend endpoint yet.",
+        "info"
+    );
+
+}
+
+
+/* ============================================================
+   MODAL CLOSE
+   ============================================================ */
+
+function closeCaseModal() {
+
+    const modal =
+        document.getElementById(
+            "caseModal"
+        );
+
+
+    modal.classList.add(
+        "hidden"
+    );
+
+    modal.classList.remove(
+        "flex"
+    );
+
+
+    selectedCaseId =
+        null;
+
+}
+
+
+/* ============================================================
+   CLOSE MODAL ON BACKDROP
+   ============================================================ */
+
+document.getElementById(
+    "caseModal"
+).addEventListener(
+    "click",
+    function(event) {
+
+        if (
+            event.target === this
+        ) {
+
+            closeCaseModal();
+
+        }
+
+    }
+);
+
+
+/* ============================================================
+   ESC KEY
+   ============================================================ */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            closeCaseModal();
+
+        }
+
+    }
+);
+
+
+/* ============================================================
+   MOBILE RESIZE
+   ============================================================ */
+
+window.addEventListener(
+    "resize",
+    function() {
+
+        if (
+            window.innerWidth >= 768
+        ) {
+
+            const sidebar =
+                document.getElementById(
+                    "sidebar"
+                );
+
+            const overlay =
+                document.getElementById(
+                    "mobileOverlay"
+                );
+
+
+            sidebar.classList.remove(
+                "hidden"
+            );
+
+            sidebar.classList.add(
+                "flex"
+            );
+
+            overlay.classList.add(
+                "hidden"
+            );
+
+        }
+
+    }
+);
+
+
+/* ============================================================
+   AUTO REFRESH
+   ============================================================ */
+
+setInterval(
+    () => {
+
+        if (
+            document.visibilityState ===
+            "visible"
+        ) {
+
+            loadDashboard();
+
+        }
+
+    },
+    30000
+);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+
+    <title>CivicTrace - Secure Access</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    />
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&display=swap"
+        rel="stylesheet"
+    />
+
+    <!-- Tailwind Configuration -->
+    <script id="tailwind-config">
+
+        tailwind.config = {
+            darkMode: "class",
+
+            theme: {
+
+                extend: {
+
+                    colors: {
+
+                        "on-tertiary-container": "#000604",
+                        "on-primary-container": "#fffbff",
+                        "error-container": "#ffdad6",
+                        "surface-container-highest": "#dde1fd",
+                        "on-error": "#ffffff",
+                        "on-surface-variant": "#444651",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#406b5f",
+                        "inverse-primary": "#b5c4ff",
+                        "surface-container-high": "#e4e7ff",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#274190",
+                        "inverse-on-surface": "#eff0ff",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#234e44",
+                        "on-primary-fixed": "#00164e",
+                        "error": "#ba1a1a",
+                        "background": "#faf8ff",
+                        "on-tertiary-fixed": "#002117",
+                        "surface-container-low": "#f3f2ff",
+                        "outline": "#757682",
+                        "tertiary-fixed": "#80f8d1",
+                        "surface-variant": "#dde1fd",
+                        "surface-bright": "#faf8ff",
+                        "surface": "#faf8ff",
+                        "surface-dim": "#d4d9f4",
+                        "on-secondary-fixed": "#00201a",
+                        "tertiary-fixed-dim": "#62dbb5",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#006b53",
+                        "surface-container": "#ebedff",
+                        "inverse-surface": "#2a2f44",
+                        "primary": "#3f57a6",
+                        "secondary": "#3c665b",
+                        "secondary-fixed": "#beecde",
+                        "outline-variant": "#c5c5d3",
+                        "on-tertiary-fixed-variant": "#00513e",
+                        "on-surface": "#151b2e",
+                        "primary-fixed": "#dce1ff",
+                        "surface-tint": "#415aa9",
+                        "on-background": "#151b2e",
+                        "tertiary-container": "#008769",
+                        "secondary-container": "#bbe9db",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#5870c1",
+                        "secondary-fixed-dim": "#a3d0c2"
+                    },
+
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+
+                    spacing: {
+                        "unit-12": "3rem",
+                        "margin-mobile": "16px",
+                        "unit-1": "0.25rem",
+                        "base": "4px",
+                        "gutter": "24px",
+                        "unit-8": "2rem",
+                        "unit-4": "1rem",
+                        "unit-2": "0.5rem",
+                        "container-max": "1280px",
+                        "unit-6": "1.5rem"
+                    },
+
+                    fontFamily: {
+                        "headline-md": ["Inter"],
+                        "tabular-nums": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+
+                    fontSize: {
+
+                        "headline-md": [
+                            "20px",
+                            {
+                                lineHeight: "28px",
+                                fontWeight: "600"
+                            }
+                        ],
+
+                        "tabular-nums": [
+                            "14px",
+                            {
+                                lineHeight: "20px",
+                                fontWeight: "400"
+                            }
+                        ],
+
+                        "body-md": [
+                            "16px",
+                            {
+                                lineHeight: "24px",
+                                fontWeight: "400"
+                            }
+                        ],
+
+                        "label-sm": [
+                            "12px",
+                            {
+                                lineHeight: "16px",
+                                fontWeight: "500"
+                            }
+                        ],
+
+                        "headline-lg": [
+                            "28px",
+                            {
+                                lineHeight: "36px",
+                                letterSpacing: "-0.01em",
+                                fontWeight: "600"
+                            }
+                        ],
+
+                        "label-md": [
+                            "14px",
+                            {
+                                lineHeight: "16px",
+                                letterSpacing: "0.05em",
+                                fontWeight: "600"
+                            }
+                        ],
+
+                        "body-sm": [
+                            "14px",
+                            {
+                                lineHeight: "20px",
+                                fontWeight: "400"
+                            }
+                        ],
+
+                        "headline-lg-mobile": [
+                            "24px",
+                            {
+                                lineHeight: "32px",
+                                fontWeight: "600"
+                            }
+                        ],
+
+                        "headline-xl": [
+                            "36px",
+                            {
+                                lineHeight: "44px",
+                                letterSpacing: "-0.02em",
+                                fontWeight: "700"
+                            }
+                        ],
+
+                        "body-lg": [
+                            "18px",
+                            {
+                                lineHeight: "28px",
+                                fontWeight: "400"
+                            }
+                        ]
+                    }
+                }
+            }
+        };
+
+    </script>
+
+</head>
+
+
+<body class="bg-background text-on-background min-h-screen flex items-center justify-center p-gutter font-body-md antialiased">
+
+
+    <!-- =========================================
+         MAIN CONTAINER
+    ========================================== -->
+
+    <div
+        class="w-full max-w-lg bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-8 shadow-sm"
+    >
+
+
+        <!-- =========================================
+             HEADER
+        ========================================== -->
+
+        <div class="text-center mb-unit-8">
+
+            <div
+                class="inline-flex items-center justify-center w-12 h-12 bg-surface-container-high rounded-full mb-unit-4"
+            >
+
+                <span
+                    class="material-symbols-outlined text-primary text-2xl"
+                >
+                    shield
+                </span>
+
+            </div>
+
+
+            <h1
+                class="text-headline-lg font-headline-lg text-on-surface mb-unit-2"
+            >
+                Secure Access
+            </h1>
+
+
+            <p
+                class="text-body-sm font-body-sm text-on-surface-variant"
+            >
+                Participate anonymously. Manage responsibly.
+            </p>
+
+        </div>
+
+
+
+        <!-- =========================================
+             TABS
+        ========================================== -->
+
+        <div
+            class="flex border-b border-outline-variant mb-unit-6"
+        >
+
+            <button
+                type="button"
+                id="tab-citizen"
+                onclick="switchTab('citizen')"
+                class="flex-1 pb-unit-2 text-label-md font-label-md text-primary border-b-2 border-primary font-bold transition-colors"
+            >
+                CITIZEN ACCESS
+            </button>
+
+
+            <button
+                type="button"
+                id="tab-gov"
+                onclick="switchTab('gov')"
+                class="flex-1 pb-unit-2 text-label-md font-label-md text-on-surface-variant border-b-2 border-transparent font-medium hover:text-primary transition-colors"
+            >
+                GOVERNMENT ACCESS
+            </button>
+
+        </div>
+
+
+
+        <!-- =========================================
+             CITIZEN ACCESS
+        ========================================== -->
+
+        <div
+            class="space-y-unit-6"
+            id="section-citizen"
+        >
+
+
+            <!-- Generate Token -->
+
+            <div
+                class="bg-surface-container p-unit-4 rounded-lg border border-outline-variant/50"
+            >
+
+                <p
+                    class="text-body-sm font-body-sm text-on-surface-variant mb-unit-4"
+                >
+                    Your identity stays hidden from public case records through token-based case access.
+                </p>
+
+
+                <button
+                    type="button"
+                    class="w-full h-11 bg-primary text-on-primary rounded-lg text-label-md font-label-md font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                    id="btn-generate-token"
+                >
+
+                    <span
+                        class="material-symbols-outlined text-lg"
+                    >
+                        key
+                    </span>
+
+                    Generate Citizen Access Token
+
+                </button>
+
+
+
+                <!-- Token Display -->
+
+                <div
+                    class="hidden mt-unit-4 p-unit-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center"
+                    id="token-display"
+                >
+
+                    <span
+                        class="text-label-sm font-label-sm text-on-surface-variant mb-1 block uppercase"
+                    >
+                        Your Secure Token
+                    </span>
+
+
+                    <span
+                        class="text-headline-md font-tabular-nums tracking-widest text-primary font-bold"
+                        id="generated-token-text"
+                    >
+                        -
+                    </span>
+
+
+                    <button
+                        type="button"
+                        class="mt-2 text-label-sm font-label-sm text-secondary hover:underline flex items-center justify-center gap-1 mx-auto"
+                        onclick="copyToken()"
+                    >
+
+                        <span
+                            class="material-symbols-outlined text-sm"
+                        >
+                            content_copy
+                        </span>
+
+                        Copy to clipboard
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Existing Token -->
+
+            <div
+                class="pt-unit-2 border-t border-outline-variant/30"
+            >
+
+                <h3
+                    class="text-label-md font-label-md text-on-surface mb-unit-2"
+                >
+                    Already have a CivicTrace token?
+                </h3>
+
+
+                <div class="flex gap-2">
+
+                    <input
+                        id="existing-token"
+                        class="flex-1 h-11 bg-surface-container-lowest border border-outline-variant rounded-lg px-unit-4 text-body-md font-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none uppercase font-tabular-nums"
+                        placeholder="Enter Token (e.g., CT-XXXX-XXXX)"
+                        type="text"
+                    />
+
+
+                    <button
+                        type="button"
+                        id="btn-access-reports"
+                        class="h-11 px-unit-6 bg-surface-container-high text-primary border border-outline-variant rounded-lg text-label-md font-label-md hover:bg-surface-container-highest transition-colors font-bold whitespace-nowrap"
+                    >
+                        Access Reports
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =========================================
+             GOVERNMENT ACCESS
+        ========================================== -->
+
+        <div
+            class="hidden space-y-unit-6"
+            id="section-gov"
+        >
+
+
+            <div>
+
+                <h2
+                    class="text-headline-md font-headline-md text-on-surface mb-1"
+                >
+                    Municipal Login
+                </h2>
+
+
+                <p
+                    class="text-body-sm font-body-sm text-on-surface-variant"
+                >
+                    Authorized personnel only.
+                </p>
+
+            </div>
+
+
+
+            <!-- Government Login Form -->
+
+            <form
+                id="gov-login-form"
+                class="space-y-unit-4"
+            >
+
+                <div>
+
+                    <label
+                        for="gov-email"
+                        class="block text-label-sm font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider"
+                    >
+                        Official Email / Government ID
+                    </label>
+
+
+                    <input
+                        id="gov-email"
+                        class="w-full h-11 bg-surface-container-lowest border border-outline-variant rounded-lg px-unit-4 text-body-md font-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                        required
+                        type="email"
+                        placeholder="official@gov.example"
+                    />
+
+                </div>
+
+
+
+                <div>
+
+                    <label
+                        for="gov-password"
+                        class="block text-label-sm font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider"
+                    >
+                        Password
+                    </label>
+
+
+                    <input
+                        id="gov-password"
+                        class="w-full h-11 bg-surface-container-lowest border border-outline-variant rounded-lg px-unit-4 text-body-md font-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                        required
+                        type="password"
+                        placeholder="Enter password"
+                    />
+
+                </div>
+
+
+
+                <div
+                    id="gov-login-error"
+                    class="hidden bg-error-container text-on-error-container p-3 rounded-lg text-body-sm"
+                >
+                </div>
+
+
+
+                <button
+                    id="gov-login-button"
+                    class="w-full h-11 bg-primary text-on-primary rounded-lg text-label-md font-label-md font-bold hover:bg-primary/90 transition-colors mt-unit-2"
+                    type="submit"
+                >
+                    Sign In to Dashboard
+                </button>
+
+
+                <div class="text-center pt-unit-2">
+
+                    <a
+                        class="text-label-sm font-label-sm text-secondary hover:underline"
+                        href="#"
+                        onclick="return false;"
+                    >
+                        Forgot Password? / IT Support
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+
+
+        <!-- =========================================
+             FOOTER INFO
+        ========================================== -->
+
+        <div
+            class="mt-unit-8 pt-unit-6 border-t border-outline-variant"
+        >
+
+            <div
+                class="bg-surface-container-low p-unit-4 rounded-lg flex items-start gap-3 mb-unit-6"
+            >
+
+                <span
+                    class="material-symbols-outlined text-outline mt-0.5"
+                >
+                    info
+                </span>
+
+
+                <p
+                    class="text-label-sm font-label-sm text-on-surface-variant leading-relaxed"
+                >
+
+                    <strong>
+                        Privacy &amp; Access:
+                    </strong>
+
+                    CivicTrace utilizes zero-knowledge token architecture for citizens, ensuring complete anonymity when reporting civic issues. Municipal access is strictly governed by role-based authentication and audit logging.
+
+                </p>
+
+            </div>
+
+
+
+            <a
+                class="inline-flex items-center gap-1 text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors"
+                href="home.html"
+            >
+
+                <span
+                    class="material-symbols-outlined text-sm"
+                >
+                    arrow_back
+                </span>
+
+                Back to CivicTrace Home
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =========================================
+         JAVASCRIPT
+    ========================================== -->
+
+    <script>
+
+        /*
+        ============================================================
+        CIVICTRACE FRONTEND CONFIGURATION
+        ============================================================
+        */
+
+        const API_BASE = "http://127.0.0.1:8000/api";
+
+
+        /*
+        ============================================================
+        TAB SWITCHING
+        ============================================================
+        */
+
+        function switchTab(tabId) {
+
+            const citizenTab =
+                document.getElementById("tab-citizen");
+
+            const govTab =
+                document.getElementById("tab-gov");
+
+            const citizenSection =
+                document.getElementById("section-citizen");
+
+            const govSection =
+                document.getElementById("section-gov");
+
+
+            if (tabId === "citizen") {
+
+                citizenTab.className =
+                    "flex-1 pb-unit-2 text-label-md font-label-md text-primary border-b-2 border-primary font-bold transition-colors";
+
+                govTab.className =
+                    "flex-1 pb-unit-2 text-label-md font-label-md text-on-surface-variant border-b-2 border-transparent font-medium hover:text-primary transition-colors";
+
+                citizenSection.classList.remove("hidden");
+
+                govSection.classList.add("hidden");
+
+            }
+
+            else {
+
+                govTab.className =
+                    "flex-1 pb-unit-2 text-label-md font-label-md text-primary border-b-2 border-primary font-bold transition-colors";
+
+                citizenTab.className =
+                    "flex-1 pb-unit-2 text-label-md font-label-md text-on-surface-variant border-b-2 border-transparent font-medium hover:text-primary transition-colors";
+
+                govSection.classList.remove("hidden");
+
+                citizenSection.classList.add("hidden");
+
+            }
+
+        }
+
+
+
+        /*
+        ============================================================
+        CITIZEN TOKEN GENERATION
+        ============================================================
+        */
+
+        const generateTokenButton =
+            document.getElementById("btn-generate-token");
+
+
+        generateTokenButton.addEventListener(
+            "click",
+            async function () {
+
+                const button = this;
+
+                const tokenDisplay =
+                    document.getElementById("token-display");
+
+                const tokenText =
+                    document.getElementById("generated-token-text");
+
+
+                /*
+                Disable button while request is running
+                */
+
+                button.disabled = true;
+
+                button.innerHTML =
+                    `
+                    <span class="material-symbols-outlined animate-spin">
+                        sync
+                    </span>
+                    Generating...
+                    `;
+
+                button.classList.add(
+                    "opacity-75",
+                    "cursor-not-allowed"
+                );
+
+
+                try {
+
+                    /*
+                    ====================================================
+                    REAL BACKEND REQUEST
+                    ====================================================
+                    */
+
+                    const response =
+                        await fetch(
+                            `${API_BASE}/citizens/tokens`,
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                }
+                            }
+                        );
+
+
+                    /*
+                    Check HTTP status
+                    */
+
+                    if (!response.ok) {
+
+                        let errorMessage =
+                            `HTTP ${response.status}`;
+
+                        try {
+
+                            const errorData =
+                                await response.json();
+
+                            errorMessage =
+                                errorData.detail ||
+                                errorData.message ||
+                                JSON.stringify(errorData);
+
+                        }
+
+                        catch {
+
+                            const text =
+                                await response.text();
+
+                            if (text) {
+                                errorMessage = text;
+                            }
+
+                        }
+
+                        throw new Error(errorMessage);
+
+                    }
+
+
+                    /*
+                    ====================================================
+                    GET BACKEND RESPONSE
+                    ====================================================
+                    */
+
+                    const data =
+                        await response.json();
+
+
+                    console.log(
+                        "Citizen token response:",
+                        data
+                    );
+
+
+                    /*
+                    ====================================================
+                    FIND TOKEN
+                    ====================================================
+
+                    Depending on your Pydantic response model,
+                    the token can commonly be returned as:
+
+                    {
+                        "token": "CT-XXXX-XXXX"
+                    }
+
+                    OR
+
+                    {
+                        "access_token": "CT-XXXX-XXXX"
+                    }
+
+                    OR
+
+                    {
+                        "citizen_token": "CT-XXXX-XXXX"
+                    }
+
+                    We support all three.
+                    */
+
+                    const token =
+                        data.token ||
+                        data.access_token ||
+                        data.citizen_token;
+
+
+                    if (!token) {
+
+                        console.error(
+                            "Backend response:",
+                            data
+                        );
+
+                        throw new Error(
+                            "Backend did not return a citizen token."
+                        );
+
+                    }
+
+
+                    /*
+                    ====================================================
+                    DISPLAY REAL TOKEN
+                    ====================================================
+                    */
+
+                    tokenText.textContent = token;
+
+                    tokenDisplay.classList.remove("hidden");
+
+
+                    /*
+                    ====================================================
+                    SAVE TOKEN
+                    ====================================================
+                    */
+
+                    localStorage.setItem(
+                        "civicTraceCitizenToken",
+                        token
+                    );
+
+                    localStorage.setItem(
+                        "civicTraceRole",
+                        "citizen"
+                    );
+
+
+                    /*
+                    ====================================================
+                    SUCCESS BUTTON
+                    ====================================================
+                    */
+
+                    button.disabled = false;
+
+                    button.innerHTML =
+                        `
+                        <span class="material-symbols-outlined">
+                            check_circle
+                        </span>
+                        Token Generated
+                        `;
+
+                    button.classList.remove(
+                        "opacity-75",
+                        "cursor-not-allowed",
+                        "bg-primary"
+                    );
+
+                    button.classList.add(
+                        "bg-tertiary"
+                    );
+
+
+                    console.log(
+                        "Citizen token saved successfully."
+                    );
+
+                }
+
+
+                catch (error) {
+
+                    console.error(
+                        "Citizen token generation error:",
+                        error
+                    );
+
+
+                    /*
+                    Restore button
+                    */
+
+                    button.disabled = false;
+
+                    button.innerHTML =
+                        `
+                        <span class="material-symbols-outlined">
+                            key
+                        </span>
+                        Generate Citizen Access Token
+                        `;
+
+                    button.classList.remove(
+                        "opacity-75",
+                        "cursor-not-allowed"
+                    );
+
+
+                    /*
+                    Show error
+                    */
+
+                    alert(
+                        "Could not generate Citizen Access Token.\n\n" +
+                        error.message
+                    );
+
+                }
+
+            }
+        );
+
+
+
+        /*
+        ============================================================
+        COPY TOKEN
+        ============================================================
+        */
+
+        function copyToken() {
+
+            const token =
+                document.getElementById(
+                    "generated-token-text"
+                ).textContent;
+
+
+            if (
+                !token ||
+                token === "-"
+            ) {
+
+                alert(
+                    "No token available to copy."
+                );
+
+                return;
+
+            }
+
+
+            navigator.clipboard
+                .writeText(token)
+
+                .then(
+                    function () {
+
+                        alert(
+                            "Token copied to clipboard. Save it securely."
+                        );
+
+                    }
+                )
+
+                .catch(
+                    function () {
+
+                        alert(
+                            "Could not copy token. Please copy it manually."
+                        );
+
+                    }
+                );
+
+        }
+
+
+
+        /*
+        ============================================================
+        EXISTING CITIZEN TOKEN
+        ============================================================
+        */
+
+        document
+            .getElementById("btn-access-reports")
+            .addEventListener(
+                "click",
+                function () {
+
+                    const token =
+                        document
+                            .getElementById("existing-token")
+                            .value
+                            .trim()
+                            .toUpperCase();
+
+
+                    if (!token) {
+
+                        alert(
+                            "Please enter your CivicTrace token."
+                        );
+
+                        return;
+
+                    }
+
+
+                    /*
+                    Save the token.
+                    The report/track pages can use it later.
+                    */
+
+                    localStorage.setItem(
+                        "civicTraceCitizenToken",
+                        token
+                    );
+
+                    localStorage.setItem(
+                        "civicTraceRole",
+                        "citizen"
+                    );
+
+
+                    /*
+                    For now go to track-report.html.
+                    Change this later if your report-access
+                    page has a different filename.
+                    */
+
+                    window.location.href =
+                        "track-report.html";
+
+                }
+            );
+
+
+
+        /*
+        ============================================================
+        GOVERNMENT OFFICIAL LOGIN
+        ============================================================
+        */
+
+        const govLoginForm =
+            document.getElementById(
+                "gov-login-form"
+            );
+
+
+        govLoginForm.addEventListener(
+            "submit",
+            async function (event) {
+
+                /*
+                Prevent normal HTML form submission
+                */
+
+                event.preventDefault();
+
+
+                const email =
+                    document
+                        .getElementById("gov-email")
+                        .value
+                        .trim();
+
+
+                const password =
+                    document
+                        .getElementById("gov-password")
+                        .value;
+
+
+                const button =
+                    document.getElementById(
+                        "gov-login-button"
+                    );
+
+
+                const errorBox =
+                    document.getElementById(
+                        "gov-login-error"
+                    );
+
+
+                /*
+                Hide previous error
+                */
+
+                errorBox.classList.add(
+                    "hidden"
+                );
+
+                errorBox.textContent = "";
+
+
+                /*
+                Disable button
+                */
+
+                button.disabled = true;
+
+                button.innerHTML =
+                    `
+                    <span class="material-symbols-outlined animate-spin">
+                        sync
+                    </span>
+                    Authenticating...
+                    `;
+
+                button.classList.add(
+                    "opacity-75"
+                );
+
+
+                try {
+
+                    /*
+                    ====================================================
+                    REAL GOVERNMENT LOGIN REQUEST
+                    ====================================================
+                    */
+
+                    const response =
+                        await fetch(
+                            `${API_BASE}/officials/login`,
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body: JSON.stringify({
+
+                                    email: email,
+
+                                    password: password
+
+                                })
+
+                            }
+                        );
+
+
+                    /*
+                    ====================================================
+                    CHECK RESPONSE
+                    ====================================================
+                    */
+
+                    if (!response.ok) {
+
+                        let errorMessage =
+                            `HTTP ${response.status}`;
+
+
+                        try {
+
+                            const errorData =
+                                await response.json();
+
+
+                            errorMessage =
+                                errorData.detail ||
+                                errorData.message ||
+                                JSON.stringify(errorData);
+
+                        }
+
+                        catch {
+
+                            const text =
+                                await response.text();
+
+                            if (text) {
+                                errorMessage = text;
+                            }
+
+                        }
+
+
+                        throw new Error(
+                            errorMessage
+                        );
+
+                    }
+
+
+                    /*
+                    ====================================================
+                    GET JWT
+                    ====================================================
+                    */
+
+                    const data =
+                        await response.json();
+
+
+                    console.log(
+                        "Government login response:",
+                        data
+                    );
+
+
+                    if (!data.access_token) {
+
+                        console.error(
+                            "Login response:",
+                            data
+                        );
+
+                        throw new Error(
+                            "Login succeeded but the server did not return an access token."
+                        );
+
+                    }
+
+
+                    /*
+                    ====================================================
+                    SAVE GOVERNMENT JWT
+                    ====================================================
+                    */
+
+                    localStorage.setItem(
+                        "civicTraceOfficialToken",
+                        data.access_token
+                    );
+
+
+                    localStorage.setItem(
+                        "civicTraceRole",
+                        "official"
+                    );
+
+
+                    localStorage.setItem(
+                        "civicTraceOfficialEmail",
+                        email
+                    );
+
+
+                    /*
+                    ====================================================
+                    SUCCESS
+                    ====================================================
+                    */
+
+                    button.classList.remove(
+                        "opacity-75"
+                    );
+
+                    button.classList.remove(
+                        "bg-primary"
+                    );
+
+                    button.classList.add(
+                        "bg-tertiary"
+                    );
+
+                    button.innerHTML =
+                        `
+                        <span class="material-symbols-outlined">
+                            check_circle
+                        </span>
+                        Success - Redirecting...
+                        `;
+
+
+                    /*
+                    ====================================================
+                    REDIRECT
+                    ====================================================
+                    */
+
+                    setTimeout(
+                        function () {
+
+                            window.location.href =
+                                "official-dashboard.html";
+
+                        },
+                        500
+                    );
+
+                }
+
+
+                catch (error) {
+
+                    console.error(
+                        "Government login error:",
+                        error
+                    );
+
+
+                    /*
+                    Restore button
+                    */
+
+                    button.disabled = false;
+
+                    button.classList.remove(
+                        "opacity-75"
+                    );
+
+                    button.innerHTML =
+                        "Sign In to Dashboard";
+
+
+                    /*
+                    Show error
+                    */
+
+                    errorBox.textContent =
+                        "Login failed: " +
+                        error.message;
+
+                    errorBox.classList.remove(
+                        "hidden"
+                    );
+
+                }
+
+            }
+        );
+
+
+
+        /*
+        ============================================================
+        PAGE LOAD
+        ============================================================
+        */
+
+        console.log(
+            "CivicTrace Login loaded."
+        );
+
+        console.log(
+            "API:",
+            API_BASE
+        );
+
+    </script>
+
+</body>
+
+</html>

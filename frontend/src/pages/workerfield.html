@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Field Worker Dashboard - CivicTrace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-container": "#000604",
+                      "secondary": "#3c665b",
+                      "error": "#ba1a1a",
+                      "surface-bright": "#faf8ff",
+                      "on-tertiary-fixed-variant": "#00513e",
+                      "tertiary-container": "#008769",
+                      "outline": "#757682",
+                      "on-primary": "#ffffff",
+                      "surface-dim": "#d4d9f4",
+                      "tertiary-fixed-dim": "#62dbb5",
+                      "on-tertiary-fixed": "#002117",
+                      "tertiary-fixed": "#80f8d1",
+                      "secondary-fixed": "#beecde",
+                      "inverse-primary": "#b5c4ff",
+                      "surface-tint": "#415aa9",
+                      "background": "#faf8ff",
+                      "surface-container-highest": "#dde1fd",
+                      "on-secondary": "#ffffff",
+                      "surface-container-high": "#e4e7ff",
+                      "outline-variant": "#c5c5d3",
+                      "inverse-surface": "#2a2f44",
+                      "primary-fixed": "#dce1ff",
+                      "error-container": "#ffdad6",
+                      "on-surface": "#151b2e",
+                      "on-surface-variant": "#444651",
+                      "primary-fixed-dim": "#b5c4ff",
+                      "on-tertiary": "#ffffff",
+                      "surface-container": "#ebedff",
+                      "surface": "#faf8ff",
+                      "on-error": "#ffffff",
+                      "on-primary-container": "#fffbff",
+                      "secondary-fixed-dim": "#a3d0c2",
+                      "secondary-container": "#bbe9db",
+                      "tertiary": "#006b53",
+                      "on-primary-fixed-variant": "#274190",
+                      "on-secondary-fixed-variant": "#234e44",
+                      "surface-container-low": "#f3f2ff",
+                      "inverse-on-surface": "#eff0ff",
+                      "on-secondary-container": "#406b5f",
+                      "on-background": "#151b2e",
+                      "on-error-container": "#93000a",
+                      "primary": "#3f57a6",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-fixed": "#00201a",
+                      "on-primary-fixed": "#00164e",
+                      "primary-container": "#5870c1",
+                      "surface-variant": "#dde1fd"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "unit-4": "1rem",
+                      "container-max": "1280px",
+                      "unit-6": "1.5rem",
+                      "gutter": "24px",
+                      "unit-12": "3rem",
+                      "base": "4px",
+                      "unit-1": "0.25rem",
+                      "unit-8": "2rem",
+                      "unit-2": "0.5rem"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-md": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "headline-xl": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "tabular-nums": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "headline-xl": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "tabular-nums": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex font-body-md">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex flex-col h-screen p-unit-4 gap-unit-2 bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline w-64 shrink-0">
+<div class="mb-unit-8">
+<h1 class="text-label-md font-label-md font-bold text-on-surface dark:text-inverse-on-surface uppercase tracking-widest">Command Center</h1>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-1">Kolkata Municipal</p>
+</div>
+<div class="flex-1 flex flex-col gap-1">
+<a class="flex items-center gap-3 p-3 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="text-label-md font-label-md">Risk Map</span>
+</a>
+<a class="flex items-center gap-3 p-3 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-bold rounded-lg scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined filled" data-icon="assignment">assignment</span>
+<span class="text-label-md font-label-md">Field Reports</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="text-label-md font-label-md">Audit Logs</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-1 border-t border-outline-variant pt-4">
+<a class="flex items-center gap-3 p-3 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="text-label-md font-label-md">Support</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col min-w-0">
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline flex justify-between items-center w-full px-margin-mobile md:px-unit-8 max-w-container-max mx-auto h-16 shrink-0 sticky top-0 z-10">
+<div class="flex items-center gap-6">
+<span class="text-headline-md font-headline-md font-extrabold text-primary dark:text-inverse-primary">CivicTrace</span>
+<nav class="hidden lg:flex gap-6">
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors text-label-md font-label-md py-4" href="#">Map</a>
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim font-bold hover:text-primary dark:hover:text-primary-fixed-dim transition-colors text-label-md font-label-md py-4 opacity-80 transition-opacity" href="#">Report</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors text-label-md font-label-md py-4" href="#">Track</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors text-label-md font-label-md py-4" href="#">About</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="bg-surface-container-low border border-outline-variant rounded-full py-1.5 pl-4 pr-10 text-body-sm font-body-sm focus:border-primary focus:ring-1 focus:ring-primary w-64 transition-all" placeholder="Search ID or Keyword..." type="text"/>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<div class="flex-1 overflow-auto p-gutter bg-surface-bright max-w-container-max mx-auto w-full">
+<div class="mb-unit-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+<div>
+<h2 class="text-headline-lg font-headline-lg text-on-surface mb-1">Active Job Execution</h2>
+<p class="text-body-md font-body-md text-on-surface-variant">Field Worker Portal - Resolution Documentation</p>
+</div>
+<div class="flex items-center gap-2 text-label-md font-label-md">
+<span class="text-on-surface-variant">Current Date:</span>
+<span class="font-bold">Oct 24, 2023</span>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter">
+<!-- Left Column: Job Context & Meta (4 cols) -->
+<div class="xl:col-span-4 flex flex-col gap-gutter">
+<!-- Primary Job Card -->
+<div class="bg-surface rounded-xl border border-outline-variant/50 overflow-hidden flex flex-col h-full">
+<div class="p-4 border-b border-outline-variant/30 bg-surface-container-lowest flex justify-between items-center">
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Job ID: REQ-KOL-2026-8921</span>
+<span class="material-symbols-outlined text-outline">tag</span>
+</div>
+<div class="p-unit-4 flex-1">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2">Pothole Repair</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-6">Deep structural pothole causing traffic slowdowns and potential vehicle damage on main arterial route.</p>
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center shrink-0 text-primary">
+<span class="material-symbols-outlined text-sm">location_on</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-outline">Location</p>
+<p class="text-body-md font-body-md font-medium text-on-surface">Park Street, Sector 4</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-error-container flex items-center justify-center shrink-0 text-error">
+<span class="material-symbols-outlined text-sm">priority_high</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-outline">Priority</p>
+<span class="inline-block mt-0.5 px-2 py-0.5 bg-error/10 text-error rounded text-label-sm font-label-sm font-bold">HIGH</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center shrink-0 text-secondary">
+<span class="material-symbols-outlined text-sm">pending_actions</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-outline">Current Status</p>
+<span class="inline-block mt-0.5 px-2 py-0.5 bg-secondary/10 text-secondary-fixed-variant rounded text-label-sm font-label-sm font-bold border border-secondary/20">In Progress</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Map Context Placeholder -->
+<div class="h-40 bg-surface-container border-t border-outline-variant/30 relative overflow-hidden group">
+<div class="bg-cover bg-center w-full h-full absolute inset-0 opacity-80 group-hover:opacity-100 transition-opacity" data-alt="A highly detailed overhead map view of Park Street in Kolkata, styled with a modern, muted color palette suited for a civic dashboard. The map shows street grids, minimal labels, and a bright red pinpoint marker indicating a repair location. The aesthetic is clean, flat, and professional, using shades of gray, subtle blues, and a stark red accent, illuminated by flat, even light." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBgR9T-RRW7MaUhobW347ZuWU6gEvLEKq5E3bokuMfDbRhaRKPZA5qeNjVNbXV1xMkxcSPNhiRz_-KSwe41CTUfRGLeiKREMn19BETDgFFAWE7XoJK_q7RhAX805mRzJ_5g3AOmUdfKhyEjoEPpjTWBm0jfG_bvesatuvdTug3lXWHORM8xSUFzECYY525iOKha2QuK_mBYT_WFPvxpSAWEg8nlC_gGjm4Z2V5c_qAW9ytdNabCwKW3')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface/80 to-transparent"></div>
+<button class="absolute bottom-3 right-3 bg-surface text-primary border border-outline-variant px-3 py-1.5 rounded-lg text-label-sm font-label-sm flex items-center gap-1 shadow-sm hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[16px]">map</span> Open Map
+                             </button>
+</div>
+</div>
+</div>
+<!-- Right Column: Resolution Workflow (8 cols) -->
+<div class="xl:col-span-8 flex flex-col gap-gutter">
+<!-- Action Center Card -->
+<div class="bg-surface rounded-xl border border-outline-variant/50 flex flex-col h-full">
+<div class="p-4 border-b border-outline-variant/30 bg-surface-container-lowest">
+<h3 class="text-label-md font-label-md text-on-surface uppercase tracking-wider">Resolution Documentation</h3>
+</div>
+<div class="p-unit-6 flex-1 flex flex-col gap-8">
+<!-- Photo Upload Section -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Before Photo -->
+<div class="flex flex-col gap-2">
+<label class="text-label-md font-label-md text-on-surface">Initial State Evidence</label>
+<div class="border-2 border-dashed border-outline-variant/60 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-surface-container-low transition-colors group cursor-pointer h-48 bg-surface-container-lowest">
+<span class="material-symbols-outlined text-4xl text-outline mb-2 group-hover:text-primary transition-colors">add_a_photo</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant font-medium">Upload Before Photo</span>
+<span class="text-label-sm font-label-sm text-outline mt-1">Required for claim</span>
+</div>
+</div>
+<!-- After Photo -->
+<div class="flex flex-col gap-2">
+<label class="text-label-md font-label-md text-on-surface">Resolution Evidence</label>
+<div class="border-2 border-dashed border-outline-variant/60 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-surface-container-low transition-colors group cursor-pointer h-48 bg-surface-container-lowest">
+<span class="material-symbols-outlined text-4xl text-outline mb-2 group-hover:text-secondary transition-colors">verified</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant font-medium">Upload After Photo</span>
+<span class="text-label-sm font-label-sm text-outline mt-1">Required for claim</span>
+</div>
+</div>
+</div>
+<!-- Description Input -->
+<div class="flex flex-col gap-2">
+<label class="text-label-md font-label-md text-on-surface" for="work-desc">Work Description &amp; Materials Used</label>
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 text-body-md font-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none placeholder:text-outline/70" id="work-desc" placeholder="e.g., Applied 50kg of cold mix asphalt, compacted surface, cleared debris..." rows="4"></textarea>
+<button class="self-start text-primary hover:text-primary-container text-label-sm font-label-sm flex items-center gap-1 mt-1 transition-colors">
+<span class="material-symbols-outlined text-[16px]">add_circle</span> Add Work Description Template
+                                </button>
+</div>
+<!-- Submission Area -->
+<div class="mt-auto pt-6 border-t border-outline-variant/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+<!-- Crucial Context Warning -->
+<div class="flex items-start gap-2 bg-surface-variant/50 p-3 rounded-lg border border-outline-variant/20 max-w-md">
+<span class="material-symbols-outlined text-on-surface-variant mt-0.5 text-xl">info</span>
+<p class="text-label-sm font-label-sm text-on-surface-variant leading-relaxed">
+                                        Submitting this claim sends it to dispatch for audit. <strong class="text-on-surface">You do not mark this job as 'Resolved'.</strong> An inspector will verify the documentation.
+                                    </p>
+</div>
+<!-- Primary CTA -->
+<button class="w-full sm:w-auto bg-primary hover:bg-primary/90 text-on-primary h-[44px] px-8 rounded-lg text-label-md font-label-md shadow-sm flex items-center justify-center gap-2 transition-colors shrink-0 whitespace-nowrap">
+                                    Submit Resolution Claim <span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

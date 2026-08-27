@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CivicTrace - Case Detail CVT-KOL-1042</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-container": "#000604",
+                      "secondary": "#3c665b",
+                      "error": "#ba1a1a",
+                      "surface-bright": "#faf8ff",
+                      "on-tertiary-fixed-variant": "#00513e",
+                      "tertiary-container": "#008769",
+                      "outline": "#757682",
+                      "on-primary": "#ffffff",
+                      "surface-dim": "#d4d9f4",
+                      "tertiary-fixed-dim": "#62dbb5",
+                      "on-tertiary-fixed": "#002117",
+                      "tertiary-fixed": "#80f8d1",
+                      "secondary-fixed": "#beecde",
+                      "inverse-primary": "#b5c4ff",
+                      "surface-tint": "#415aa9",
+                      "background": "#faf8ff",
+                      "surface-container-highest": "#dde1fd",
+                      "on-secondary": "#ffffff",
+                      "surface-container-high": "#e4e7ff",
+                      "outline-variant": "#c5c5d3",
+                      "inverse-surface": "#2a2f44",
+                      "primary-fixed": "#dce1ff",
+                      "error-container": "#ffdad6",
+                      "on-surface": "#151b2e",
+                      "on-surface-variant": "#444651",
+                      "primary-fixed-dim": "#b5c4ff",
+                      "on-tertiary": "#ffffff",
+                      "surface-container": "#ebedff",
+                      "surface": "#faf8ff",
+                      "on-error": "#ffffff",
+                      "on-primary-container": "#fffbff",
+                      "secondary-fixed-dim": "#a3d0c2",
+                      "secondary-container": "#bbe9db",
+                      "tertiary": "#006b53",
+                      "on-primary-fixed-variant": "#274190",
+                      "on-secondary-fixed-variant": "#234e44",
+                      "surface-container-low": "#f3f2ff",
+                      "inverse-on-surface": "#eff0ff",
+                      "on-secondary-container": "#406b5f",
+                      "on-background": "#151b2e",
+                      "on-error-container": "#93000a",
+                      "primary": "#3f57a6",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-fixed": "#00201a",
+                      "on-primary-fixed": "#00164e",
+                      "primary-container": "#5870c1",
+                      "surface-variant": "#dde1fd"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "unit-4": "1rem",
+                      "container-max": "1280px",
+                      "unit-6": "1.5rem",
+                      "gutter": "24px",
+                      "unit-12": "3rem",
+                      "base": "4px",
+                      "unit-1": "0.25rem",
+                      "unit-8": "2rem",
+                      "unit-2": "0.5rem"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-md": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "headline-xl": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "tabular-nums": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "headline-xl": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "tabular-nums": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body { background-color: #faf8ff; } /* bg-background */
+        /* Neutral base layer */
+        .bg-level-0 { background-color: rgba(113, 118, 142, 0.05); } 
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:flex-row">
+<!-- TopNavBar (Mobile Only Fallback, usually hidden on desktop when SideNav is present, but per instructions, rendering TopNav for global context if needed. Since this is a detail page with a back action, we suppress global navs per shell rules. HOWEVER, the prompt doesn't explicitly mention it's a sub-page departing from flow, it's a detail screen. Given the "SideNavBar" and "TopNavBar" in JSON, I will render SideNavBar as the primary shell for desktop.) -->
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-screen p-unit-4 gap-unit-2 bg-surface-container-low dark:bg-inverse-surface text-secondary dark:text-secondary-fixed docked vertical-left w-64 border-r border-outline-variant dark:border-outline shrink-0 sticky top-0">
+<div class="mb-unit-6 px-unit-2">
+<h1 class="text-label-md font-label-md font-bold text-on-surface dark:text-inverse-on-surface uppercase tracking-wider">Command Center</h1>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-1">Kolkata Municipal</p>
+</div>
+<div class="flex-1 flex flex-col gap-unit-2 mt-unit-4">
+<!-- Active state logic: "Field Reports" matches the case detail context -->
+<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="map">map</span>
+<span class="text-label-md font-label-md">Risk Map</span>
+</a>
+<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-bold rounded-lg scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="assignment" data-weight="fill" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span class="text-label-md font-label-md">Field Reports</span>
+</a>
+<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="history">history</span>
+<span class="text-label-md font-label-md">Audit Logs</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-unit-2 border-t border-outline-variant pt-unit-4">
+<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+<span class="text-label-md font-label-md">Support</span>
+</a>
+<div class="flex items-center gap-unit-4 px-unit-4 py-unit-2 mt-2">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden border border-outline-variant">
+<span class="material-symbols-outlined text-outline">person</span>
+</div>
+<span class="text-label-sm font-label-sm truncate">Admin User Profile</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col h-screen overflow-y-auto bg-level-0 relative">
+<!-- Top App Bar equivalent for Detail context -->
+<header class="bg-surface h-16 flex items-center justify-between px-gutter border-b border-outline-variant shrink-0 sticky top-0 z-10">
+<div class="flex items-center gap-unit-4">
+<button aria-label="Go back" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div>
+<h2 class="text-headline-md font-headline-md font-bold text-on-surface flex items-center gap-2">
+                        CVT-KOL-1042
+                        <span class="bg-error-container text-on-error-container px-2 py-0.5 rounded text-label-sm font-label-sm uppercase font-bold ml-2 flex items-center gap-1 border border-error/20">
+<span class="material-symbols-outlined text-[14px]">warning</span> Critical
+                        </span>
+</h2>
+</div>
+</div>
+<div class="flex items-center gap-unit-4">
+<button aria-label="Share" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button aria-label="More options" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Fixed Grid Layout: 12-column max 1280px -->
+<div class="w-full max-w-container-max mx-auto p-gutter grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Center Content (8 columns) -->
+<div class="md:col-span-8 flex flex-col gap-gutter">
+<!-- Headline Card -->
+<section class="bg-surface rounded-xl border border-outline-variant p-unit-6 flex flex-col gap-unit-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-headline-lg font-headline-lg text-on-surface mb-2">Open Manhole near School Road</h3>
+<p class="text-body-md font-body-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">person</span>
+                                Reporter: <span class="font-medium text-on-surface">Anonymous Citizen</span>
+<span class="text-outline mx-2">•</span>
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+                                2 hours ago
+                            </p>
+</div>
+<div class="flex flex-col items-end">
+<div class="text-headline-xl font-headline-xl text-error font-bold tracking-tight">94<span class="text-headline-md text-outline">/100</span></div>
+<div class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Risk Score</div>
+</div>
+</div>
+<p class="text-body-md font-body-md text-on-surface mt-2">
+                        Large uncovered manhole situated directly on the pedestrian pathway leading to the primary school. High risk of accident for students during drop-off/pick-up hours. No barricades present.
+                    </p>
+</section>
+<!-- Evidence Section (Bento Grid) -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-unit-4">
+<!-- Photo Evidence -->
+<div class="bg-surface rounded-xl border border-outline-variant flex flex-col overflow-hidden h-[300px]">
+<div class="border-b border-outline-variant px-unit-4 py-unit-3 flex items-center gap-2 bg-surface-container-lowest">
+<span class="material-symbols-outlined text-primary text-[18px]">photo_camera</span>
+<h4 class="text-label-md font-label-md text-on-surface">Citizen Photo</h4>
+</div>
+<div class="flex-1 relative bg-surface-variant">
+<img class="w-full h-full object-cover" data-alt="A close-up, high-resolution photograph of an open, dangerous manhole on a cracked asphalt pavement during daylight. The shot is taken from a pedestrian's perspective, showing the deep dark void of the manhole contrasting with the gray concrete. The lighting is harsh natural sunlight, emphasizing the hazard. The overall aesthetic is realistic, documentary-style civic reporting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8_dYQuLzJYXTsafqE3S0eHhPOo74QASPSKdA2I6qE2C7nfljBx8PKNLmuv-ZaCjTzUVFau8Ga21L4QlSeUPylvR3rUEIoyVD_V51qeZwtUgKCWPAM9PsqHolyA0vwzJFdO-5cOiu3eBrhh_8_kg2ipa-5toHkngTTA5yhXblGOBREJznXrzYm-q3yndTkC-TEG51JcEMlWTPiCvIwm340sUnNansbfHtIX55Axmu8C8JtyUBPRv6o"/>
+<div class="absolute bottom-2 right-2 bg-inverse-surface/80 backdrop-blur text-inverse-on-surface px-2 py-1 rounded text-[10px] font-tabular-nums uppercase tracking-wide flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">my_location</span>
+                                Lat: 22.5726, Lng: 88.3639
+                            </div>
+</div>
+</div>
+<!-- Map Preview -->
+<div class="bg-surface rounded-xl border border-outline-variant flex flex-col overflow-hidden h-[300px]">
+<div class="border-b border-outline-variant px-unit-4 py-unit-3 flex items-center justify-between bg-surface-container-lowest">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">location_on</span>
+<h4 class="text-label-md font-label-md text-on-surface">Location Preview</h4>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Salt Lake, Sector V</span>
+</div>
+<div class="flex-1 relative bg-surface-variant flex items-center justify-center overflow-hidden">
+<!-- Simulated Map via placeholder -->
+<div class="bg-cover bg-center w-full h-full opacity-90" data-alt="A clean, modern digital map interface centered on a dense urban grid, styled in a light mode palette with subtle gray roads and pale blue water bodies. A distinct red hazard marker icon sits prominently in the center. The map design is minimalist, professional, and data-focused, reflecting a high-end civic management software interface." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB2iMKNSRP1qgMT3-gYEMj6GixXAK15o7JAduqZKWSayQwRHJurwcEFv5ZBSdpQfIRfEFV4UiXyGkHZyB6290DE0vr9vlXVnecgZQXvdH-Ey_tg2YKCVS_pSJtfPvJrNqVq4cocsfXdQXJjoJ4gdbvrlbKV6z7mHwyFphtfO3KleW8vfM6FwmLcaVqLWmGvvbuGac4EUNWmTdDQ6npQu9lA8Kdw1cByb8ZjbtJMZNQloRbP6dF0j5oo')"></div>
+<!-- Crosshair overlay -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-12 h-12 rounded-full border-2 border-error/50 flex items-center justify-center bg-error/10">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Data Table: Associated Assets / Nearby Infra -->
+<section class="bg-surface rounded-xl border border-outline-variant overflow-hidden flex flex-col">
+<div class="border-b border-outline-variant px-unit-6 py-unit-4">
+<h4 class="text-label-md font-label-md text-on-surface">Nearby Infrastructure Impact</h4>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-lowest border-b border-outline-variant">
+<th class="px-unit-6 py-unit-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Asset ID</th>
+<th class="px-unit-6 py-unit-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Type</th>
+<th class="px-unit-6 py-unit-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Distance</th>
+<th class="px-unit-6 py-unit-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Status</th>
+</tr>
+</thead>
+<tbody class="text-body-sm font-body-sm">
+<tr class="border-b border-outline-variant/50 hover:bg-surface-container-low transition-colors">
+<td class="px-unit-6 py-unit-3 font-tabular-nums text-on-surface">EDU-SL-045</td>
+<td class="px-unit-6 py-unit-3 text-on-surface-variant">Primary School Gate</td>
+<td class="px-unit-6 py-unit-3 text-on-surface-variant">12m</td>
+<td class="px-unit-6 py-unit-3"><span class="px-2 py-1 rounded text-[11px] font-medium bg-error-container text-on-error-container">High Exposure</span></td>
+</tr>
+<tr class="border-b border-outline-variant/50 hover:bg-surface-container-low transition-colors">
+<td class="px-unit-6 py-unit-3 font-tabular-nums text-on-surface">DRAIN-M-992</td>
+<td class="px-unit-6 py-unit-3 text-on-surface-variant">Main Sewer Line</td>
+<td class="px-unit-6 py-unit-3 text-on-surface-variant">0m (Direct)</td>
+<td class="px-unit-6 py-unit-3"><span class="px-2 py-1 rounded text-[11px] font-medium bg-surface-variant text-on-surface-variant">Active</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-unit-6 py-unit-3 font-tabular-nums text-on-surface">ST-LIGHT-44</td>
+<td class="px-unit-6 py-unit-3 text-on-surface-variant">Street Lamp</td>
+<td class="px-unit-6 py-unit-3 text-on-surface-variant">8m</td>
+<td class="px-unit-6 py-unit-3"><span class="px-2 py-1 rounded text-[11px] font-medium bg-tertiary-container text-on-tertiary-container">Functional</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Right Sidebar (4 columns) -->
+<div class="md:col-span-4 flex flex-col gap-gutter">
+<!-- Officer Actions -->
+<section class="bg-surface rounded-xl border border-outline-variant p-unit-6 flex flex-col gap-unit-4">
+<h3 class="text-label-md font-label-md text-on-surface border-b border-outline-variant pb-2">Officer Actions</h3>
+<div class="flex flex-col gap-3 mt-2">
+<button class="w-full h-[44px] bg-primary hover:bg-primary/90 text-on-primary rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                            Validate Issue
+                        </button>
+<button class="w-full h-[44px] bg-surface border border-outline hover:bg-surface-container-low text-primary rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">assignment_ind</span>
+                            Assign Department
+                        </button>
+<button class="w-full h-[44px] bg-surface border border-error text-error hover:bg-error-container hover:text-on-error-container rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">priority_high</span>
+                            Escalate
+                        </button>
+</div>
+</section>
+<!-- Vertical Audit Timeline -->
+<section class="bg-surface rounded-xl border border-outline-variant p-unit-6 flex flex-col flex-1">
+<h3 class="text-label-md font-label-md text-on-surface border-b border-outline-variant pb-2 mb-unit-4">Audit Timeline</h3>
+<div class="relative pl-4 flex-1">
+<!-- Timeline Line -->
+<div class="absolute left-[11px] top-2 bottom-0 w-[2px] bg-surface-variant"></div>
+<!-- Timeline Item 1 -->
+<div class="relative mb-6 pl-6">
+<div class="absolute left-[-5px] top-1 w-4 h-4 rounded-full bg-primary border-2 border-surface"></div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-1">Just Now</p>
+<p class="text-body-sm font-body-sm font-medium text-on-surface">Case viewed by Officer</p>
+<p class="text-label-sm font-label-sm text-outline mt-1">Admin User (ID: 9942)</p>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative mb-6 pl-6">
+<div class="absolute left-[-5px] top-1 w-4 h-4 rounded-full bg-error border-2 border-surface"></div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-1">15 mins ago</p>
+<p class="text-body-sm font-body-sm font-medium text-on-surface">Automated Risk Assessment</p>
+<p class="text-label-sm font-label-sm text-outline mt-1">Score: 94/100 (CRITICAL)</p>
+</div>
+<!-- Timeline Item 3 -->
+<div class="relative mb-6 pl-6">
+<div class="absolute left-[-5px] top-1 w-4 h-4 rounded-full bg-outline-variant border-2 border-surface"></div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-1">2 hours ago</p>
+<p class="text-body-sm font-body-sm font-medium text-on-surface">Case Created</p>
+<p class="text-label-sm font-label-sm text-outline mt-1">Via Citizen App (Anonymous)</p>
+</div>
+<!-- Timeline Item 4 (Faded) -->
+<div class="relative pl-6 opacity-50">
+<div class="absolute left-[-5px] top-1 w-4 h-4 rounded-full bg-outline-variant border-2 border-surface"></div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mb-1">2 hours ago</p>
+<p class="text-body-sm font-body-sm font-medium text-on-surface">System Logging Initiated</p>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+</body></html>

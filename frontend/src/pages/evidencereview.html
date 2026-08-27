@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CivicTrace - Evidence Review</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script>
+tailwind.config = {
+    darkMode: "class",
+
+    theme: {
+        extend: {
+            colors: {
+                primary: "#3f57a6",
+                "primary-container": "#5870c1",
+
+                secondary: "#3c665b",
+                "secondary-container": "#bbe9db",
+
+                tertiary: "#006b53",
+                "tertiary-container": "#008769",
+
+                error: "#ba1a1a",
+                "error-container": "#ffdad6",
+
+                background: "#faf8ff",
+                surface: "#faf8ff",
+                "surface-container-low": "#f3f2ff",
+                "surface-container": "#ebedff",
+                "surface-container-high": "#e4e7ff",
+                "surface-container-highest": "#dde1fd",
+
+                "surface-variant": "#dde1fd",
+
+                "on-surface": "#151b2e",
+                "on-surface-variant": "#444651",
+
+                outline: "#757682",
+                "outline-variant": "#c5c5d3",
+
+                "on-primary": "#ffffff",
+                "on-secondary": "#ffffff",
+                "on-error": "#ffffff"
+            }
+        }
+    }
+}
+</script>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, sans-serif;
+    background: #faf8ff;
+    color: #151b2e;
+}
+
+.material-symbols-outlined {
+    font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24;
+}
+
+.spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid #c5c5d3;
+    border-top-color: #3f57a6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status-received {
+    background: #e4e7ff;
+    color: #3f57a6;
+}
+
+.status-assigned {
+    background: #fff0c2;
+    color: #805b00;
+}
+
+.status-in_progress {
+    background: #dce1ff;
+    color: #274190;
+}
+
+.status-resolved {
+    background: #bbe9db;
+    color: #234e44;
+}
+
+.status-rejected {
+    background: #ffdad6;
+    color: #93000a;
+}
+
+.status-unknown {
+    background: #ebedff;
+    color: #444651;
+}
+
+.toast {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 100;
+    padding: 14px 18px;
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    display: none;
+}
+
+.toast.success {
+    background: #006b53;
+}
+
+.toast.error {
+    background: #ba1a1a;
+}
+
+.empty-evidence {
+    min-height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #757682;
+}
+
+.evidence-image {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    background: #f3f2ff;
+}
+
+button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+</style>
+</head>
+
+<body class="min-h-screen bg-background">
+
+<!-- ========================================================= -->
+<!-- SIDEBAR -->
+<!-- ========================================================= -->
+
+<nav class="hidden md:flex fixed left-0 top-0 h-screen w-64 flex-col p-4 gap-2
+            bg-surface-container-low border-r border-outline-variant z-40">
+
+    <div class="mb-8 px-2">
+
+        <h1 class="text-sm font-bold text-on-surface">
+            Command Center
+        </h1>
+
+        <p class="text-xs text-on-surface-variant mt-1">
+            Kolkata Municipal
+        </p>
+
+    </div>
+
+    <div class="flex-1 flex flex-col gap-1">
+
+        <a href="government-dashboard.html"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg
+                  text-on-surface-variant hover:bg-surface-container-highest">
+
+            <span class="material-symbols-outlined">
+                dashboard
+            </span>
+
+            <span class="text-sm font-semibold">
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <a href="risk-map.html"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg
+                  text-on-surface-variant hover:bg-surface-container-highest">
+
+            <span class="material-symbols-outlined">
+                map
+            </span>
+
+            <span class="text-sm font-semibold">
+                Risk Map
+            </span>
+
+        </a>
+
+
+        <a href="field-reports.html"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg
+                  text-on-surface-variant hover:bg-surface-container-highest">
+
+            <span class="material-symbols-outlined">
+                assignment
+            </span>
+
+            <span class="text-sm font-semibold">
+                Field Reports
+            </span>
+
+        </a>
+
+
+        <a href="audit-logs.html"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg
+                  text-on-surface-variant hover:bg-surface-container-highest">
+
+            <span class="material-symbols-outlined">
+                history
+            </span>
+
+            <span class="text-sm font-semibold">
+                Audit Logs
+            </span>
+
+        </a>
+
+    </div>
+
+
+    <div class="border-t border-outline-variant pt-4">
+
+        <button
+            onclick="logout()"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg
+                   text-on-surface-variant hover:bg-error-container hover:text-error">
+
+            <span class="material-symbols-outlined">
+                logout
+            </span>
+
+            <span class="text-sm font-semibold">
+                Logout
+            </span>
+
+        </button>
+
+    </div>
+
+</nav>
+
+
+<!-- ========================================================= -->
+<!-- MAIN -->
+<!-- ========================================================= -->
+
+<main class="md:ml-64 min-h-screen">
+
+    <!-- TOP BAR -->
+
+    <header class="h-16 px-4 md:px-8 flex items-center justify-between
+                   border-b border-outline-variant bg-surface">
+
+        <div class="flex items-center gap-4">
+
+            <button
+                onclick="history.back()"
+                class="flex items-center gap-2 text-on-surface-variant hover:text-primary">
+
+                <span class="material-symbols-outlined">
+                    arrow_back
+                </span>
+
+                <span class="hidden sm:inline text-sm">
+                    Back
+                </span>
+
+            </button>
+
+
+            <div class="h-6 w-px bg-outline-variant"></div>
+
+
+            <h2 class="text-xl font-extrabold text-primary">
+                Evidence Review
+            </h2>
+
+
+            <span
+                id="caseBadge"
+                class="hidden sm:inline-block px-2 py-1 rounded
+                       bg-surface-variant text-xs font-semibold">
+
+                Loading...
+
+            </span>
+
+        </div>
+
+
+        <div class="flex items-center gap-3">
+
+            <span
+                id="officialName"
+                class="hidden sm:block text-sm font-semibold text-on-surface-variant">
+
+                Government Official
+
+            </span>
+
+            <span class="material-symbols-outlined text-on-surface-variant">
+                account_circle
+            </span>
+
+        </div>
+
+    </header>
+
+
+    <!-- CONTENT -->
+
+    <div class="p-4 md:p-8 max-w-7xl mx-auto">
+
+        <!-- LOADING -->
+
+        <div
+            id="loadingState"
+            class="min-h-[500px] flex flex-col items-center justify-center gap-4">
+
+            <div class="spinner"></div>
+
+            <p class="text-sm text-on-surface-variant">
+                Loading case and evidence...
+            </p>
+
+        </div>
+
+
+        <!-- ERROR -->
+
+        <div
+            id="errorState"
+            class="hidden min-h-[400px] flex flex-col items-center justify-center text-center">
+
+            <span class="material-symbols-outlined text-5xl text-error mb-4">
+                error
+            </span>
+
+            <h2 class="text-xl font-bold mb-2">
+                Unable to load case
+            </h2>
+
+            <p
+                id="errorMessage"
+                class="text-sm text-on-surface-variant max-w-md mb-6">
+            </p>
+
+            <button
+                onclick="loadEverything()"
+                class="px-5 py-2.5 bg-primary text-on-primary rounded-lg font-semibold">
+
+                Try Again
+
+            </button>
+
+        </div>
+
+
+        <!-- ACTUAL CONTENT -->
+
+        <div id="mainContent" class="hidden">
+
+            <!-- CASE HEADER -->
+
+            <section class="mb-6">
+
+                <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+
+                    <div>
+
+                        <h1
+                            id="caseTitle"
+                            class="text-2xl md:text-3xl font-semibold text-on-surface mb-2">
+
+                            -
+
+                        </h1>
+
+
+                        <div class="flex flex-wrap gap-3 items-center text-sm text-on-surface-variant">
+
+                            <span class="flex items-center gap-1">
+
+                                <span class="material-symbols-outlined text-lg">
+                                    location_on
+                                </span>
+
+                                <span id="caseLocation">
+                                    -
+                                </span>
+
+                            </span>
+
+
+                            <span class="flex items-center gap-1">
+
+                                <span class="material-symbols-outlined text-lg">
+                                    category
+                                </span>
+
+                                <span id="caseCategory">
+                                    -
+                                </span>
+
+                            </span>
+
+
+                            <span
+                                id="caseStatus"
+                                class="status-badge status-unknown">
+
+                                -
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="text-sm text-on-surface-variant">
+
+                        Risk Score:
+
+                        <strong
+                            id="riskScore"
+                            class="text-on-surface">
+
+                            -
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- CASE DESCRIPTION -->
+
+            <section
+                class="bg-surface border border-outline-variant rounded-xl p-5 mb-6">
+
+                <div class="flex items-center gap-2 mb-2">
+
+                    <span class="material-symbols-outlined text-primary">
+                        description
+                    </span>
+
+                    <h2 class="font-bold">
+                        Report Description
+                    </h2>
+
+                </div>
+
+                <p
+                    id="caseDescription"
+                    class="text-sm leading-6 text-on-surface-variant">
+
+                    -
+
+                </p>
+
+            </section>
+
+
+            <!-- EVIDENCE -->
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- ORIGINAL -->
+
+                <section
+                    class="bg-surface border border-outline-variant rounded-xl overflow-hidden">
+
+                    <div class="px-5 py-4 border-b border-outline-variant flex justify-between items-center">
+
+                        <div class="flex items-center gap-2">
+
+                            <span class="material-symbols-outlined text-error">
+                                report
+                            </span>
+
+                            <h2 class="font-bold">
+                                Original Evidence
+                            </h2>
+
+                        </div>
+
+                        <span class="text-xs text-on-surface-variant">
+                            Citizen report
+                        </span>
+
+                    </div>
+
+
+                    <div id="originalEvidence">
+                    </div>
+
+                </section>
+
+
+                <!-- RESOLUTION -->
+
+                <section
+                    class="bg-surface border border-outline-variant rounded-xl overflow-hidden">
+
+                    <div class="px-5 py-4 border-b border-outline-variant flex justify-between items-center">
+
+                        <div class="flex items-center gap-2">
+
+                            <span class="material-symbols-outlined text-secondary">
+                                verified
+                            </span>
+
+                            <h2 class="font-bold">
+                                Resolution Evidence
+                            </h2>
+
+                        </div>
+
+                        <span class="text-xs text-on-surface-variant">
+                            Field evidence
+                        </span>
+
+                    </div>
+
+
+                    <div id="resolutionEvidence">
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- ACTION BAR -->
+
+            <section
+                class="mt-6 bg-surface-container-low border border-outline-variant rounded-xl p-5">
+
+                <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+
+                    <div>
+
+                        <div class="flex items-center gap-2 mb-1">
+
+                            <span class="material-symbols-outlined text-primary">
+                                fact_check
+                            </span>
+
+                            <h2 class="font-bold">
+                                Review Action Required
+                            </h2>
+
+                        </div>
+
+                        <p class="text-sm text-on-surface-variant">
+                            Review the resolution evidence before changing the case status.
+                        </p>
+
+                    </div>
+
+
+                    <div class="flex flex-wrap gap-3">
+
+                        <button
+                            id="moreEvidenceBtn"
+                            onclick="requestMoreEvidence()"
+                            class="h-11 px-5 border border-outline rounded-lg
+                                   text-sm font-semibold
+                                   hover:bg-surface-variant
+                                   flex items-center gap-2">
+
+                            <span class="material-symbols-outlined">
+                                history
+                            </span>
+
+                            Request More Evidence
+
+                        </button>
+
+
+                        <button
+                            id="rejectBtn"
+                            onclick="rejectResolution()"
+                            class="h-11 px-5 border border-error text-error
+                                   rounded-lg text-sm font-semibold
+                                   hover:bg-error-container
+                                   flex items-center gap-2">
+
+                            <span class="material-symbols-outlined">
+                                close
+                            </span>
+
+                            Reject & Reopen
+
+                        </button>
+
+
+                        <button
+                            id="acceptBtn"
+                            onclick="acceptResolution()"
+                            class="h-11 px-6 bg-primary text-on-primary
+                                   rounded-lg text-sm font-bold
+                                   hover:bg-primary-container
+                                   flex items-center gap-2">
+
+                            <span class="material-symbols-outlined">
+                                check
+                            </span>
+
+                            Accept Resolution Claim
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- CASE DETAILS -->
+
+            <section class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                <div class="bg-surface border border-outline-variant rounded-xl p-5">
+
+                    <span class="text-xs text-on-surface-variant">
+                        Case ID
+                    </span>
+
+                    <p
+                        id="detailCaseId"
+                        class="font-bold mt-1 break-all">
+
+                        -
+
+                    </p>
+
+                </div>
+
+
+                <div class="bg-surface border border-outline-variant rounded-xl p-5">
+
+                    <span class="text-xs text-on-surface-variant">
+                        Created
+                    </span>
+
+                    <p
+                        id="detailCreated"
+                        class="font-bold mt-1">
+
+                        -
+
+                    </p>
+
+                </div>
+
+
+                <div class="bg-surface border border-outline-variant rounded-xl p-5">
+
+                    <span class="text-xs text-on-surface-variant">
+                        Last Updated
+                    </span>
+
+                    <p
+                        id="detailUpdated"
+                        class="font-bold mt-1">
+
+                        -
+
+                    </p>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<!-- TOAST -->
+
+<div id="toast" class="toast"></div>
+
+
+<script>
+
+/* ============================================================
+   CONFIG
+============================================================ */
+
+const API_BASE = "http://127.0.0.1:8000/api";
+
+
+/* ============================================================
+   CASE ID
+============================================================ */
+
+/*
+   You can open this page as:
+
+   evidence-review.html?case_id=CVT-KOL-2453
+
+   OR:
+
+   evidence-review.html
+
+   In the second case it defaults to the test case.
+*/
+
+const params = new URLSearchParams(window.location.search);
+
+const CASE_ID =
+    params.get("case_id") ||
+    localStorage.getItem("selectedCaseId") ||
+    "CVT-KOL-2453";
+
+
+/* ============================================================
+   AUTH
+============================================================ */
+
+/*
+   Different pages sometimes store JWT under different keys.
+   We check the common ones used by CivicTrace.
+*/
+
+function getToken() {
+
+    return (
+        localStorage.getItem("access_token") ||
+        localStorage.getItem("token") ||
+        localStorage.getItem("jwt") ||
+        sessionStorage.getItem("access_token") ||
+        sessionStorage.getItem("token") ||
+        null
+    );
+}
+
+
+function getHeaders() {
+
+    const token = getToken();
+
+    const headers = {
+        "Accept": "application/json"
+    };
+
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    return headers;
+}
+
+
+/* ============================================================
+   DOM
+============================================================ */
+
+const loadingState =
+    document.getElementById("loadingState");
+
+const errorState =
+    document.getElementById("errorState");
+
+const errorMessage =
+    document.getElementById("errorMessage");
+
+const mainContent =
+    document.getElementById("mainContent");
+
+
+/* ============================================================
+   START
+============================================================ */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    document.getElementById("caseBadge").textContent = CASE_ID;
+
+    loadEverything();
+
+});
+
+
+/* ============================================================
+   MAIN LOAD
+============================================================ */
+
+async function loadEverything() {
+
+    showLoading();
+
+    try {
+
+        const caseData = await getCase();
+
+        renderCase(caseData);
+
+
+        let evidenceData = [];
+
+        try {
+
+            evidenceData = await getEvidence();
+
+        } catch (e) {
+
+            console.warn(
+                "Evidence endpoint failed:",
+                e
+            );
+
+        }
+
+
+        renderEvidence(evidenceData);
+
+        showContent();
+
+    } catch (error) {
+
+        console.error(error);
+
+        showError(
+            error.message ||
+            "Unable to load this case."
+        );
+
+    }
+
+}
+
+
+/* ============================================================
+   GET CASE
+============================================================ */
+
+async function getCase() {
+
+    const response = await fetch(
+        `${API_BASE}/cases/${encodeURIComponent(CASE_ID)}`,
+        {
+            method: "GET",
+            headers: getHeaders()
+        }
+    );
+
+
+    if (!response.ok) {
+
+        if (response.status === 401) {
+
+            throw new Error(
+                "Government authentication required. Please log in again."
+            );
+
+        }
+
+        if (response.status === 404) {
+
+            throw new Error(
+                `Case ${CASE_ID} was not found.`
+            );
+
+        }
+
+        throw new Error(
+            `Failed to load case. Server returned ${response.status}.`
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+/* ============================================================
+   GET EVIDENCE
+============================================================ */
+
+async function getEvidence() {
+
+    const response = await fetch(
+        `${API_BASE}/cases/${encodeURIComponent(CASE_ID)}/evidence`,
+        {
+            method: "GET",
+            headers: getHeaders()
+        }
+    );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Evidence request failed: ${response.status}`
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+/* ============================================================
+   RENDER CASE
+============================================================ */
+
+function renderCase(data) {
+
+    document.getElementById("caseTitle").textContent =
+        data.title || "Untitled Case";
+
+
+    document.getElementById("caseLocation").textContent =
+        data.location_text || "Location unavailable";
+
+
+    document.getElementById("caseCategory").textContent =
+        formatCategory(data.category);
+
+
+    document.getElementById("caseDescription").textContent =
+        data.description || "No description provided.";
+
+
+    document.getElementById("riskScore").textContent =
+        data.risk_score ?? "N/A";
+
+
+    document.getElementById("detailCaseId").textContent =
+        data.id || CASE_ID;
+
+
+    document.getElementById("detailCreated").textContent =
+        formatDate(data.created_at);
+
+
+    document.getElementById("detailUpdated").textContent =
+        data.updated_at
+            ? formatDate(data.updated_at)
+            : "Not updated";
+
+
+    const statusElement =
+        document.getElementById("caseStatus");
+
+
+    statusElement.textContent =
+        formatStatus(data.status);
+
+
+    statusElement.className =
+        `status-badge ${getStatusClass(data.status)}`;
+
+
+    /*
+       If the case is already resolved/rejected,
+       disable review buttons.
+    */
+
+    if (
+        data.status === "resolved" ||
+        data.status === "rejected"
+    ) {
+
+        disableReviewButtons();
+
+    }
+
+}
+
+
+/* ============================================================
+   RENDER EVIDENCE
+============================================================ */
+
+function renderEvidence(data) {
+
+    const originalContainer =
+        document.getElementById("originalEvidence");
+
+    const resolutionContainer =
+        document.getElementById("resolutionEvidence");
+
+
+    originalContainer.innerHTML = "";
+    resolutionContainer.innerHTML = "";
+
+
+    /*
+       Backend may return either:
+
+       [
+         {...},
+         {...}
+       ]
+
+       OR:
+
+       {
+         "evidence": [...]
+       }
+    */
+
+    let evidence = data;
+
+
+    if (
+        data &&
+        !Array.isArray(data) &&
+        Array.isArray(data.evidence)
+    ) {
+
+        evidence = data.evidence;
+
+    }
+
+
+    if (!Array.isArray(evidence)) {
+
+        evidence = [];
+
+    }
+
+
+    const beforeEvidence =
+        evidence.filter(item =>
+            isOriginalEvidence(item)
+        );
+
+
+    const afterEvidence =
+        evidence.filter(item =>
+            !isOriginalEvidence(item)
+        );
+
+
+    /*
+       If backend doesn't provide before/after
+       classification, put first evidence on
+       original side and remaining evidence on
+       resolution side.
+    */
+
+    if (
+        beforeEvidence.length === 0 &&
+        afterEvidence.length > 0
+    ) {
+
+        const first = afterEvidence.shift();
+
+        beforeEvidence.push(first);
+
+    }
+
+
+    if (beforeEvidence.length > 0) {
+
+        renderEvidenceCard(
+            originalContainer,
+            beforeEvidence[0],
+            "Original Report"
+        );
+
+    } else {
+
+        originalContainer.innerHTML =
+            emptyEvidence(
+                "No original evidence has been uploaded."
+            );
+
+    }
+
+
+    if (afterEvidence.length > 0) {
+
+        renderEvidenceCard(
+            resolutionContainer,
+            afterEvidence[afterEvidence.length - 1],
+            "Resolution Claim"
+        );
+
+    } else {
+
+        resolutionContainer.innerHTML =
+            emptyEvidence(
+                "No resolution evidence has been uploaded yet."
+            );
+
+    }
+
+}
+
+
+/* ============================================================
+   EVIDENCE CARD
+============================================================ */
+
+function renderEvidenceCard(
+    container,
+    evidence,
+    label
+) {
+
+    const imageUrl =
+        getEvidenceImageUrl(evidence);
+
+
+    const description =
+        evidence.description ||
+        evidence.notes ||
+        "No notes provided.";
+
+
+    const latitude =
+        evidence.latitude ??
+        evidence.lat;
+
+
+    const longitude =
+        evidence.longitude ??
+        evidence.lng;
+
+
+    const captured =
+        evidence.captured_at ||
+        evidence.created_at ||
+        evidence.timestamp;
+
+
+    let imageHTML = "";
+
+
+    if (imageUrl) {
+
+        imageHTML = `
+            <img
+                src="${escapeAttribute(imageUrl)}"
+                class="evidence-image"
+                alt="${escapeAttribute(label)}"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            >
+
+            <div class="hidden evidence-image items-center justify-center text-center p-6">
+                <div>
+                    <span class="material-symbols-outlined text-4xl text-outline">
+                        broken_image
+                    </span>
+
+                    <p class="text-sm text-on-surface-variant mt-2">
+                        Evidence image unavailable
+                    </p>
+                </div>
+            </div>
+        `;
+
+    } else {
+
+        imageHTML = `
+            <div class="evidence-image flex items-center justify-center">
+                <div class="text-center p-6">
+
+                    <span class="material-symbols-outlined text-5xl text-outline">
+                        image_not_supported
+                    </span>
+
+                    <p class="text-sm text-on-surface-variant mt-2">
+                        No image available
+                    </p>
+
+                </div>
+            </div>
+        `;
+
+    }
+
+
+    container.innerHTML = `
+
+        <div class="relative">
+
+            <div class="absolute top-4 left-4 z-10
+                        bg-primary text-on-primary
+                        px-3 py-1 rounded-full
+                        text-xs font-bold uppercase">
+
+                ${escapeHTML(label)}
+
+            </div>
+
+            ${imageHTML}
+
+        </div>
+
+
+        <div class="p-5">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4
+                        border-b border-outline-variant pb-4 mb-4">
+
+
+                <div>
+
+                    <span class="block text-xs text-outline mb-1">
+                        Evidence Type
+                    </span>
+
+                    <span class="font-semibold text-sm">
+                        ${escapeHTML(
+                            evidence.evidence_type ||
+                            evidence.type ||
+                            label
+                        )}
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    <span class="block text-xs text-outline mb-1">
+                        Timestamp
+                    </span>
+
+                    <span class="font-semibold text-sm">
+                        ${captured
+                            ? escapeHTML(formatDate(captured))
+                            : "Unavailable"
+                        }
+                    </span>
+
+                </div>
+
+
+                <div class="sm:col-span-2">
+
+                    <span class="block text-xs text-outline mb-1">
+                        GPS Coordinates
+                    </span>
+
+                    <span class="font-mono text-sm">
+
+                        ${
+                            latitude !== undefined &&
+                            latitude !== null &&
+                            longitude !== undefined &&
+                            longitude !== null
+
+                            ? `${latitude}, ${longitude}`
+
+                            : "Unavailable"
+                        }
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div>
+
+                <span class="block text-xs text-outline mb-2">
+                    Notes
+                </span>
+
+                <p class="text-sm leading-6 text-on-surface-variant">
+                    ${escapeHTML(description)}
+                </p>
+
+            </div>
+
+        </div>
+    `;
+
+}
+
+
+/* ============================================================
+   EVIDENCE HELPERS
+============================================================ */
+
+function isOriginalEvidence(item) {
+
+    const type =
+        String(
+            item.evidence_type ||
+            item.type ||
+            item.kind ||
+            ""
+        ).toLowerCase();
+
+
+    return (
+        type.includes("before") ||
+        type.includes("original") ||
+        type.includes("report")
+    );
+
+}
+
+
+function getEvidenceImageUrl(item) {
+
+    return (
+        item.media_url ||
+        item.file_url ||
+        item.image_url ||
+        item.url ||
+        item.path ||
+        null
+    );
+
+}
+
+
+function emptyEvidence(message) {
+
+    return `
+
+        <div class="empty-evidence">
+
+            <div>
+
+                <span class="material-symbols-outlined text-5xl">
+                    image_not_supported
+                </span>
+
+                <p class="text-sm mt-3">
+                    ${escapeHTML(message)}
+                </p>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* ============================================================
+   ACCEPT RESOLUTION
+============================================================ */
+
+async function acceptResolution() {
+
+    const confirmed =
+        confirm(
+            "Accept this resolution claim and mark the case as resolved?"
+        );
+
+
+    if (!confirmed) return;
+
+
+    setReviewButtons(true);
+
+
+    try {
+
+        await updateCaseStatus(
+            "resolved"
+        );
+
+
+        showToast(
+            "Resolution accepted. Case marked as resolved.",
+            "success"
+        );
+
+
+        await loadEverything();
+
+
+    } catch (error) {
+
+        showToast(
+            error.message,
+            "error"
+        );
+
+        setReviewButtons(false);
+
+    }
+
+}
+
+
+/* ============================================================
+   REJECT / REOPEN
+============================================================ */
+
+async function rejectResolution() {
+
+    const confirmed =
+        confirm(
+            "Reject the resolution evidence and reopen this case?"
+        );
+
+
+    if (!confirmed) return;
+
+
+    setReviewButtons(true);
+
+
+    try {
+
+        /*
+           We use the existing PATCH /cases/{case_id}
+           endpoint.
+
+           Your backend already exposes this endpoint.
+        */
+
+        await updateCaseStatus(
+            "rejected"
+        );
+
+
+        showToast(
+            "Resolution rejected. Case reopened.",
+            "success"
+        );
+
+
+        await loadEverything();
+
+
+    } catch (error) {
+
+        showToast(
+            error.message,
+            "error"
+        );
+
+        setReviewButtons(false);
+
+    }
+
+}
+
+
+/* ============================================================
+   REQUEST MORE EVIDENCE
+============================================================ */
+
+async function requestMoreEvidence() {
+
+    const confirmed =
+        confirm(
+            "Request more evidence from the field team?"
+        );
+
+
+    if (!confirmed) return;
+
+
+    setReviewButtons(true);
+
+
+    try {
+
+        /*
+           We use "assigned" here because it is a status
+           supported by your existing case workflow.
+
+           If your backend later gets a dedicated
+           "more_evidence" status, change this one value.
+        */
+
+        await updateCaseStatus(
+            "assigned"
+        );
+
+
+        showToast(
+            "Case returned for additional evidence.",
+            "success"
+        );
+
+
+        await loadEverything();
+
+
+    } catch (error) {
+
+        showToast(
+            error.message,
+            "error"
+        );
+
+        setReviewButtons(false);
+
+    }
+
+}
+
+
+/* ============================================================
+   PATCH CASE
+============================================================ */
+
+async function updateCaseStatus(status) {
+
+    const token =
+        getToken();
+
+
+    const headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    };
+
+
+    if (token) {
+
+        headers["Authorization"] =
+            `Bearer ${token}`;
+
+    }
+
+
+    /*
+       Existing endpoint confirmed:
+
+       PATCH /api/cases/{case_id}
+
+       We send only the status field.
+    */
+
+    const response =
+        await fetch(
+            `${API_BASE}/cases/${encodeURIComponent(CASE_ID)}`,
+            {
+                method: "PATCH",
+                headers,
+                body: JSON.stringify({
+                    status: status
+                })
+            }
+        );
+
+
+    if (!response.ok) {
+
+        let detail =
+            `Case update failed (${response.status})`;
+
+
+        try {
+
+            const data =
+                await response.json();
+
+            if (data.detail) {
+
+                if (Array.isArray(data.detail)) {
+
+                    detail =
+                        data.detail
+                            .map(x => x.msg || JSON.stringify(x))
+                            .join(", ");
+
+                } else {
+
+                    detail =
+                        String(data.detail);
+
+                }
+
+            }
+
+        } catch (_) {
+        }
+
+
+        throw new Error(detail);
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+/* ============================================================
+   UI STATES
+============================================================ */
+
+function showLoading() {
+
+    loadingState.classList.remove("hidden");
+
+    errorState.classList.add("hidden");
+
+    mainContent.classList.add("hidden");
+
+}
+
+
+function showContent() {
+
+    loadingState.classList.add("hidden");
+
+    errorState.classList.add("hidden");
+
+    mainContent.classList.remove("hidden");
+
+}
+
+
+function showError(message) {
+
+    loadingState.classList.add("hidden");
+
+    mainContent.classList.add("hidden");
+
+    errorState.classList.remove("hidden");
+
+    errorMessage.textContent =
+        message;
+
+}
+
+
+function setReviewButtons(disabled) {
+
+    document.getElementById(
+        "moreEvidenceBtn"
+    ).disabled = disabled;
+
+
+    document.getElementById(
+        "rejectBtn"
+    ).disabled = disabled;
+
+
+    document.getElementById(
+        "acceptBtn"
+    ).disabled = disabled;
+
+}
+
+
+function disableReviewButtons() {
+
+    setReviewButtons(true);
+
+}
+
+
+/* ============================================================
+   TOAST
+============================================================ */
+
+function showToast(
+    message,
+    type = "success"
+) {
+
+    const toast =
+        document.getElementById("toast");
+
+
+    toast.textContent =
+        message;
+
+
+    toast.className =
+        `toast ${type}`;
+
+
+    toast.style.display =
+        "block";
+
+
+    setTimeout(() => {
+
+        toast.style.display =
+            "none";
+
+    }, 4000);
+
+}
+
+
+/* ============================================================
+   FORMATTING
+============================================================ */
+
+function formatCategory(category) {
+
+    if (!category) return "Unknown";
+
+
+    return String(category)
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, c => c.toUpperCase());
+
+}
+
+
+function formatStatus(status) {
+
+    if (!status) return "Unknown";
+
+
+    return String(status)
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, c => c.toUpperCase());
+
+}
+
+
+function getStatusClass(status) {
+
+    const normalized =
+        String(status || "")
+            .toLowerCase()
+            .replaceAll(" ", "_");
+
+
+    if (normalized === "received") {
+        return "status-received";
+    }
+
+    if (normalized === "assigned") {
+        return "status-assigned";
+    }
+
+    if (
+        normalized === "in_progress" ||
+        normalized === "in-progress"
+    ) {
+        return "status-in_progress";
+    }
+
+    if (normalized === "resolved") {
+        return "status-resolved";
+    }
+
+    if (normalized === "rejected") {
+        return "status-rejected";
+    }
+
+    return "status-unknown";
+
+}
+
+
+function formatDate(value) {
+
+    if (!value) return "Unavailable";
+
+
+    const date =
+        new Date(value);
+
+
+    if (Number.isNaN(date.getTime())) {
+
+        return String(value);
+
+    }
+
+
+    return date.toLocaleString(
+        "en-IN",
+        {
+            dateStyle: "medium",
+            timeStyle: "short"
+        }
+    );
+
+}
+
+
+/* ============================================================
+   SECURITY HELPERS
+============================================================ */
+
+function escapeHTML(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+
+function escapeAttribute(value) {
+
+    return escapeHTML(value);
+
+}
+
+
+/* ============================================================
+   LOGOUT
+============================================================ */
+
+function logout() {
+
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("token");
+    localStorage.removeItem("jwt");
+
+    sessionStorage.removeItem("access_token");
+    sessionStorage.removeItem("token");
+
+    window.location.href =
+        "login.html";
+
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>CivicTrace - Report Issue</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .material-symbols-outlined {
+        font-family: 'Material Symbols Outlined';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+      }
+    }
+  </style>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-tertiary-container": "#000604",
+            "secondary": "#3c665b",
+            "error": "#ba1a1a",
+            "surface-bright": "#faf8ff",
+            "on-tertiary-fixed-variant": "#00513e",
+            "tertiary-container": "#008769",
+            "outline": "#757682",
+            "on-primary": "#ffffff",
+            "surface-dim": "#d4d9f4",
+            "tertiary-fixed-dim": "#62dbb5",
+            "on-tertiary-fixed": "#002117",
+            "tertiary-fixed": "#80f8d1",
+            "secondary-fixed": "#beecde",
+            "inverse-primary": "#b5c4ff",
+            "surface-tint": "#415aa9",
+            "background": "#faf8ff",
+            "surface-container-highest": "#dde1fd",
+            "on-secondary": "#ffffff",
+            "surface-container-high": "#e4e7ff",
+            "outline-variant": "#c5c5d3",
+            "inverse-surface": "#2a2f44",
+            "primary-fixed": "#dce1ff",
+            "error-container": "#ffdad6",
+            "on-surface": "#151b2e",
+            "on-surface-variant": "#444651",
+            "primary-fixed-dim": "#b5c4ff",
+            "on-tertiary": "#ffffff",
+            "surface-container": "#ebedff",
+            "surface": "#faf8ff",
+            "on-error": "#ffffff",
+            "on-primary-container": "#fffbff",
+            "secondary-fixed-dim": "#a3d0c2",
+            "secondary-container": "#bbe9db",
+            "tertiary": "#006b53",
+            "on-primary-fixed-variant": "#274190",
+            "on-secondary-fixed-variant": "#234e44",
+            "surface-container-low": "#f3f2ff",
+            "inverse-on-surface": "#eff0ff",
+            "on-secondary-container": "#406b5f",
+            "on-background": "#151b2e",
+            "on-error-container": "#93000a",
+            "primary": "#3f57a6",
+            "surface-container-lowest": "#ffffff",
+            "on-secondary-fixed": "#00201a",
+            "on-primary-fixed": "#00164e",
+            "primary-container": "#5870c1",
+            "surface-variant": "#dde1fd"
+          },
+          borderRadius: {
+            DEFAULT: "0.25rem",
+            lg: "0.5rem",
+            xl: "0.75rem",
+            full: "9999px"
+          },
+          spacing: {
+            "margin-mobile": "16px",
+            "unit-4": "1rem",
+            "container-max": "1280px",
+            "unit-6": "1.5rem",
+            "gutter": "24px",
+            "unit-12": "3rem",
+            "base": "4px",
+            "unit-1": "0.25rem",
+            "unit-8": "2rem",
+            "unit-2": "0.5rem"
+          },
+          fontFamily: {
+            "headline-lg-mobile": ["Inter"],
+            "body-md": ["Inter"],
+            "label-md": ["Inter"],
+            "body-sm": ["Inter"],
+            "headline-md": ["Inter"],
+            "headline-xl": ["Inter"],
+            "headline-lg": ["Inter"],
+            "label-sm": ["Inter"],
+            "body-lg": ["Inter"],
+            "tabular-nums": ["Inter"]
+          },
+          fontSize: {
+            "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+            "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+            "label-md": ["14px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+            "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+            "headline-md": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+            "headline-xl": ["36px", { lineHeight: "44px", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "headline-lg": ["28px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "label-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+            "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+            "tabular-nums": ["14px", { lineHeight: "20px", fontWeight: "400" }]
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md text-body-md">
+
+<!-- TopNavBar -->
+<header class="bg-surface border-b border-outline-variant flex justify-between items-center w-full px-margin-mobile md:px-unit-8 max-w-container-max mx-auto h-16 docked full-width top-0 z-50">
+  <div class="flex items-center gap-unit-6">
+    <span class="text-headline-md font-headline-md font-extrabold text-primary">CivicTrace</span>
+    <nav class="hidden md:flex gap-unit-6 h-full items-center">
+      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="home.html">Map</a>
+      <a class="text-primary border-b-2 border-primary pb-1 font-bold opacity-80 transition-opacity text-label-md font-label-md" href="report.html">Report</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="track-report.html">Track</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="about.html">About</a>
+    </nav>
+  </div>
+  <div class="flex items-center gap-unit-4">
+    <button class="text-on-surface-variant hover:text-primary transition-colors">
+      <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+    </button>
+    <button class="text-on-surface-variant hover:text-primary transition-colors">
+      <span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+    </button>
+  </div>
+</header>
+
+<main class="flex-grow w-full max-w-container-max mx-auto px-unit-8 py-unit-12 grid grid-cols-12 gap-gutter">
+
+<!-- Sidebar / Context Info -->
+<aside class="col-span-12 md:col-span-4 lg:col-span-3 flex flex-col gap-unit-6">
+  <div class="bg-surface-container-low p-unit-6 rounded-xl border border-outline-variant">
+    <div class="flex items-start gap-unit-4 mb-unit-4">
+      <span class="material-symbols-outlined text-tertiary-container" data-icon="shield" style="font-variation-settings: 'FILL' 1;">shield</span>
+      <div>
+        <h2 class="text-headline-sm font-headline-sm font-semibold mb-unit-1">Privacy Assured</h2>
+        <p class="text-body-sm font-body-sm text-on-surface-variant">Your identity is not shared with municipal authorities. Reports are anonymous to ensure citizen protection.</p>
+      </div>
+    </div>
+  </div>
+  <div class="bg-surface-container-low p-unit-6 rounded-xl border border-outline-variant flex-grow">
+    <h3 class="text-label-md font-label-md uppercase text-on-surface-variant mb-unit-4">Progress</h3>
+    <ol class="flex flex-col gap-unit-4 relative">
+      <div class="absolute left-[11px] top-2 bottom-2 w-0.5 bg-outline-variant z-0"></div>
+      <li class="flex items-center gap-unit-3 relative z-10">
+        <div id="step1dot" class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center text-label-sm font-label-sm">1</div>
+        <span id="step1text" class="text-body-md font-body-md font-medium text-primary">Category</span>
+      </li>
+      <li class="flex items-center gap-unit-3 relative z-10">
+        <div id="step2dot" class="w-6 h-6 rounded-full bg-surface border border-outline-variant text-on-surface-variant flex items-center justify-center text-label-sm font-label-sm">2</div>
+        <span id="step2text" class="text-body-md font-body-md text-on-surface-variant">Evidence</span>
+      </li>
+      <li class="flex items-center gap-unit-3 relative z-10">
+        <div class="w-6 h-6 rounded-full bg-surface border border-outline-variant text-on-surface-variant flex items-center justify-center text-label-sm font-label-sm">3</div>
+        <span class="text-body-md font-body-md text-on-surface-variant">Submit</span>
+      </li>
+    </ol>
+  </div>
+</aside>
+
+<!-- Main Form Area -->
+<section class="col-span-12 md:col-span-8 lg:col-span-9">
+  <div class="bg-surface rounded-xl border border-outline-variant p-unit-8 shadow-sm">
+    <div class="mb-unit-8 border-b border-outline-variant pb-unit-4">
+      <h1 class="text-headline-lg font-headline-lg text-primary mb-unit-2">Report a Civic Issue</h1>
+      <p class="text-body-md font-body-md text-on-surface-variant">Help improve Kolkata by reporting issues in your neighborhood. Your location will be captured automatically.</p>
+    </div>
+
+    <!-- Token input -->
+    <div class="mb-unit-6">
+      <label class="block text-label-md font-label-md text-on-surface-variant mb-unit-2" for="tokenInput">
+        Citizen Token
+      </label>
+      <input
+        id="tokenInput"
+        type="text"
+        placeholder="e.g. CT-VPN4-ETUO"
+        class="w-full px-unit-4 py-unit-2 rounded-lg border border-outline-variant bg-surface-container-low text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+      />
+    </div>
+
+    <!-- Step 1: Category Selection -->
+    <div id="step1">
+      <h2 class="text-headline-md font-headline-md mb-unit-4">1. Select Issue Category</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-unit-4">
+        <button
+          class="category-btn flex flex-col items-center justify-center p-unit-6 border-2 border-primary bg-primary-fixed-dim/20 rounded-lg text-primary hover:bg-primary-fixed-dim/30 transition-colors"
+          data-category="pothole_road"
+        >
+          <span class="material-symbols-outlined text-[32px] mb-unit-2" data-icon="road">road</span>
+          <span class="text-label-md font-label-md">Pothole / Road</span>
+        </button>
+        <button
+          class="category-btn flex flex-col items-center justify-center p-unit-6 border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors"
+          data-category="water_leak"
+        >
+          <span class="material-symbols-outlined text-[32px] mb-unit-2" data-icon="water_drop">water_drop</span>
+          <span class="text-label-md font-label-md">Water Leak</span>
+        </button>
+        <button
+          class="category-btn flex flex-col items-center justify-center p-unit-6 border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors"
+          data-category="streetlight"
+        >
+          <span class="material-symbols-outlined text-[32px] mb-unit-2" data-icon="lightbulb">lightbulb</span>
+          <span class="text-label-md font-label-md">Streetlight</span>
+        </button>
+        <button
+          class="category-btn flex flex-col items-center justify-center p-unit-6 border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors"
+          data-category="garbage"
+        >
+          <span class="material-symbols-outlined text-[32px] mb-unit-2" data-icon="delete">delete</span>
+          <span class="text-label-md font-label-md">Garbage</span>
+        </button>
+      </div>
+      <p id="categoryError" class="text-error text-body-sm mt-unit-2 hidden">Please select a category.</p>
+
+      <div class="flex justify-end items-center pt-unit-6 border-t border-outline-variant mt-unit-8">
+        <button
+          id="toEvidenceBtn"
+          class="px-unit-6 py-unit-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors"
+        >
+          Next: Evidence
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Evidence -->
+    <div id="step2" class="hidden">
+      <h2 class="text-headline-md font-headline-md mb-unit-4">2. Add Evidence</h2>
+
+      <div class="mb-unit-4">
+        <label class="block text-label-md font-label-md text-on-surface-variant mb-unit-2" for="photoInput">
+          Photo (optional)
+        </label>
+        <input
+          id="photoInput"
+          type="file"
+          accept="image/*"
+          class="w-full px-unit-4 py-unit-2 rounded-lg border border-outline-variant bg-surface-container-low text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+
+      <div class="mb-unit-6">
+        <label class="block text-label-md font-label-md text-on-surface-variant mb-unit-2" for="descInput">
+          Description (optional)
+        </label>
+        <textarea
+          id="descInput"
+          rows="3"
+          placeholder="Describe what you see..."
+          class="w-full px-unit-4 py-unit-2 rounded-lg border border-outline-variant bg-surface-container-low text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+        ></textarea>
+      </div>
+
+      <div class="flex justify-between items-center pt-unit-6 border-t border-outline-variant mt-unit-8">
+        <button
+          id="backBtn"
+          class="px-unit-6 py-unit-2 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container transition-colors"
+        >
+          Back
+        </button>
+        <button
+          id="submitBtn"
+          class="px-unit-6 py-unit-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors"
+        >
+          Submit Report
+        </button>
+      </div>
+    </div>
+
+    <!-- Result / Error -->
+    <div id="resultBox" class="hidden mt-unit-8 p-unit-4 rounded-lg border border-outline-variant">
+      <p id="resultText" class="text-body-md"></p>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<script>
+  const API_BASE = "http://127.0.0.1:8000/api";
+
+  const tokenInput = document.getElementById("tokenInput");
+
+  const step1 = document.getElementById("step1");
+  const step2 = document.getElementById("step2");
+
+  const step1dot = document.getElementById("step1dot");
+  const step2dot = document.getElementById("step2dot");
+  const step1text = document.getElementById("step1text");
+  const step2text = document.getElementById("step2text");
+
+  const categoryBtns = document.querySelectorAll(".category-btn");
+  const categoryError = document.getElementById("categoryError");
+  const toEvidenceBtn = document.getElementById("toEvidenceBtn");
+  const backBtn = document.getElementById("backBtn");
+  const submitBtn = document.getElementById("submitBtn");
+
+  const photoInput = document.getElementById("photoInput");
+  const descInput = document.getElementById("descInput");
+
+  const resultBox = document.getElementById("resultBox");
+  const resultText = document.getElementById("resultText");
+
+  let selectedCategory = null;
+  let selectedCaseId = null;
+
+  // Category selection
+  categoryBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      categoryBtns.forEach(b => {
+        b.classList.remove("border-primary", "bg-primary-fixed-dim/20", "text-primary");
+        b.classList.add("border-outline-variant", "text-on-surface-variant");
+      });
+      btn.classList.remove("border-outline-variant", "text-on-surface-variant");
+      btn.classList.add("border-primary", "bg-primary-fixed-dim/20", "text-primary");
+      selectedCategory = btn.dataset.category;
+      categoryError.classList.add("hidden");
+    });
+  });
+
+  // Step navigation
+  toEvidenceBtn.addEventListener("click", () => {
+    if (!selectedCategory) {
+      categoryError.classList.remove("hidden");
+      return;
+    }
+    step1.classList.add("hidden");
+    step2.classList.remove("hidden");
+
+    // Update progress
+    step1dot.classList.remove("bg-primary", "text-on-primary");
+    step1dot.classList.add("bg-surface-container-low", "text-on-surface-variant");
+    step1text.classList.remove("text-primary", "font-medium");
+    step1text.classList.add("text-on-surface-variant");
+
+    step2dot.classList.remove("bg-surface", "border-outline-variant", "text-on-surface-variant");
+    step2dot.classList.add("bg-primary", "text-on-primary");
+    step2text.classList.remove("text-on-surface-variant");
+    step2text.classList.add("text-primary", "font-medium");
+  });
+
+  backBtn.addEventListener("click", () => {
+    step2.classList.add("hidden");
+    step1.classList.remove("hidden");
+
+    step1dot.classList.remove("bg-surface-container-low", "text-on-surface-variant");
+    step1dot.classList.add("bg-primary", "text-on-primary");
+    step1text.classList.remove("text-on-surface-variant");
+    step1text.classList.add("text-primary", "font-medium");
+
+    step2dot.classList.remove("bg-primary", "text-on-primary");
+    step2dot.classList.add("bg-surface", "border-outline-variant", "text-on-surface-variant");
+    step2text.classList.remove("text-primary", "font-medium");
+    step2text.classList.add("text-on-surface-variant");
+  });
+
+  // Geolocation helper
+  function getCurrentPosition() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocation is not supported by your browser."));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          resolve({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+          });
+        },
+        err => {
+          switch (err.code) {
+            case err.PERMISSION_DENIED:
+              reject(new Error("Location permission denied. Please allow location access and try again."));
+              break;
+            case err.POSITION_UNAVAILABLE:
+              reject(new Error("Location information unavailable."));
+              break;
+            case err.TIMEOUT:
+              reject(new Error("Location request timed out."));
+              break;
+            default:
+              reject(new Error("Failed to get your location."));
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+  }
+
+  // Submit
+  submitBtn.addEventListener("click", async () => {
+    resultBox.classList.add("hidden");
+
+    const token = tokenInput.value.trim();
+    if (!token) {
+      showResult("Please enter your citizen token.", true);
+      return;
+    }
+    if (!selectedCategory) {
+      step2.classList.add("hidden");
+      step1.classList.remove("hidden");
+      categoryError.classList.remove("hidden");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Getting location...";
+
+    try {
+      const loc = await getCurrentPosition();
+
+      submitBtn.textContent = "Submitting...";
+
+      const caseId = "CVT-KOL-" + Math.floor(1000 + Math.random() * 9000);
+      selectedCaseId = caseId;
+
+      const payload = {
+        id: caseId,
+        title: selectedCategory.toUpperCase().replace("_", " "),
+        description: "Citizen report via web form.",
+        category: selectedCategory,
+        location_text: "Auto-detected location",
+        latitude: loc.lat,
+        longitude: loc.lng,
+        risk_score: 50,
+        reporter_token: token
+      };
+
+      const resCase = await fetch(`${API_BASE}/cases`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!resCase.ok) {
+        const errText = await resCase.text();
+        throw new Error(errText || `HTTP ${resCase.status}`);
+      }
+
+      const dataCase = await resCase.json();
+
+      // Evidence (photo + description) if present
+      const photoFile = photoInput.files?.[0];
+      const descriptionText = descInput.value.trim();
+
+      if (photoFile || descriptionText) {
+        let photoBase64 = null;
+        if (photoFile) {
+          photoBase64 = await fileToBase64(photoFile);
+        }
+
+        const evidencePayload = {
+          case_id: dataCase.id,
+          description: descriptionText || "Photo evidence",
+          photo_data: photoBase64
+        };
+
+        const resEv = await fetch(`${API_BASE}/evidence`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(evidencePayload)
+        });
+
+        if (!resEv.ok) {
+          const errText = await resEv.text();
+          throw new Error(errText || `HTTP ${resEv.status}`);
+        }
+      }
+
+      showResult(`Report submitted successfully. Case ID: ${dataCase.id}`, false);
+
+      // Clear form
+      tokenInput.value = "";
+      selectedCategory = null;
+      photoInput.value = "";
+      descInput.value = "";
+      categoryBtns.forEach(b => {
+        b.classList.remove("border-primary", "bg-primary-fixed-dim/20", "text-primary");
+        b.classList.add("border-outline-variant", "text-on-surface-variant");
+      });
+
+      // Go back to step 1
+      step2.classList.add("hidden");
+      step1.classList.remove("hidden");
+    } catch (err) {
+      showResult(`Error: ${err.message}`, true);
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit Report";
+    }
+  });
+
+  function showResult(message, isError) {
+    resultText.textContent = message;
+    resultBox.classList.remove("hidden");
+    resultBox.classList.toggle("bg-error-container", isError);
+    resultBox.classList.toggle("bg-surface-container-low", !isError);
+    resultText.classList.toggle("text-error", isError);
+    resultText.classList.toggle("text-on-surface", !isError);
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+</script>
+
+</body>
+</html>
