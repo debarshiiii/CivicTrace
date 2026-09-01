@@ -119,137 +119,355 @@
 </head>
 <body class="bg-background text-on-background h-screen flex flex-col overflow-hidden font-body-md text-body-md">
 <!-- TopNavBar -->
-<header class="sticky top-0 w-full z-50 flex justify-between items-center px-gutter h-16 bg-surface-container-lowest border-b border-outline-variant flat no shadows">
+<header class="sticky top-0 w-full z-50 flex justify-between items-center px-gutter h-16 bg-surface-container-lowest border-b border-outline-variant">
 <div class="flex items-center gap-unit-6">
-<span class="text-headline-md font-headline-md font-bold text-primary">CivicTrace</span>
+<a href="home.html" class="text-headline-md font-headline-md font-bold text-primary">CivicTrace</a>
 <nav aria-label="Main Navigation" class="hidden md:flex gap-unit-4">
-<a class="text-secondary font-medium font-label-md text-label-md hover:text-primary-container transition-colors" href="#">Map</a>
-<a class="text-primary border-b-2 border-primary pb-1 font-bold font-label-md text-label-md hover:text-primary-container transition-colors" href="#">Report</a>
-<a class="text-secondary font-medium font-label-md text-label-md hover:text-primary-container transition-colors" href="#">Track</a>
-<a class="text-secondary font-medium font-label-md text-label-md hover:text-primary-container transition-colors" href="#">About</a>
+<a class="text-secondary font-medium font-label-md text-label-md hover:text-primary-container transition-colors" href="municipalcommandcenter.html">Command Center</a>
+<a class="text-secondary font-medium font-label-md text-label-md hover:text-primary-container transition-colors" href="accountabilityauditlogs.html">Audit Logs</a>
 </nav>
 </div>
-<div class="flex items-center gap-unit-4">
-<button aria-label="Notifications" class="text-secondary hover:text-primary-container transition-colors">
-<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-</button>
-<button aria-label="Account" class="text-secondary hover:text-primary-container transition-colors">
-<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
-</button>
-</div>
+<div id="userBadge" class="text-label-sm font-label-sm text-on-surface-variant"></div>
 </header>
-<main class="flex-1 w-full max-w-[1280px] mx-auto px-gutter py-unit-6 grid grid-cols-12 gap-gutter h-[calc(100vh-64px)] overflow-hidden">
-<!-- LEFT: Case Info & Audit Timeline -->
+
+<div id="loginRequired" class="hidden flex-1 flex items-center justify-center p-gutter">
+  <div class="bg-error-container text-on-error-container rounded-lg p-unit-6 max-w-md text-center">
+    <p class="font-medium mb-unit-4">You need to sign in as a government verifier to review resolutions.</p>
+    <a href="login.html" class="inline-block bg-primary text-on-primary px-unit-6 py-unit-2 rounded-lg font-label-md text-label-md">Go to Login</a>
+  </div>
+</div>
+
+<div id="loadingState" class="p-gutter">
+  <p class="text-body-md text-on-surface-variant">Loading...</p>
+</div>
+
+<div id="errorState" class="hidden p-gutter">
+  <div class="bg-error-container text-on-error-container rounded-lg p-unit-6 max-w-lg">
+    <p id="errorMessage" class="font-medium"></p>
+  </div>
+</div>
+
+<main id="mainContent" class="hidden flex-1 w-full max-w-[1280px] mx-auto px-gutter py-unit-6 grid grid-cols-12 gap-gutter h-[calc(100vh-64px)] overflow-hidden">
+<!-- LEFT: Case Info -->
 <section class="col-span-3 flex flex-col gap-unit-4 h-full overflow-y-auto pr-unit-2">
 <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-unit-4">
-<h1 class="text-headline-md font-headline-md mb-unit-1">Case CVT-KOL-1042</h1>
+<h1 id="caseTitle" class="text-headline-md font-headline-md mb-unit-1"></h1>
 <div class="flex items-center gap-unit-2 mb-unit-4">
-<span class="bg-surface-container-highest text-on-surface-variant px-unit-2 py-unit-1 rounded font-label-sm text-label-sm">RESOLUTION CLAIMED</span>
+<span id="caseStatusBadge" class="bg-surface-container-highest text-on-surface-variant px-unit-2 py-unit-1 rounded font-label-sm text-label-sm"></span>
 </div>
-<p class="text-body-sm font-body-sm text-on-surface-variant mb-unit-4">Large pothole on Elm St causing traffic hazard.</p>
+<p id="caseDescription" class="text-body-sm font-body-sm text-on-surface-variant mb-unit-4"></p>
 <div class="text-label-sm font-label-sm text-outline mb-unit-1">Location</div>
-<div class="text-body-sm font-body-sm mb-unit-4">123 Elm St, Downtown</div>
-<div class="text-label-sm font-label-sm text-outline mb-unit-1">Reported By</div>
-<div class="text-body-sm font-body-sm">Citizen #8492</div>
+<div id="caseLocation" class="text-body-sm font-body-sm mb-unit-4"></div>
+<div class="text-label-sm font-label-sm text-outline mb-unit-1">Worker's Claim Notes</div>
+<div id="claimDescription" class="text-body-sm font-body-sm"></div>
 </div>
 <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-unit-4 flex-1">
-<h2 class="text-label-md font-label-md font-bold mb-unit-4 border-b border-outline-variant pb-unit-2">Audit Timeline</h2>
-<ul class="space-y-unit-4 relative before:absolute before:inset-y-0 before:left-3 before:w-0.5 before:bg-outline-variant">
-<li class="relative pl-unit-8">
-<span class="absolute left-1 top-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-<span class="material-symbols-outlined text-[10px] text-on-primary" data-icon="check">check</span>
-</span>
-<div class="font-label-sm text-label-sm text-outline">Today, 09:00 AM</div>
-<div class="text-body-sm font-body-sm">Resolution evidence submitted by Contractor ABC.</div>
-</li>
-<li class="relative pl-unit-8">
-<span class="absolute left-1 top-1 w-4 h-4 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center">
-</span>
-<div class="font-label-sm text-label-sm text-outline">Yesterday, 14:30 PM</div>
-<div class="text-body-sm font-body-sm">Work order assigned to Contractor ABC.</div>
-</li>
-<li class="relative pl-unit-8">
-<span class="absolute left-1 top-1 w-4 h-4 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center">
-</span>
-<div class="font-label-sm text-label-sm text-outline">Oct 24, 11:15 AM</div>
-<div class="text-body-sm font-body-sm">Issue verified by municipal inspector.</div>
-</li>
-<li class="relative pl-unit-8">
-<span class="absolute left-1 top-1 w-4 h-4 rounded-full bg-surface-container-highest border border-outline-variant flex items-center justify-center">
-</span>
-<div class="font-label-sm text-label-sm text-outline">Oct 23, 08:45 AM</div>
-<div class="text-body-sm font-body-sm">Report submitted by citizen.</div>
-</li>
-</ul>
+<h2 class="text-label-md font-label-md font-bold mb-unit-4 border-b border-outline-variant pb-unit-2">Recent Activity</h2>
+<div id="timelineList" class="space-y-unit-4 relative before:absolute before:inset-y-0 before:left-3 before:w-0.5 before:bg-outline-variant">
+<p class="text-body-sm text-on-surface-variant">Loading...</p>
+</div>
 </div>
 </section>
+
 <!-- CENTER: Evidence Comparison -->
 <section class="col-span-6 flex flex-col gap-unit-4 h-full">
 <h2 class="text-headline-md font-headline-md">Evidence Comparison</h2>
 <div class="flex-1 grid grid-cols-2 gap-unit-4">
-<!-- Original Report -->
 <div class="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col overflow-hidden">
 <div class="p-unit-2 border-b border-outline-variant bg-surface-container-low">
-<h3 class="font-label-md text-label-md text-center">Original Report</h3>
+<h3 class="font-label-md text-label-md text-center">Before (Original Report)</h3>
 </div>
 <div class="flex-1 bg-surface-container-high relative p-unit-2">
-<img alt="Original Pothole Image" class="w-full h-full object-cover rounded border border-outline-variant" data-alt="A detailed, realistic photograph of a large, deep pothole in the middle of an asphalt road on Elm Street. The lighting is bright daylight, showing the rough edges of the asphalt and small debris around the hole. The mood is utilitarian and civic, highlighting an infrastructure problem in a modern, light-mode style interface context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWcdSkscZxSuvOhAR36Pf9iKfEVHfmkAftTfNrpLu2nGKzwUKKrfLJgwTwMU4pLE9gxy72gzfawlGDqSKy44BFoTKfGttO0LqAGgtSE_WPpQbqOVOR8OZzdxgzyeKCbl7t-CPYg4Bkrri87KDmmdYtJXgNU1lDXf77kdfZ20rkMjQvdTeiCR2ijmUwEHJ_YNMR2bzJU22k_2ye3iNQDwoJounnZCOTEiieZdFM_ff0p1ul6qJbYu6i"/>
-<div class="absolute bottom-unit-4 left-unit-4 bg-surface-container-lowest/80 backdrop-blur-sm p-unit-2 rounded border border-outline-variant text-label-sm font-label-sm">Oct 23, 08:45 AM</div>
+<img id="beforeImage" alt="Before evidence" class="w-full h-full object-cover rounded border border-outline-variant hidden" />
+<p id="beforeEmpty" class="text-body-sm text-on-surface-variant text-center pt-unit-8">No before-photo on file.</p>
 </div>
 </div>
-<!-- Contractor Resolution -->
 <div class="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col overflow-hidden">
 <div class="p-unit-2 border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
-<h3 class="font-label-md text-label-md ml-auto mr-auto">Contractor Resolution</h3>
-<span class="material-symbols-outlined text-primary text-sm" data-icon="verified">verified</span>
+<h3 class="font-label-md text-label-md ml-auto mr-auto">After (Worker's Resolution)</h3>
 </div>
 <div class="flex-1 bg-surface-container-high relative p-unit-2">
-<img alt="Repaired Pothole Image" class="w-full h-full object-cover rounded border border-outline-variant" data-alt="A detailed, realistic photograph of a freshly patched section of asphalt road on Elm Street, exactly where a pothole used to be. The new asphalt is darker and smoother than the surrounding road. The lighting is bright daylight. The mood is resolved and civic, demonstrating infrastructure repair in a modern, light-mode style interface context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoUazBHEVG4DIsKSiL1QKSBbMLG0yFFd9ltgDm6__3UZo_KjYQVu8btBxQ3-8auUoa0HryFiFtJNded4ne_IHE81-_dDt9A6Xtejo43Uqb2pjhZcs6Zj0cVzYXAWVrGpLkDPZNcWYSnRxFKid29bDo3AszowwIJk2xcIdxV2TC_o0FIUslPpBBGZKW0MEw7_jvFBvGrh1nb4a6whorOIdGQnqfr9_8al__fL61jry2ZcsBgp-FoOGc"/>
-<div class="absolute bottom-unit-4 left-unit-4 bg-surface-container-lowest/80 backdrop-blur-sm p-unit-2 rounded border border-outline-variant text-label-sm font-label-sm">Today, 09:00 AM</div>
+<img id="afterImage" alt="After evidence" class="w-full h-full object-cover rounded border border-outline-variant hidden" />
+<p id="afterEmpty" class="text-body-sm text-on-surface-variant text-center pt-unit-8">No after-photo on file.</p>
 </div>
 </div>
 </div>
 <div class="bg-secondary-container/30 text-on-secondary-container border border-secondary-container p-unit-4 rounded-lg flex items-start gap-unit-2">
-<span class="material-symbols-outlined mt-0.5" data-icon="info">info</span>
-<p class="font-body-sm text-body-sm">Review the contractor's provided evidence against your original report to verify if the issue has been adequately resolved.</p>
+<span class="material-symbols-outlined mt-0.5">info</span>
+<p class="font-body-sm text-body-sm">Review the worker's provided evidence against the original report to verify if the issue has been adequately resolved.</p>
 </div>
 </section>
+
 <!-- RIGHT: Verification Panel -->
 <section class="col-span-3 flex flex-col gap-unit-4 h-full">
 <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-unit-6 flex-1 flex flex-col">
+
+<div id="alreadyVerifiedBanner" class="hidden bg-tertiary-container text-on-tertiary-container rounded-lg p-unit-4 mb-unit-4">
+  <p id="alreadyVerifiedText" class="font-medium"></p>
+</div>
+
+<div id="verifyForm">
 <h2 class="text-headline-md font-headline-md mb-unit-6 text-center">Has this issue actually been fixed?</h2>
-<div class="flex flex-col gap-unit-4 mb-unit-8">
-<button class="bg-primary text-on-primary font-label-md text-label-md h-[44px] rounded-lg w-full flex items-center justify-center gap-unit-2 hover:bg-primary/90 transition-colors">
-<span class="material-symbols-outlined" data-icon="thumb_up">thumb_up</span>
-                        Looks Resolved
-                    </button>
-<button class="border border-secondary text-secondary font-label-md text-label-md h-[44px] rounded-lg w-full flex items-center justify-center gap-unit-2 hover:bg-surface-container transition-colors" id="challengeBtn">
-<span class="material-symbols-outlined" data-icon="thumb_down">thumb_down</span>
-                        Problem Still Exists
-                    </button>
+<div class="flex flex-col gap-unit-4 mb-unit-6">
+<button id="acceptBtn" class="bg-primary text-on-primary font-label-md text-label-md h-[44px] rounded-lg w-full flex items-center justify-center gap-unit-2 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined">thumb_up</span>
+Looks Resolved
+</button>
+<button id="challengeBtn" class="border border-secondary text-secondary font-label-md text-label-md h-[44px] rounded-lg w-full flex items-center justify-center gap-unit-2 hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">thumb_down</span>
+Problem Still Exists
+</button>
 </div>
-<!-- Hidden Challenge Area -->
+
 <div class="hidden flex-col gap-unit-4 flex-1 border-t border-outline-variant pt-unit-4 mt-auto" id="challengeArea">
-<h3 class="font-label-md text-label-md text-error">Challenge Resolution</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Please provide new photo evidence to dispute this claim.</p>
-<div class="border-2 border-dashed border-outline-variant rounded-lg p-unit-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-container-low transition-colors flex-1">
-<span class="material-symbols-outlined text-outline text-[32px] mb-unit-2" data-icon="cloud_upload">cloud_upload</span>
-<div class="font-label-md text-label-md text-primary mb-unit-1">Click to upload or drag &amp; drop</div>
-<div class="font-label-sm text-label-sm text-outline">JPG, PNG up to 10MB</div>
+<h3 class="font-label-md text-label-md text-error">Reject Resolution</h3>
+<label class="font-body-sm text-body-sm text-on-surface-variant" for="rejectNotes">Explain what's still wrong (required)</label>
+<textarea id="rejectNotes" class="border border-outline-variant rounded-lg p-unit-2 text-body-sm font-body-sm h-24 resize-none" placeholder="e.g. Pothole was only partially filled and remains a hazard."></textarea>
+<button id="submitRejectBtn" class="bg-error text-on-error font-label-md text-label-md h-[44px] rounded-lg w-full mt-unit-2">
+Submit Rejection
+</button>
 </div>
-<button class="bg-error text-on-error font-label-md text-label-md h-[44px] rounded-lg w-full mt-unit-2">
-                        Submit Challenge
-                    </button>
 </div>
 </div>
 </section>
 </main>
+
 <script>
-        document.getElementById('challengeBtn').addEventListener('click', function() {
-            document.getElementById('challengeArea').classList.remove('hidden');
-            document.getElementById('challengeArea').classList.add('flex');
-            // Hide standard buttons for focus
-            this.parentElement.style.display = 'none';
-        });
-    </script>
+const API_BASE = "http://127.0.0.1:8000/api";
+const API_ROOT = "http://127.0.0.1:8000";
+
+function getToken() {
+  return (
+    localStorage.getItem("civicTraceToken") ||
+    localStorage.getItem("officialToken") ||
+    localStorage.getItem("access_token") ||
+    localStorage.getItem("token")
+  );
+}
+
+function authHeaders() {
+  const token = getToken();
+  return token ? { "Authorization": "Bearer " + token } : {};
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str == null ? "" : String(str);
+  return div.innerHTML;
+}
+
+function formatStatus(status) {
+  if (!status) return "Unknown";
+  return String(status).replace(/_/g, " ").toUpperCase();
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const caseId = urlParams.get("id");
+
+const loginRequired = document.getElementById("loginRequired");
+const loadingState = document.getElementById("loadingState");
+const errorState = document.getElementById("errorState");
+const errorMessage = document.getElementById("errorMessage");
+const mainContent = document.getElementById("mainContent");
+
+let evidenceById = {};
+
+async function checkAuth() {
+  const token = getToken();
+  if (!token) {
+    loadingState.classList.add("hidden");
+    loginRequired.classList.remove("hidden");
+    return false;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, { headers: authHeaders() });
+    if (!res.ok) throw new Error("Not authenticated");
+    const me = await res.json();
+
+    if (me.role === "worker") {
+      loadingState.classList.add("hidden");
+      errorState.classList.remove("hidden");
+      errorMessage.textContent = "Field workers submit resolutions but cannot verify their own work. Sign in as an official, supervisor, admin, or auditor.";
+      return false;
+    }
+
+    document.getElementById("userBadge").textContent = `${me.name || me.email} (${me.role})`;
+    return true;
+
+  } catch (err) {
+    loadingState.classList.add("hidden");
+    loginRequired.classList.remove("hidden");
+    return false;
+  }
+}
+
+async function loadCaseAndResolution() {
+  if (!caseId) {
+    loadingState.classList.add("hidden");
+    errorState.classList.remove("hidden");
+    errorMessage.textContent = "No case ID given. Open this page as verifyresolution.html?id=CASE_ID.";
+    return;
+  }
+
+  try {
+    const [caseRes, resolutionRes, evidenceRes] = await Promise.all([
+      fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}`),
+      fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}/resolution`),
+      fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}/evidence`)
+    ]);
+
+    if (caseRes.status === 404) throw new Error(`No case found with ID "${caseId}".`);
+    if (!caseRes.ok) throw new Error(`Server returned ${caseRes.status}`);
+
+    const c = await caseRes.json();
+    const resolution = resolutionRes.ok ? await resolutionRes.json() : { claim: null, verification: null };
+    const evidenceList = evidenceRes.ok ? await evidenceRes.json() : [];
+
+    evidenceById = {};
+    evidenceList.forEach((e) => { evidenceById[e.id] = e; });
+
+    document.title = `CivicTrace - Verify ${c.id}`;
+    document.getElementById("caseTitle").textContent = `Case ${c.id}`;
+    document.getElementById("caseStatusBadge").textContent = formatStatus(c.status);
+    document.getElementById("caseDescription").textContent = c.description || "No description provided.";
+    document.getElementById("caseLocation").textContent = c.location_text || "Not specified";
+
+    if (!resolution.claim) {
+      loadingState.classList.add("hidden");
+      errorState.classList.remove("hidden");
+      errorMessage.textContent = "This case has no resolution claim submitted yet — there is nothing to verify.";
+      return;
+    }
+
+    document.getElementById("claimDescription").textContent =
+      resolution.claim.description || "No notes provided by the worker.";
+
+    renderEvidenceImage("beforeImage", "beforeEmpty", resolution.claim.before_evidence_id);
+    renderEvidenceImage("afterImage", "afterEmpty", resolution.claim.after_evidence_id);
+
+    renderTimeline(evidenceList, resolution);
+
+    if (resolution.verification) {
+      document.getElementById("verifyForm").classList.add("hidden");
+      const banner = document.getElementById("alreadyVerifiedBanner");
+      const text = document.getElementById("alreadyVerifiedText");
+      banner.classList.remove("hidden");
+      text.textContent = `Already ${resolution.verification.decision.toUpperCase()}${resolution.verification.notes ? ": " + resolution.verification.notes : ""}`;
+    } else {
+      setupVerifyForm();
+    }
+
+    loadingState.classList.add("hidden");
+    mainContent.classList.remove("hidden");
+
+  } catch (err) {
+    console.error(err);
+    loadingState.classList.add("hidden");
+    errorState.classList.remove("hidden");
+    errorMessage.textContent = err.message || "Could not load this case.";
+  }
+}
+
+function renderEvidenceImage(imgId, emptyId, evidenceId) {
+  const img = document.getElementById(imgId);
+  const empty = document.getElementById(emptyId);
+  const item = evidenceId ? evidenceById[evidenceId] : null;
+
+  if (item && item.url) {
+    const fullUrl = item.url.startsWith("http") ? item.url : `${API_ROOT}${item.url}`;
+    img.src = fullUrl;
+    img.classList.remove("hidden");
+    empty.classList.add("hidden");
+  } else {
+    img.classList.add("hidden");
+    empty.classList.remove("hidden");
+  }
+}
+
+function renderTimeline(evidenceList, resolution) {
+  const wrap = document.getElementById("timelineList");
+  const items = [];
+
+  if (resolution.claim) {
+    items.push({
+      time: resolution.claim.created_at,
+      text: "Resolution evidence submitted by worker."
+    });
+  }
+
+  evidenceList.forEach((e) => {
+    items.push({
+      time: e.created_at,
+      text: `${e.type} evidence uploaded (${e.uploaded_by_type}).`
+    });
+  });
+
+  items.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+  if (items.length === 0) {
+    wrap.innerHTML = `<p class="text-body-sm text-on-surface-variant">No activity recorded yet.</p>`;
+    return;
+  }
+
+  wrap.innerHTML = "";
+  items.slice(0, 8).forEach((item) => {
+    const li = document.createElement("div");
+    li.className = "relative pl-unit-8";
+    li.innerHTML = `
+      <span class="absolute left-1 top-1 w-4 h-4 rounded-full bg-surface-container-highest border border-outline-variant"></span>
+      <div class="font-label-sm text-label-sm text-outline">${item.time ? new Date(item.time).toLocaleString() : ""}</div>
+      <div class="text-body-sm font-body-sm">${escapeHtml(item.text)}</div>
+    `;
+    wrap.appendChild(li);
+  });
+}
+
+function setupVerifyForm() {
+  document.getElementById("acceptBtn").addEventListener("click", () => submitVerification("accepted"));
+
+  document.getElementById("challengeBtn").addEventListener("click", function () {
+    document.getElementById("challengeArea").classList.remove("hidden");
+    document.getElementById("challengeArea").classList.add("flex");
+    this.parentElement.querySelectorAll("button").forEach((b) => b.style.display = "none");
+  });
+
+  document.getElementById("submitRejectBtn").addEventListener("click", () => {
+    const notes = document.getElementById("rejectNotes").value.trim();
+    if (!notes) {
+      alert("Please explain what's still wrong before submitting a rejection.");
+      return;
+    }
+    submitVerification("rejected", notes);
+  });
+}
+
+async function submitVerification(decision, notes) {
+  try {
+    const res = await fetch(`${API_BASE}/resolution-verifications`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({
+        case_id: caseId,
+        decision: decision,
+        notes: notes || null
+      })
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+
+    alert(decision === "accepted" ? "Marked as resolved." : "Resolution rejected — case sent back for rework.");
+    window.location.href = `casedetails.html?id=${encodeURIComponent(caseId)}`;
+
+  } catch (err) {
+    alert("Could not submit verification: " + err.message);
+  }
+}
+
+(async function start() {
+  const ok = await checkAuth();
+  if (!ok) return;
+  await loadCaseAndResolution();
+})();
+</script>
 </body></html>

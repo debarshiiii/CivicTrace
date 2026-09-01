@@ -139,7 +139,7 @@
       <a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="home.html">Map</a>
       <a class="text-primary border-b-2 border-primary pb-1 font-bold opacity-80 transition-opacity text-label-md font-label-md" href="report.html">Report</a>
       <a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="track-report.html">Track</a>
-      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="about.html">About</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#" onclick="event.preventDefault(); alert('About page is coming soon.');">About</a>
     </nav>
   </div>
   <div class="flex items-center gap-unit-4">
@@ -441,13 +441,11 @@
 
       submitBtn.textContent = "Submitting...";
 
-      const caseId = "CVT-KOL-" + Math.floor(1000 + Math.random() * 9000);
-      selectedCaseId = caseId;
+      const descriptionText = descInput.value.trim();
 
       const payload = {
-        id: caseId,
         title: selectedCategory.toUpperCase().replace("_", " "),
-        description: "Citizen report via web form.",
+        description: descriptionText || "Citizen report via web form.",
         category: selectedCategory,
         location_text: "Auto-detected location",
         latitude: loc.lat,
@@ -468,19 +466,20 @@
       }
 
       const dataCase = await resCase.json();
+      selectedCaseId = dataCase.id;
 
-      // Evidence (photo + description) if present
+      // Photo evidence, if the citizen attached one.
+      // (Evidence rows require a url, so a description with no
+      // photo is just carried on the case itself, above.)
       const photoFile = photoInput.files?.[0];
-      const descriptionText = descInput.value.trim();
 
-      if (photoFile || descriptionText) {
-        let photoBase64 = null;
-        if (photoFile) {
-          photoBase64 = await fileToBase64(photoFile);
-        }
+      if (photoFile) {
+        const photoBase64 = await fileToBase64(photoFile);
 
         const evidencePayload = {
           case_id: dataCase.id,
+          type: "report",
+          uploaded_by_type: "citizen",
           description: descriptionText || "Photo evidence",
           photo_data: photoBase64
         };

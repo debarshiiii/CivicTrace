@@ -3,7 +3,7 @@
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>CivicTrace - Case Detail CVT-KOL-1042</title>
+<title>CivicTrace - Case Detail</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -117,7 +117,6 @@
     </style>
 </head>
 <body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:flex-row">
-<!-- TopNavBar (Mobile Only Fallback, usually hidden on desktop when SideNav is present, but per instructions, rendering TopNav for global context if needed. Since this is a detail page with a back action, we suppress global navs per shell rules. HOWEVER, the prompt doesn't explicitly mention it's a sub-page departing from flow, it's a detail screen. Given the "SideNavBar" and "TopNavBar" in JSON, I will render SideNavBar as the primary shell for desktop.) -->
 <!-- SideNavBar -->
 <nav class="hidden md:flex flex-col h-screen p-unit-4 gap-unit-2 bg-surface-container-low dark:bg-inverse-surface text-secondary dark:text-secondary-fixed docked vertical-left w-64 border-r border-outline-variant dark:border-outline shrink-0 sticky top-0">
 <div class="mb-unit-6 px-unit-2">
@@ -125,225 +124,433 @@
 <p class="text-label-sm font-label-sm text-on-surface-variant mt-1">Kolkata Municipal</p>
 </div>
 <div class="flex-1 flex flex-col gap-unit-2 mt-unit-4">
-<!-- Active state logic: "Field Reports" matches the case detail context -->
-<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="municipalcommandcenter.html">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
 <span class="text-label-md font-label-md">Dashboard</span>
 </a>
-<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="map">map</span>
+<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#" onclick="event.preventDefault(); alert('Live risk map is coming soon.');">
+<span class="material-symbols-outlined text-[20px]">map</span>
 <span class="text-label-md font-label-md">Risk Map</span>
 </a>
-<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-bold rounded-lg scale-95 transition-transform duration-150" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="assignment" data-weight="fill" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-bold rounded-lg" href="workerfield.html">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">assignment</span>
 <span class="text-label-md font-label-md">Field Reports</span>
 </a>
-<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="history">history</span>
+<a id="auditLogsLink" class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="accountabilityauditlogs.html">
+<span class="material-symbols-outlined text-[20px]">history</span>
 <span class="text-label-md font-label-md">Audit Logs</span>
 </a>
 </div>
 <div class="mt-auto flex flex-col gap-unit-2 border-t border-outline-variant pt-unit-4">
-<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#" onclick="event.preventDefault(); alert('Settings page is coming soon.');">
+<span class="material-symbols-outlined text-[20px]">settings</span>
 <span class="text-label-md font-label-md">Settings</span>
 </a>
-<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
-<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+<a class="flex items-center gap-unit-4 px-unit-4 py-unit-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#" onclick="event.preventDefault(); alert('Help & Support page is coming soon.');">
+<span class="material-symbols-outlined text-[20px]">help</span>
 <span class="text-label-md font-label-md">Support</span>
 </a>
 <div class="flex items-center gap-unit-4 px-unit-4 py-unit-2 mt-2">
 <div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden border border-outline-variant">
 <span class="material-symbols-outlined text-outline">person</span>
 </div>
-<span class="text-label-sm font-label-sm truncate">Admin User Profile</span>
+<span id="sidebarUserLabel" class="text-label-sm font-label-sm truncate">Guest</span>
 </div>
 </div>
 </nav>
 <!-- Main Content Canvas -->
 <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-level-0 relative">
-<!-- Top App Bar equivalent for Detail context -->
 <header class="bg-surface h-16 flex items-center justify-between px-gutter border-b border-outline-variant shrink-0 sticky top-0 z-10">
 <div class="flex items-center gap-unit-4">
-<button aria-label="Go back" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
+<button aria-label="Go back" onclick="window.history.back()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
 <span class="material-symbols-outlined">arrow_back</span>
 </button>
 <div>
-<h2 class="text-headline-md font-headline-md font-bold text-on-surface flex items-center gap-2">
-                        CVT-KOL-1042
-                        <span class="bg-error-container text-on-error-container px-2 py-0.5 rounded text-label-sm font-label-sm uppercase font-bold ml-2 flex items-center gap-1 border border-error/20">
-<span class="material-symbols-outlined text-[14px]">warning</span> Critical
-                        </span>
+<h2 id="caseIdHeading" class="text-headline-md font-headline-md font-bold text-on-surface flex items-center gap-2">
+Loading case...
 </h2>
 </div>
 </div>
-<div class="flex items-center gap-unit-4">
-<button aria-label="Share" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
-<span class="material-symbols-outlined">share</span>
-</button>
-<button aria-label="More options" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors">
-<span class="material-symbols-outlined">more_vert</span>
-</button>
-</div>
 </header>
-<!-- Fixed Grid Layout: 12-column max 1280px -->
-<div class="w-full max-w-container-max mx-auto p-gutter grid grid-cols-1 md:grid-cols-12 gap-gutter">
-<!-- Center Content (8 columns) -->
+
+<!-- Loading / error states -->
+<div id="loadingState" class="w-full max-w-container-max mx-auto p-gutter">
+  <p class="text-body-md text-on-surface-variant">Loading case details...</p>
+</div>
+<div id="errorState" class="hidden w-full max-w-container-max mx-auto p-gutter">
+  <div class="bg-error-container text-on-error-container rounded-xl p-unit-6">
+    <p class="font-medium" id="errorMessage">Could not load this case.</p>
+    <a href="track-report.html" class="underline text-label-md font-label-md mt-2 inline-block">Go back to Track a Report</a>
+  </div>
+</div>
+
+<div id="caseContent" class="hidden w-full max-w-container-max mx-auto p-gutter grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Center Content -->
 <div class="md:col-span-8 flex flex-col gap-gutter">
-<!-- Headline Card -->
 <section class="bg-surface rounded-xl border border-outline-variant p-unit-6 flex flex-col gap-unit-4">
-<div class="flex justify-between items-start">
+<div class="flex justify-between items-start flex-wrap gap-4">
 <div>
-<h3 class="text-headline-lg font-headline-lg text-on-surface mb-2">Open Manhole near School Road</h3>
-<p class="text-body-md font-body-md text-on-surface-variant flex items-center gap-2">
-<span class="material-symbols-outlined text-[18px]">person</span>
-                                Reporter: <span class="font-medium text-on-surface">Anonymous Citizen</span>
+<h3 id="caseTitle" class="text-headline-lg font-headline-lg text-on-surface mb-2"></h3>
+<p class="text-body-md font-body-md text-on-surface-variant flex items-center gap-2 flex-wrap">
+<span class="material-symbols-outlined text-[18px]">category</span>
+<span id="caseCategory" class="font-medium text-on-surface"></span>
 <span class="text-outline mx-2">•</span>
 <span class="material-symbols-outlined text-[18px]">schedule</span>
-                                2 hours ago
-                            </p>
+<span id="caseCreatedAt"></span>
+</p>
 </div>
 <div class="flex flex-col items-end">
-<div class="text-headline-xl font-headline-xl text-error font-bold tracking-tight">94<span class="text-headline-md text-outline">/100</span></div>
+<div id="caseRiskScore" class="text-headline-xl font-headline-xl text-error font-bold tracking-tight">--<span class="text-headline-md text-outline">/100</span></div>
 <div class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Risk Score</div>
 </div>
 </div>
-<p class="text-body-md font-body-md text-on-surface mt-2">
-                        Large uncovered manhole situated directly on the pedestrian pathway leading to the primary school. High risk of accident for students during drop-off/pick-up hours. No barricades present.
-                    </p>
+<p id="caseDescription" class="text-body-md font-body-md text-on-surface mt-2"></p>
+<div class="flex items-center gap-2">
+<span id="caseStatusBadge" class="px-2 py-1 rounded text-label-sm font-label-sm uppercase font-bold border"></span>
+</div>
 </section>
-<!-- Evidence Section (Bento Grid) -->
-<section class="grid grid-cols-1 md:grid-cols-2 gap-unit-4">
-<!-- Photo Evidence -->
-<div class="bg-surface rounded-xl border border-outline-variant flex flex-col overflow-hidden h-[300px]">
+
+<!-- Evidence -->
+<section class="bg-surface rounded-xl border border-outline-variant flex flex-col overflow-hidden">
 <div class="border-b border-outline-variant px-unit-4 py-unit-3 flex items-center gap-2 bg-surface-container-lowest">
 <span class="material-symbols-outlined text-primary text-[18px]">photo_camera</span>
-<h4 class="text-label-md font-label-md text-on-surface">Citizen Photo</h4>
+<h4 class="text-label-md font-label-md text-on-surface">Evidence</h4>
 </div>
-<div class="flex-1 relative bg-surface-variant">
-<img class="w-full h-full object-cover" data-alt="A close-up, high-resolution photograph of an open, dangerous manhole on a cracked asphalt pavement during daylight. The shot is taken from a pedestrian's perspective, showing the deep dark void of the manhole contrasting with the gray concrete. The lighting is harsh natural sunlight, emphasizing the hazard. The overall aesthetic is realistic, documentary-style civic reporting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8_dYQuLzJYXTsafqE3S0eHhPOo74QASPSKdA2I6qE2C7nfljBx8PKNLmuv-ZaCjTzUVFau8Ga21L4QlSeUPylvR3rUEIoyVD_V51qeZwtUgKCWPAM9PsqHolyA0vwzJFdO-5cOiu3eBrhh_8_kg2ipa-5toHkngTTA5yhXblGOBREJznXrzYm-q3yndTkC-TEG51JcEMlWTPiCvIwm340sUnNansbfHtIX55Axmu8C8JtyUBPRv6o"/>
-<div class="absolute bottom-2 right-2 bg-inverse-surface/80 backdrop-blur text-inverse-on-surface px-2 py-1 rounded text-[10px] font-tabular-nums uppercase tracking-wide flex items-center gap-1">
-<span class="material-symbols-outlined text-[12px]">my_location</span>
-                                Lat: 22.5726, Lng: 88.3639
-                            </div>
-</div>
-</div>
-<!-- Map Preview -->
-<div class="bg-surface rounded-xl border border-outline-variant flex flex-col overflow-hidden h-[300px]">
-<div class="border-b border-outline-variant px-unit-4 py-unit-3 flex items-center justify-between bg-surface-container-lowest">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary text-[18px]">location_on</span>
-<h4 class="text-label-md font-label-md text-on-surface">Location Preview</h4>
-</div>
-<span class="text-label-sm font-label-sm text-on-surface-variant">Salt Lake, Sector V</span>
-</div>
-<div class="flex-1 relative bg-surface-variant flex items-center justify-center overflow-hidden">
-<!-- Simulated Map via placeholder -->
-<div class="bg-cover bg-center w-full h-full opacity-90" data-alt="A clean, modern digital map interface centered on a dense urban grid, styled in a light mode palette with subtle gray roads and pale blue water bodies. A distinct red hazard marker icon sits prominently in the center. The map design is minimalist, professional, and data-focused, reflecting a high-end civic management software interface." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB2iMKNSRP1qgMT3-gYEMj6GixXAK15o7JAduqZKWSayQwRHJurwcEFv5ZBSdpQfIRfEFV4UiXyGkHZyB6290DE0vr9vlXVnecgZQXvdH-Ey_tg2YKCVS_pSJtfPvJrNqVq4cocsfXdQXJjoJ4gdbvrlbKV6z7mHwyFphtfO3KleW8vfM6FwmLcaVqLWmGvvbuGac4EUNWmTdDQ6npQu9lA8Kdw1cByb8ZjbtJMZNQloRbP6dF0j5oo')"></div>
-<!-- Crosshair overlay -->
-<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-<div class="w-12 h-12 rounded-full border-2 border-error/50 flex items-center justify-center bg-error/10">
-<div class="w-2 h-2 rounded-full bg-error"></div>
-</div>
-</div>
-</div>
+<div id="evidenceGrid" class="p-unit-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-unit-4">
+<p class="text-body-sm text-on-surface-variant col-span-full">Loading evidence...</p>
 </div>
 </section>
-<!-- Data Table: Associated Assets / Nearby Infra -->
-<section class="bg-surface rounded-xl border border-outline-variant overflow-hidden flex flex-col">
-<div class="border-b border-outline-variant px-unit-6 py-unit-4">
-<h4 class="text-label-md font-label-md text-on-surface">Nearby Infrastructure Impact</h4>
-</div>
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
-<thead>
-<tr class="bg-surface-container-lowest border-b border-outline-variant">
-<th class="px-unit-6 py-unit-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Asset ID</th>
-<th class="px-unit-6 py-unit-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Type</th>
-<th class="px-unit-6 py-unit-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Distance</th>
-<th class="px-unit-6 py-unit-3 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Status</th>
-</tr>
-</thead>
-<tbody class="text-body-sm font-body-sm">
-<tr class="border-b border-outline-variant/50 hover:bg-surface-container-low transition-colors">
-<td class="px-unit-6 py-unit-3 font-tabular-nums text-on-surface">EDU-SL-045</td>
-<td class="px-unit-6 py-unit-3 text-on-surface-variant">Primary School Gate</td>
-<td class="px-unit-6 py-unit-3 text-on-surface-variant">12m</td>
-<td class="px-unit-6 py-unit-3"><span class="px-2 py-1 rounded text-[11px] font-medium bg-error-container text-on-error-container">High Exposure</span></td>
-</tr>
-<tr class="border-b border-outline-variant/50 hover:bg-surface-container-low transition-colors">
-<td class="px-unit-6 py-unit-3 font-tabular-nums text-on-surface">DRAIN-M-992</td>
-<td class="px-unit-6 py-unit-3 text-on-surface-variant">Main Sewer Line</td>
-<td class="px-unit-6 py-unit-3 text-on-surface-variant">0m (Direct)</td>
-<td class="px-unit-6 py-unit-3"><span class="px-2 py-1 rounded text-[11px] font-medium bg-surface-variant text-on-surface-variant">Active</span></td>
-</tr>
-<tr class="hover:bg-surface-container-low transition-colors">
-<td class="px-unit-6 py-unit-3 font-tabular-nums text-on-surface">ST-LIGHT-44</td>
-<td class="px-unit-6 py-unit-3 text-on-surface-variant">Street Lamp</td>
-<td class="px-unit-6 py-unit-3 text-on-surface-variant">8m</td>
-<td class="px-unit-6 py-unit-3"><span class="px-2 py-1 rounded text-[11px] font-medium bg-tertiary-container text-on-tertiary-container">Functional</span></td>
-</tr>
-</tbody>
-</table>
-</div>
+
+<!-- Location -->
+<section class="bg-surface rounded-xl border border-outline-variant p-unit-6 flex flex-col gap-2">
+<h4 class="text-label-md font-label-md text-on-surface mb-2">Location</h4>
+<p id="caseLocation" class="text-body-md text-on-surface-variant"></p>
+<p id="caseCoords" class="text-label-sm font-label-sm text-outline font-tabular-nums"></p>
 </section>
 </div>
-<!-- Right Sidebar (4 columns) -->
+
+<!-- Right Sidebar -->
 <div class="md:col-span-4 flex flex-col gap-gutter">
-<!-- Officer Actions -->
-<section class="bg-surface rounded-xl border border-outline-variant p-unit-6 flex flex-col gap-unit-4">
+<!-- Officer Actions (only shown to gov users) -->
+<section id="officerActionsCard" class="hidden bg-surface rounded-xl border border-outline-variant p-unit-6 flex flex-col gap-unit-4">
 <h3 class="text-label-md font-label-md text-on-surface border-b border-outline-variant pb-2">Officer Actions</h3>
-<div class="flex flex-col gap-3 mt-2">
-<button class="w-full h-[44px] bg-primary hover:bg-primary/90 text-on-primary rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors shadow-sm">
-<span class="material-symbols-outlined text-[18px]">check_circle</span>
-                            Validate Issue
-                        </button>
-<button class="w-full h-[44px] bg-surface border border-outline hover:bg-surface-container-low text-primary rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors">
-<span class="material-symbols-outlined text-[18px]">assignment_ind</span>
-                            Assign Department
-                        </button>
-<button class="w-full h-[44px] bg-surface border border-error text-error hover:bg-error-container hover:text-on-error-container rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors">
-<span class="material-symbols-outlined text-[18px]">priority_high</span>
-                            Escalate
-                        </button>
-</div>
+<div id="officerActionsButtons" class="flex flex-col gap-3 mt-2"></div>
+<p id="officerActionsMessage" class="hidden text-label-sm font-label-sm text-tertiary"></p>
 </section>
-<!-- Vertical Audit Timeline -->
+
+<!-- Resolution status -->
+<section id="resolutionCard" class="hidden bg-surface rounded-xl border border-outline-variant p-unit-6 flex flex-col gap-unit-3">
+<h3 class="text-label-md font-label-md text-on-surface border-b border-outline-variant pb-2">Resolution</h3>
+<p id="resolutionSummary" class="text-body-sm text-on-surface-variant mt-2"></p>
+<a id="verifyResolutionLink" href="#" class="hidden w-full h-[40px] bg-primary hover:bg-primary/90 text-on-primary rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors">
+Review &amp; Verify
+</a>
+</section>
+
+<!-- Audit Timeline -->
 <section class="bg-surface rounded-xl border border-outline-variant p-unit-6 flex flex-col flex-1">
-<h3 class="text-label-md font-label-md text-on-surface border-b border-outline-variant pb-2 mb-unit-4">Audit Timeline</h3>
-<div class="relative pl-4 flex-1">
-<!-- Timeline Line -->
-<div class="absolute left-[11px] top-2 bottom-0 w-[2px] bg-surface-variant"></div>
-<!-- Timeline Item 1 -->
-<div class="relative mb-6 pl-6">
-<div class="absolute left-[-5px] top-1 w-4 h-4 rounded-full bg-primary border-2 border-surface"></div>
-<p class="text-label-sm font-label-sm text-on-surface-variant mb-1">Just Now</p>
-<p class="text-body-sm font-body-sm font-medium text-on-surface">Case viewed by Officer</p>
-<p class="text-label-sm font-label-sm text-outline mt-1">Admin User (ID: 9942)</p>
+<div class="flex items-center justify-between border-b border-outline-variant pb-2 mb-unit-4">
+<h3 class="text-label-md font-label-md text-on-surface">Audit Timeline</h3>
+<a id="fullAuditLink" href="#" class="text-label-sm font-label-sm text-primary hover:underline">View full log</a>
 </div>
-<!-- Timeline Item 2 -->
-<div class="relative mb-6 pl-6">
-<div class="absolute left-[-5px] top-1 w-4 h-4 rounded-full bg-error border-2 border-surface"></div>
-<p class="text-label-sm font-label-sm text-on-surface-variant mb-1">15 mins ago</p>
-<p class="text-body-sm font-body-sm font-medium text-on-surface">Automated Risk Assessment</p>
-<p class="text-label-sm font-label-sm text-outline mt-1">Score: 94/100 (CRITICAL)</p>
-</div>
-<!-- Timeline Item 3 -->
-<div class="relative mb-6 pl-6">
-<div class="absolute left-[-5px] top-1 w-4 h-4 rounded-full bg-outline-variant border-2 border-surface"></div>
-<p class="text-label-sm font-label-sm text-on-surface-variant mb-1">2 hours ago</p>
-<p class="text-body-sm font-body-sm font-medium text-on-surface">Case Created</p>
-<p class="text-label-sm font-label-sm text-outline mt-1">Via Citizen App (Anonymous)</p>
-</div>
-<!-- Timeline Item 4 (Faded) -->
-<div class="relative pl-6 opacity-50">
-<div class="absolute left-[-5px] top-1 w-4 h-4 rounded-full bg-outline-variant border-2 border-surface"></div>
-<p class="text-label-sm font-label-sm text-on-surface-variant mb-1">2 hours ago</p>
-<p class="text-body-sm font-body-sm font-medium text-on-surface">System Logging Initiated</p>
-</div>
+<div id="auditTimeline" class="relative pl-4 flex-1">
+<p class="text-body-sm text-on-surface-variant">Loading...</p>
 </div>
 </section>
 </div>
 </div>
 </main>
+
+<script>
+const API_BASE = "http://127.0.0.1:8000/api";
+const API_ROOT = "http://127.0.0.1:8000";
+
+function getToken() {
+  return (
+    localStorage.getItem("civicTraceToken") ||
+    localStorage.getItem("officialToken") ||
+    localStorage.getItem("access_token") ||
+    localStorage.getItem("token")
+  );
+}
+
+function authHeaders() {
+  const token = getToken();
+  return token ? { "Authorization": "Bearer " + token } : {};
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str == null ? "" : String(str);
+  return div.innerHTML;
+}
+
+function formatCategory(category) {
+  if (!category) return "Municipal Issue";
+  return String(category)
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
+}
+
+function formatStatus(status) {
+  if (!status) return "Unknown";
+  return String(status).replace(/_/g, " ").toUpperCase();
+}
+
+function statusBadgeClasses(status) {
+  const map = {
+    received: "bg-surface-variant text-on-surface-variant border-outline-variant",
+    validated: "bg-secondary-container text-on-secondary-container border-secondary",
+    assigned: "bg-tertiary-container text-on-tertiary-container border-tertiary",
+    in_progress: "bg-tertiary-container text-on-tertiary-container border-tertiary",
+    resolution_claimed: "bg-primary-container text-on-primary-container border-primary",
+    verifying: "bg-primary-container text-on-primary-container border-primary",
+    resolved: "bg-tertiary-container text-on-tertiary-container border-tertiary",
+    rejected: "bg-error-container text-on-error-container border-error"
+  };
+  return map[status] || "bg-surface-variant text-on-surface-variant border-outline-variant";
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const caseId = urlParams.get("id");
+
+const loadingState = document.getElementById("loadingState");
+const errorState = document.getElementById("errorState");
+const errorMessage = document.getElementById("errorMessage");
+const caseContent = document.getElementById("caseContent");
+
+let currentUserRole = null;
+
+async function initSession() {
+  const token = getToken();
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, { headers: authHeaders() });
+    if (res.ok) {
+      const me = await res.json();
+      currentUserRole = me.role;
+      document.getElementById("sidebarUserLabel").textContent = me.name || me.email || me.role;
+    }
+  } catch (err) {
+    console.warn("Could not load session info:", err);
+  }
+}
+
+async function loadCase() {
+  if (!caseId) {
+    loadingState.classList.add("hidden");
+    errorState.classList.remove("hidden");
+    errorMessage.textContent = "No case ID was given. Open this page as casedetails.html?id=CASE_ID.";
+    return;
+  }
+
+  document.getElementById("auditLogsLink").href = `accountabilityauditlogs.html?id=${encodeURIComponent(caseId)}`;
+  document.getElementById("fullAuditLink").href = `accountabilityauditlogs.html?id=${encodeURIComponent(caseId)}`;
+
+  try {
+    const res = await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}`);
+    if (res.status === 404) {
+      throw new Error(`No case found with ID "${caseId}".`);
+    }
+    if (!res.ok) {
+      throw new Error(`Server returned ${res.status}`);
+    }
+    const c = await res.json();
+
+    document.getElementById("caseIdHeading").textContent = c.id;
+    document.title = `CivicTrace - Case ${c.id}`;
+    document.getElementById("caseTitle").textContent = c.title;
+    document.getElementById("caseCategory").textContent = formatCategory(c.category);
+    document.getElementById("caseCreatedAt").textContent = c.created_at
+      ? new Date(c.created_at).toLocaleString()
+      : "Unknown date";
+    document.getElementById("caseRiskScore").innerHTML =
+      `${c.risk_score ?? "--"}<span class="text-headline-md text-outline">/100</span>`;
+    document.getElementById("caseDescription").textContent =
+      c.description || "No description provided.";
+    document.getElementById("caseLocation").textContent =
+      c.location_text || "Location not specified.";
+    document.getElementById("caseCoords").textContent =
+      (c.latitude != null && c.longitude != null)
+        ? `Lat: ${c.latitude}, Lng: ${c.longitude}`
+        : "";
+
+    const badge = document.getElementById("caseStatusBadge");
+    badge.textContent = formatStatus(c.status);
+    badge.className = `px-2 py-1 rounded text-label-sm font-label-sm uppercase font-bold border ${statusBadgeClasses(c.status)}`;
+
+    loadingState.classList.add("hidden");
+    caseContent.classList.remove("hidden");
+
+    renderOfficerActions(c);
+    loadEvidence();
+    loadResolution(c);
+    loadAuditTimeline();
+
+  } catch (err) {
+    console.error(err);
+    loadingState.classList.add("hidden");
+    errorState.classList.remove("hidden");
+    errorMessage.textContent = err.message || "Could not load this case.";
+  }
+}
+
+function renderOfficerActions(c) {
+  if (!currentUserRole || currentUserRole === "worker") return;
+
+  const card = document.getElementById("officerActionsCard");
+  const buttonsWrap = document.getElementById("officerActionsButtons");
+  card.classList.remove("hidden");
+  buttonsWrap.innerHTML = "";
+
+  const actionsByStatus = {
+    received: [{ label: "Validate Issue", icon: "check_circle", newStatus: "validated" }],
+    validated: [{ label: "Mark In Progress", icon: "engineering", newStatus: "in_progress" }],
+    assigned: [{ label: "Mark In Progress", icon: "engineering", newStatus: "in_progress" }]
+  };
+
+  const actions = actionsByStatus[c.status] || [];
+
+  if (actions.length === 0) {
+    const msg = document.getElementById("officerActionsMessage");
+    msg.textContent = "No status actions available for this case right now.";
+    msg.classList.remove("hidden");
+    return;
+  }
+
+  actions.forEach((action) => {
+    const btn = document.createElement("button");
+    btn.className =
+      "w-full h-[44px] bg-primary hover:bg-primary/90 text-on-primary rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors shadow-sm";
+    btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">${action.icon}</span> ${escapeHtml(action.label)}`;
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      btn.textContent = "Updating...";
+      try {
+        const res = await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify({ status: action.newStatus })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        await loadCase();
+      } catch (err) {
+        alert("Could not update case: " + err.message);
+        btn.disabled = false;
+      }
+    });
+    buttonsWrap.appendChild(btn);
+  });
+
+  buttonsWrap.insertAdjacentHTML(
+    "beforeend",
+    `<a href="municipalcommandcenter.html" class="w-full h-[40px] border border-outline hover:bg-surface-container-low text-primary rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors">
+      <span class="material-symbols-outlined text-[18px]">assignment_ind</span> Assign in Command Center
+    </a>`
+  );
+}
+
+async function loadEvidence() {
+  const grid = document.getElementById("evidenceGrid");
+  try {
+    const res = await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}/evidence`);
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    const items = await res.json();
+
+    if (!Array.isArray(items) || items.length === 0) {
+      grid.innerHTML = `<p class="text-body-sm text-on-surface-variant col-span-full">No evidence submitted for this case yet.</p>`;
+      return;
+    }
+
+    grid.innerHTML = "";
+    items.forEach((item) => {
+      const fullUrl = item.url.startsWith("http") ? item.url : `${API_ROOT}${item.url}`;
+      const div = document.createElement("div");
+      div.className = "rounded-lg overflow-hidden border border-outline-variant flex flex-col";
+      div.innerHTML = `
+        <img class="w-full h-40 object-cover bg-surface-variant" src="${escapeHtml(fullUrl)}" alt="Evidence photo" />
+        <div class="p-2 text-label-sm font-label-sm text-on-surface-variant flex justify-between">
+          <span class="uppercase">${escapeHtml(item.type)}</span>
+          <span>${item.created_at ? new Date(item.created_at).toLocaleDateString() : ""}</span>
+        </div>
+      `;
+      grid.appendChild(div);
+    });
+  } catch (err) {
+    console.warn("Could not load evidence:", err);
+    grid.innerHTML = `<p class="text-body-sm text-error col-span-full">Could not load evidence.</p>`;
+  }
+}
+
+async function loadResolution(c) {
+  try {
+    const res = await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}/resolution`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.claim) return;
+
+    const card = document.getElementById("resolutionCard");
+    const summary = document.getElementById("resolutionSummary");
+    const link = document.getElementById("verifyResolutionLink");
+    card.classList.remove("hidden");
+
+    if (data.verification) {
+      summary.textContent = `Verification decision: ${data.verification.decision.toUpperCase()}${data.verification.notes ? " — " + data.verification.notes : ""}`;
+    } else {
+      summary.textContent = "A worker has submitted a resolution claim awaiting verification.";
+      if (currentUserRole && currentUserRole !== "worker") {
+        link.href = `verifyresolution.html?id=${encodeURIComponent(caseId)}`;
+        link.classList.remove("hidden");
+      }
+    }
+  } catch (err) {
+    console.warn("Could not load resolution:", err);
+  }
+}
+
+async function loadAuditTimeline() {
+  const wrap = document.getElementById("auditTimeline");
+  if (!getToken()) {
+    wrap.innerHTML = `<p class="text-body-sm text-on-surface-variant">Sign in as a government user to view the audit trail here, or <a class="text-primary underline" href="accountabilityauditlogs.html?id=${encodeURIComponent(caseId)}">open the full audit log page</a>.</p>`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}/audit-logs`, {
+      headers: authHeaders()
+    });
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    const logs = await res.json();
+
+    if (!Array.isArray(logs) || logs.length === 0) {
+      wrap.innerHTML = `<p class="text-body-sm text-on-surface-variant">No audit events recorded yet.</p>`;
+      return;
+    }
+
+    wrap.innerHTML = `<div class="absolute left-[11px] top-2 bottom-0 w-[2px] bg-surface-variant"></div>`;
+
+    logs.slice(0, 6).forEach((log) => {
+      const actorLabel = log.actor_id ? `${log.actor_type} (ID: ${log.actor_id})` : log.actor_type;
+      const item = document.createElement("div");
+      item.className = "relative mb-6 pl-6";
+      item.innerHTML = `
+        <div class="absolute left-[-5px] top-1 w-4 h-4 rounded-full bg-primary border-2 border-surface"></div>
+        <p class="text-label-sm font-label-sm text-on-surface-variant mb-1">${log.timestamp ? new Date(log.timestamp).toLocaleString() : ""}</p>
+        <p class="text-body-sm font-body-sm font-medium text-on-surface">${escapeHtml(String(log.action || "").replace(/[._]/g, " "))}</p>
+        <p class="text-label-sm font-label-sm text-outline mt-1">${escapeHtml(actorLabel)}</p>
+      `;
+      wrap.appendChild(item);
+    });
+  } catch (err) {
+    console.warn("Could not load audit timeline:", err);
+    wrap.innerHTML = `<p class="text-body-sm text-error">Could not load the audit trail.</p>`;
+  }
+}
+
+(async function start() {
+  await initSession();
+  await loadCase();
+})();
+</script>
 </body></html>

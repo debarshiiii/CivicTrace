@@ -51,7 +51,7 @@ class CitizenTokenResponse(BaseModel):
 # =========================================================
 
 class CaseCreate(BaseModel):
-    id: str
+    id: Optional[str] = None
     title: str
     description: Optional[str] = None
     category: str
@@ -95,10 +95,12 @@ class CaseResponse(BaseModel):
 
 class EvidenceCreate(BaseModel):
     case_id: str
-    type: str
-    url: str
-    uploaded_by_type: str
+    type: str = "report"
+    url: Optional[str] = None
+    uploaded_by_type: str = "citizen"
     uploaded_by_id: Optional[int] = None
+    description: Optional[str] = None
+    photo_data: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
 
 

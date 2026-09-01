@@ -266,7 +266,7 @@
             <!-- FIELD REPORTS -->
 
             <a
-                href="track-report.html"
+                href="workerfield.html"
                 class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg text-sm transition"
             >
 
@@ -301,7 +301,7 @@
             <!-- SETTINGS -->
 
             <a
-                href="settings.html"
+                href="#" onclick="event.preventDefault(); alert('Settings page is coming soon.');"
                 class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg text-sm transition"
             >
 
@@ -340,7 +340,7 @@
             <!-- SUPPORT -->
 
             <a
-                href="about.html"
+                href="#" onclick="event.preventDefault(); alert('Help & Support page is coming soon.');"
                 class="flex items-center gap-3 px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg text-sm transition"
             >
 
@@ -689,6 +689,38 @@
 
 
         /* =====================================================
+           AUTH TOKEN
+           (same storage key used by login.html /
+           municipalcommandcenter.html / workerfield.html)
+        ===================================================== */
+
+        function getToken() {
+
+            return (
+                localStorage.getItem("civicTraceToken") ||
+                localStorage.getItem("officialToken") ||
+                localStorage.getItem("access_token") ||
+                localStorage.getItem("token")
+            );
+
+        }
+
+        function authHeaders() {
+
+            const token = getToken();
+
+            if (!token) {
+                return {};
+            }
+
+            return {
+                "Authorization": "Bearer " + token
+            };
+
+        }
+
+
+        /* =====================================================
            URL CASE ID
         ===================================================== */
 
@@ -704,7 +736,7 @@
 
         let currentCaseId =
             requestedCaseId ||
-            "CVT-KOL-1042";
+            null;
 
 
         /* =====================================================
@@ -820,23 +852,49 @@
                     await response.json();
 
 
-                if (!Array.isArray(cases)) {
+                if (!Array.isArray(cases) || cases.length === 0) {
                     return;
                 }
 
 
-                const found =
-                    cases.find(
-                        function(caseItem) {
+                let found;
 
-                            return String(
-                                caseItem.id
-                            ) === String(
-                                currentCaseId
-                            );
+                if (currentCaseId) {
 
-                        }
-                    );
+                    found =
+                        cases.find(
+                            function(caseItem) {
+
+                                return String(
+                                    caseItem.id
+                                ) === String(
+                                    currentCaseId
+                                );
+
+                            }
+                        );
+
+                } else {
+
+                    /*
+                     * No case selected via ?id= — default to
+                     * the most recently created case so the
+                     * page shows real data instead of nothing.
+                     */
+
+                    found =
+                        [...cases].sort(
+                            function(a, b) {
+
+                                return (
+                                    new Date(b.created_at) -
+                                    new Date(a.created_at)
+                                );
+
+                            }
+                        )[0];
+
+                }
 
 
                 if (!found) {
@@ -957,100 +1015,66 @@
 
         /* =====================================================
            AUDIT DATA
+           Loaded live from GET /api/cases/{id}/audit-logs.
+           No fallback/mock data — if the request fails, the
+           page shows an explicit error instead of fake rows.
         ===================================================== */
-
-        /*
-         * The backend currently may not expose an
-         * /api/audit-logs endpoint.
-         *
-         * Therefore the page first attempts to load
-         * real audit data.
-         *
-         * If that endpoint does not exist yet,
-         * the original CivicTrace audit UI data is
-         * displayed so the page never looks broken.
-         */
-
-        const fallbackAuditEvents = [
-
-            {
-                timestamp: "2023-10-25 14:30:12",
-                action: "Case Reopened",
-                actor: "Admin Jenkins",
-                icon: "admin_panel_settings",
-                dot: "bg-secondary",
-                detail: "View Notes"
-            },
-
-            {
-                timestamp: "2023-10-24 09:15:00",
-                action: "Citizen Challenged",
-                actor: "Citizen (ID: 9942)",
-                icon: "person",
-                dot: "bg-error",
-                detail: "View Appeal"
-            },
-
-            {
-                timestamp: "2023-10-23 16:45:33",
-                action: "Resolution Claimed",
-                actor: "Contractor Apex",
-                icon: "engineering",
-                dot: "bg-primary",
-                detail: "View Photos"
-            },
-
-            {
-                timestamp: "2023-10-22 08:00:00",
-                action: "Work Started",
-                actor: "Contractor Apex",
-                icon: "engineering",
-                dot: "bg-tertiary",
-                detail: "-"
-            },
-
-            {
-                timestamp: "2023-10-21 11:20:15",
-                action: "Assigned",
-                actor: "Admin Jenkins",
-                icon: "admin_panel_settings",
-                dot: "bg-primary",
-                detail: "To: Contractor Apex"
-            },
-
-            {
-                timestamp: "2023-10-20 15:45:00",
-                action: "Municipal Validation",
-                actor: "Admin Jenkins",
-                icon: "admin_panel_settings",
-                dot: "bg-outline",
-                detail: "Verified"
-            },
-
-            {
-                timestamp: "2023-10-20 10:05:22",
-                action: "AI Risk Classification",
-                actor: "System",
-                icon: "memory",
-                dot: "bg-outline-variant",
-                detail: "Priority: High"
-            },
-
-            {
-                timestamp: "2023-10-20 10:00:00",
-                action: "Report Submitted",
-                actor: "Citizen (ID: 9942)",
-                icon: "person",
-                dot: "bg-outline-variant",
-                detail: "View Original"
-            }
-
-        ];
 
 
         /* =====================================================
            LOAD AUDIT LOGS
         ===================================================== */
+
+        function mapAuditLog(log) {
+
+            const actorLabel = {
+                citizen: "Citizen",
+                gov_user: "Government Official",
+                system: "System"
+            }[log.actor_type] || log.actor_type || "System";
+
+            const actor =
+                log.actor_id
+                    ? `${actorLabel} (ID: ${log.actor_id})`
+                    : actorLabel;
+
+            const actionLabel =
+                String(log.action || "")
+                    .replace(/[._]/g, " ")
+                    .replace(/\b\w/g, function(letter) {
+                        return letter.toUpperCase();
+                    });
+
+            let detail = "-";
+
+            if (log.metadata && typeof log.metadata === "object") {
+
+                const entries =
+                    Object.entries(log.metadata)
+                        .filter(([, v]) => v !== null && v !== undefined && v !== "");
+
+                if (entries.length > 0) {
+
+                    detail =
+                        entries
+                            .map(([k, v]) => `${k}: ${v}`)
+                            .join(", ");
+
+                }
+
+            }
+
+            return {
+                timestamp: log.timestamp,
+                action: actionLabel || "System Event",
+                actor: actor,
+                detail: detail,
+                icon: getActorIcon(actor),
+                dot: getActionDot(actionLabel)
+            };
+
+        }
+
 
         async function loadAuditLogs() {
 
@@ -1061,22 +1085,41 @@
             auditEmpty.classList.add("hidden");
 
 
-            try {
+            if (!currentCaseId) {
 
-                /*
-                 * Attempt real backend endpoint.
-                 */
+                auditLoading.classList.add("hidden");
+
+                renderAuditLogs([]);
+
+                return;
+
+            }
+
+
+            try {
 
                 const response =
                     await fetch(
-                        `${API_BASE}/audit-logs?case_id=${encodeURIComponent(currentCaseId)}`
+                        `${API_BASE}/cases/${encodeURIComponent(currentCaseId)}/audit-logs`,
+                        {
+                            headers: authHeaders()
+                        }
                     );
+
+
+                if (response.status === 401) {
+
+                    throw new Error(
+                        "Sign in as a government user to view the audit trail."
+                    );
+
+                }
 
 
                 if (!response.ok) {
 
                     throw new Error(
-                        "Audit endpoint unavailable"
+                        `Audit endpoint returned ${response.status}`
                     );
 
                 }
@@ -1088,38 +1131,27 @@
 
                 const events =
                     Array.isArray(data)
-                        ? data
-                        : (
-                            Array.isArray(data.logs)
-                                ? data.logs
-                                : []
-                        );
+                        ? data.map(mapAuditLog)
+                        : [];
 
 
-                if (events.length === 0) {
-
-                    renderAuditLogs(
-                        fallbackAuditEvents
-                    );
-
-                } else {
-
-                    renderAuditLogs(events);
-
-                }
+                renderAuditLogs(events);
 
             } catch (error) {
 
                 console.warn(
-                    "Real audit API unavailable. " +
-                    "Using current CivicTrace audit records.",
+                    "Could not load audit logs:",
                     error
                 );
 
 
-                renderAuditLogs(
-                    fallbackAuditEvents
-                );
+                auditError.textContent =
+                    error.message ||
+                    "Could not load audit logs.";
+
+                auditError.classList.remove("hidden");
+
+                renderAuditLogs([]);
 
             }
 
@@ -1658,9 +1690,13 @@
            START
         ===================================================== */
 
-        loadCaseInformation();
+        (async function start() {
 
-        loadAuditLogs();
+            await loadCaseInformation();
+
+            await loadAuditLogs();
+
+        })();
 
     </script>
 

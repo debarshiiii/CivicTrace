@@ -281,7 +281,7 @@
                 onclick="switchTab('gov')"
                 class="flex-1 pb-unit-2 text-label-md font-label-md text-on-surface-variant border-b-2 border-transparent font-medium hover:text-primary transition-colors"
             >
-                GOVERNMENT ACCESS
+                GOVERNMENT / WORKER ACCESS
             </button>
 
         </div>
@@ -454,7 +454,7 @@
                         for="gov-email"
                         class="block text-label-sm font-label-sm text-on-surface-variant mb-1 uppercase tracking-wider"
                     >
-                        Official Email / Government ID
+                        Official / Worker Email
                     </label>
 
 
@@ -1124,7 +1124,7 @@
 
                     const response =
                         await fetch(
-                            `${API_BASE}/officials/login`,
+                            `${API_BASE}/auth/login`,
                             {
                                 method: "POST",
 
@@ -1221,25 +1221,70 @@
 
                     /*
                     ====================================================
-                    SAVE GOVERNMENT JWT
+                    SAVE GOVERNMENT / WORKER JWT
+                    Stored under "civicTraceToken" because that is the
+                    key municipalcommandcenter.html and workerfield.html
+                    actually read via getToken().
                     ====================================================
                     */
 
                     localStorage.setItem(
-                        "civicTraceOfficialToken",
+                        "civicTraceToken",
                         data.access_token
-                    );
-
-
-                    localStorage.setItem(
-                        "civicTraceRole",
-                        "official"
                     );
 
 
                     localStorage.setItem(
                         "civicTraceOfficialEmail",
                         email
+                    );
+
+
+                    /*
+                    ====================================================
+                    FIND OUT WHO WE JUST LOGGED IN AS
+                    (role decides which dashboard to send them to)
+                    ====================================================
+                    */
+
+                    let role = "official";
+
+                    try {
+
+                        const meResponse =
+                            await fetch(
+                                `${API_BASE}/auth/me`,
+                                {
+                                    headers: {
+                                        "Authorization":
+                                            "Bearer " + data.access_token
+                                    }
+                                }
+                            );
+
+                        if (meResponse.ok) {
+
+                            const me =
+                                await meResponse.json();
+
+                            role = me.role || "official";
+
+                        }
+
+                    }
+
+                    catch (meError) {
+
+                        console.warn(
+                            "Could not determine role after login, defaulting to official.",
+                            meError
+                        );
+
+                    }
+
+                    localStorage.setItem(
+                        "civicTraceRole",
+                        role
                     );
 
 
@@ -1273,14 +1318,22 @@
                     /*
                     ====================================================
                     REDIRECT
+                    Workers go to the field workflow, everyone else
+                    (official / admin / supervisor / auditor) goes to
+                    the command center.
                     ====================================================
                     */
+
+                    const destination =
+                        role === "worker"
+                            ? "workerfield.html"
+                            : "municipalcommandcenter.html";
 
                     setTimeout(
                         function () {
 
                             window.location.href =
-                                "official-dashboard.html";
+                                destination;
 
                         },
                         500

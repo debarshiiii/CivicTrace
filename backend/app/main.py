@@ -22,6 +22,8 @@ import random
 import enum
 import shutil
 import uuid
+import base64
+import binascii
 
 from .database import engine, get_db, Base
 
@@ -50,7 +52,8 @@ from .schemas import (
     AssignmentCreate,
     ResolutionClaimCreate,
     ResolutionVerificationCreate,
-    AuditLogResponse
+    AuditLogResponse,
+    UserResponse
 )
 
 from .auth import (
@@ -97,10 +100,12 @@ UPLOAD_DIR = Path("uploads")
 BEFORE_DIR = UPLOAD_DIR / "before"
 AFTER_DIR = UPLOAD_DIR / "after"
 CHALLENGE_DIR = UPLOAD_DIR / "challenges"
+REPORT_DIR = UPLOAD_DIR / "reports"
 
 BEFORE_DIR.mkdir(parents=True, exist_ok=True)
 AFTER_DIR.mkdir(parents=True, exist_ok=True)
 CHALLENGE_DIR.mkdir(parents=True, exist_ok=True)
+REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 app.mount(
     "/uploads",
@@ -217,7 +222,7 @@ def require_gov_user(
 
 @app.post(
     "/api/auth/register",
-    response_model=UserCreate
+    response_model=UserResponse
 )
 def register_user(
     user_in: UserCreate,
@@ -443,22 +448,54 @@ def create_case(
                 detail="Invalid citizen token"
             )
 
-    existing_case = (
-        db.query(Case)
-        .filter(
-            Case.id == case_in.id
-        )
-        .first()
-    )
+    case_id = case_in.id
 
-    if existing_case:
-        raise HTTPException(
-            status_code=400,
-            detail="Case ID already exists"
+    if case_id:
+
+        existing_case = (
+            db.query(Case)
+            .filter(
+                Case.id == case_id
+            )
+            .first()
         )
+
+        if existing_case:
+            raise HTTPException(
+                status_code=400,
+                detail="Case ID already exists"
+            )
+
+    else:
+
+        chars = "0123456789"
+
+        while True:
+
+            candidate = (
+                "CVT-KOL-"
+                + "".join(
+                    random.choices(
+                        chars,
+                        k=6
+                    )
+                )
+            )
+
+            existing_case = (
+                db.query(Case)
+                .filter(
+                    Case.id == candidate
+                )
+                .first()
+            )
+
+            if not existing_case:
+                case_id = candidate
+                break
 
     case = Case(
-        id=case_in.id,
+        id=case_id,
         title=case_in.title,
         description=case_in.description,
         category=case_in.category,
@@ -698,13 +735,76 @@ def create_evidence(
             detail="Case not found"
         )
 
+    if not ev.url and not ev.photo_data:
+        raise HTTPException(
+            status_code=400,
+            detail="Either url or photo_data is required"
+        )
+
+    url = ev.url
+
+    if ev.photo_data:
+
+        raw = ev.photo_data
+
+        extension = ".jpg"
+
+        if raw.startswith("data:"):
+
+            try:
+
+                header, raw = raw.split(",", 1)
+
+                if "image/png" in header:
+                    extension = ".png"
+                elif "image/webp" in header:
+                    extension = ".webp"
+                else:
+                    extension = ".jpg"
+
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid photo_data format"
+                )
+
+        try:
+
+            file_bytes = base64.b64decode(
+                raw,
+                validate=True
+            )
+
+        except (binascii.Error, ValueError):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid base64 photo_data"
+            )
+
+        filename = f"{uuid.uuid4().hex}{extension}"
+
+        filepath = REPORT_DIR / filename
+
+        with filepath.open("wb") as buffer:
+            buffer.write(file_bytes)
+
+        url = f"/uploads/reports/{filename}"
+
+    meta = ev.metadata or {}
+
+    if ev.description:
+        meta = {
+            **meta,
+            "description": ev.description
+        }
+
     evidence = Evidence(
         case_id=ev.case_id,
         type=ev.type,
-        url=ev.url,
+        url=url,
         uploaded_by_type=ev.uploaded_by_type,
         uploaded_by_id=ev.uploaded_by_id,
-        meta=ev.metadata
+        meta=meta
     )
 
     db.add(evidence)
@@ -828,7 +928,11 @@ async def upload_evidence(
         case_id=case_id,
         type=evidence_type,
         url=url,
-        uploaded_by_type="gov_user",
+        uploaded_by_type=(
+            "worker"
+            if user.role == UserRole.worker
+            else "gov_user"
+        ),
         uploaded_by_id=user.id,
         meta={
             "original_filename": file.filename,

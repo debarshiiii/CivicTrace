@@ -118,186 +118,399 @@
     </script>
 </head>
 <body class="bg-background text-on-background min-h-screen flex font-body-md">
-<!-- SideNavBar (Shared Component) -->
+<!-- SideNavBar -->
 <nav class="hidden md:flex flex-col h-screen p-unit-4 gap-unit-2 bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline w-64 shrink-0">
 <div class="mb-unit-8">
 <h1 class="text-label-md font-label-md font-bold text-on-surface dark:text-inverse-on-surface uppercase tracking-widest">Command Center</h1>
 <p class="text-label-sm font-label-sm text-on-surface-variant mt-1">Kolkata Municipal</p>
 </div>
 <div class="flex-1 flex flex-col gap-1">
-<a class="flex items-center gap-3 p-3 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
-<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<a class="flex items-center gap-3 p-3 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="municipalcommandcenter.html">
+<span class="material-symbols-outlined">dashboard</span>
 <span class="text-label-md font-label-md">Dashboard</span>
 </a>
-<a class="flex items-center gap-3 p-3 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
-<span class="material-symbols-outlined" data-icon="map">map</span>
-<span class="text-label-md font-label-md">Risk Map</span>
-</a>
-<a class="flex items-center gap-3 p-3 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-bold rounded-lg scale-95 transition-transform duration-150" href="#">
-<span class="material-symbols-outlined filled" data-icon="assignment">assignment</span>
+<a class="flex items-center gap-3 p-3 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-bold rounded-lg" href="workerfield.html">
+<span class="material-symbols-outlined">assignment</span>
 <span class="text-label-md font-label-md">Field Reports</span>
 </a>
-<a class="flex items-center gap-3 p-3 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
-<span class="material-symbols-outlined" data-icon="history">history</span>
+<a class="flex items-center gap-3 p-3 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="accountabilityauditlogs.html">
+<span class="material-symbols-outlined">history</span>
 <span class="text-label-md font-label-md">Audit Logs</span>
 </a>
 </div>
-<div class="mt-auto flex flex-col gap-1 border-t border-outline-variant pt-4">
-<a class="flex items-center gap-3 p-3 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
-<span class="material-symbols-outlined" data-icon="settings">settings</span>
-<span class="text-label-md font-label-md">Settings</span>
-</a>
-<a class="flex items-center gap-3 p-3 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high dark:hover:bg-surface-variant hover:bg-surface-container-highest dark:hover:bg-outline transition-all rounded-lg" href="#">
-<span class="material-symbols-outlined" data-icon="help">help</span>
-<span class="text-label-md font-label-md">Support</span>
-</a>
-</div>
-</nav>
-<!-- Main Content Canvas -->
-<main class="flex-1 flex flex-col min-w-0">
-<!-- TopNavBar (Shared Component) -->
-<header class="bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline flex justify-between items-center w-full px-margin-mobile md:px-unit-8 max-w-container-max mx-auto h-16 shrink-0 sticky top-0 z-10">
-<div class="flex items-center gap-6">
-<span class="text-headline-md font-headline-md font-extrabold text-primary dark:text-inverse-primary">CivicTrace</span>
-<nav class="hidden lg:flex gap-6">
-<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors text-label-md font-label-md py-4" href="#">Map</a>
-<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim font-bold hover:text-primary dark:hover:text-primary-fixed-dim transition-colors text-label-md font-label-md py-4 opacity-80 transition-opacity" href="#">Report</a>
-<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors text-label-md font-label-md py-4" href="#">Track</a>
-<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors text-label-md font-label-md py-4" href="#">About</a>
-</nav>
-</div>
-<div class="flex items-center gap-4">
-<div class="relative hidden sm:block">
-<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-<input class="bg-surface-container-low border border-outline-variant rounded-full py-1.5 pl-4 pr-10 text-body-sm font-body-sm focus:border-primary focus:ring-1 focus:ring-primary w-64 transition-all" placeholder="Search ID or Keyword..." type="text"/>
-</div>
-<button class="text-on-surface-variant hover:text-primary transition-colors">
-<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
-</button>
-<button class="text-on-surface-variant hover:text-primary transition-colors">
-<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<div class="mt-auto pt-4 border-t border-outline-variant/40">
+<button id="logoutBtn" class="flex items-center gap-3 p-3 w-full text-left text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-label-md font-label-md">Log out</span>
 </button>
 </div>
+</nav>
+
+<main class="flex-1 flex flex-col h-screen overflow-y-auto">
+<header class="h-16 bg-surface border-b border-outline-variant flex items-center justify-between px-gutter shrink-0 sticky top-0 z-10">
+<h2 class="text-headline-md font-headline-md font-bold text-on-surface">Field Worker Portal</h2>
+<div id="userBadge" class="text-label-sm font-label-sm text-on-surface-variant"></div>
 </header>
-<div class="flex-1 overflow-auto p-gutter bg-surface-bright max-w-container-max mx-auto w-full">
-<div class="mb-unit-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-<div>
+
+<div id="loginRequired" class="hidden flex-1 flex items-center justify-center p-gutter">
+  <div class="bg-error-container text-on-error-container rounded-lg p-unit-6 max-w-md text-center">
+    <p class="font-medium mb-unit-4">Sign in as a field worker to view your assignments.</p>
+    <a href="login.html" class="inline-block bg-primary text-on-primary px-unit-6 py-unit-2 rounded-lg font-label-md text-label-md">Go to Login</a>
+  </div>
+</div>
+
+<div id="loadingState" class="p-gutter">
+  <p class="text-body-md text-on-surface-variant">Loading your assignments...</p>
+</div>
+
+<div id="mainContent" class="hidden flex-1 overflow-auto p-gutter bg-surface-bright max-w-container-max mx-auto w-full">
+
+<div class="mb-unit-6">
 <h2 class="text-headline-lg font-headline-lg text-on-surface mb-1">Active Job Execution</h2>
-<p class="text-body-md font-body-md text-on-surface-variant">Field Worker Portal - Resolution Documentation</p>
+<p class="text-body-md font-body-md text-on-surface-variant">Select an assignment below to document your resolution work.</p>
 </div>
-<div class="flex items-center gap-2 text-label-md font-label-md">
-<span class="text-on-surface-variant">Current Date:</span>
-<span class="font-bold">Oct 24, 2023</span>
-</div>
-</div>
-<!-- Bento Grid Layout -->
+
 <div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter">
-<!-- Left Column: Job Context & Meta (4 cols) -->
+<!-- Left: assignment list -->
 <div class="xl:col-span-4 flex flex-col gap-gutter">
-<!-- Primary Job Card -->
-<div class="bg-surface rounded-xl border border-outline-variant/50 overflow-hidden flex flex-col h-full">
-<div class="p-4 border-b border-outline-variant/30 bg-surface-container-lowest flex justify-between items-center">
-<span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Job ID: REQ-KOL-2026-8921</span>
-<span class="material-symbols-outlined text-outline">tag</span>
+<div id="assignmentList" class="flex flex-col gap-3"></div>
+<p id="noAssignments" class="hidden text-body-sm text-on-surface-variant bg-surface rounded-xl border border-outline-variant p-unit-6 text-center">
+  You have no assigned cases right now.
+</p>
 </div>
-<div class="p-unit-4 flex-1">
-<h3 class="text-headline-md font-headline-md text-on-surface mb-2">Pothole Repair</h3>
-<p class="text-body-md font-body-md text-on-surface-variant mb-6">Deep structural pothole causing traffic slowdowns and potential vehicle damage on main arterial route.</p>
-<div class="space-y-4">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center shrink-0 text-primary">
-<span class="material-symbols-outlined text-sm">location_on</span>
-</div>
-<div>
-<p class="text-label-sm font-label-sm text-outline">Location</p>
-<p class="text-body-md font-body-md font-medium text-on-surface">Park Street, Sector 4</p>
-</div>
-</div>
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-error-container flex items-center justify-center shrink-0 text-error">
-<span class="material-symbols-outlined text-sm">priority_high</span>
-</div>
-<div>
-<p class="text-label-sm font-label-sm text-outline">Priority</p>
-<span class="inline-block mt-0.5 px-2 py-0.5 bg-error/10 text-error rounded text-label-sm font-label-sm font-bold">HIGH</span>
-</div>
-</div>
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center shrink-0 text-secondary">
-<span class="material-symbols-outlined text-sm">pending_actions</span>
-</div>
-<div>
-<p class="text-label-sm font-label-sm text-outline">Current Status</p>
-<span class="inline-block mt-0.5 px-2 py-0.5 bg-secondary/10 text-secondary-fixed-variant rounded text-label-sm font-label-sm font-bold border border-secondary/20">In Progress</span>
-</div>
-</div>
-</div>
-</div>
-<!-- Map Context Placeholder -->
-<div class="h-40 bg-surface-container border-t border-outline-variant/30 relative overflow-hidden group">
-<div class="bg-cover bg-center w-full h-full absolute inset-0 opacity-80 group-hover:opacity-100 transition-opacity" data-alt="A highly detailed overhead map view of Park Street in Kolkata, styled with a modern, muted color palette suited for a civic dashboard. The map shows street grids, minimal labels, and a bright red pinpoint marker indicating a repair location. The aesthetic is clean, flat, and professional, using shades of gray, subtle blues, and a stark red accent, illuminated by flat, even light." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBgR9T-RRW7MaUhobW347ZuWU6gEvLEKq5E3bokuMfDbRhaRKPZA5qeNjVNbXV1xMkxcSPNhiRz_-KSwe41CTUfRGLeiKREMn19BETDgFFAWE7XoJK_q7RhAX805mRzJ_5g3AOmUdfKhyEjoEPpjTWBm0jfG_bvesatuvdTug3lXWHORM8xSUFzECYY525iOKha2QuK_mBYT_WFPvxpSAWEg8nlC_gGjm4Z2V5c_qAW9ytdNabCwKW3')"></div>
-<div class="absolute inset-0 bg-gradient-to-t from-surface/80 to-transparent"></div>
-<button class="absolute bottom-3 right-3 bg-surface text-primary border border-outline-variant px-3 py-1.5 rounded-lg text-label-sm font-label-sm flex items-center gap-1 shadow-sm hover:bg-surface-container transition-colors">
-<span class="material-symbols-outlined text-[16px]">map</span> Open Map
-                             </button>
-</div>
-</div>
-</div>
-<!-- Right Column: Resolution Workflow (8 cols) -->
+
+<!-- Right: resolution workflow for the selected job -->
 <div class="xl:col-span-8 flex flex-col gap-gutter">
-<!-- Action Center Card -->
-<div class="bg-surface rounded-xl border border-outline-variant/50 flex flex-col h-full">
-<div class="p-4 border-b border-outline-variant/30 bg-surface-container-lowest">
-<h3 class="text-label-md font-label-md text-on-surface uppercase tracking-wider">Resolution Documentation</h3>
+<div id="noSelectionCard" class="bg-surface rounded-xl border border-outline-variant/50 p-unit-6 text-center text-on-surface-variant">
+  Select an assignment on the left to document your work.
 </div>
+
+<div id="jobPanel" class="hidden bg-surface rounded-xl border border-outline-variant/50 flex flex-col">
+<div class="p-4 border-b border-outline-variant/30 bg-surface-container-lowest flex items-center justify-between">
+<h3 class="text-label-md font-label-md text-on-surface uppercase tracking-wider">Resolution Documentation</h3>
+<span id="jobCaseId" class="text-label-sm font-label-sm text-outline font-tabular-nums"></span>
+</div>
+
+<div class="p-unit-6 flex flex-col gap-4 border-b border-outline-variant/30">
+<h3 id="jobTitle" class="text-headline-md font-headline-md text-on-surface"></h3>
+<p id="jobDescription" class="text-body-md font-body-md text-on-surface-variant"></p>
+<p id="jobLocation" class="text-label-sm font-label-sm text-outline"></p>
+</div>
+
 <div class="p-unit-6 flex-1 flex flex-col gap-8">
-<!-- Photo Upload Section -->
+
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <!-- Before Photo -->
 <div class="flex flex-col gap-2">
 <label class="text-label-md font-label-md text-on-surface">Initial State Evidence</label>
-<div class="border-2 border-dashed border-outline-variant/60 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-surface-container-low transition-colors group cursor-pointer h-48 bg-surface-container-lowest">
+<label for="beforePhotoInput" class="border-2 border-dashed border-outline-variant/60 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-surface-container-low transition-colors group cursor-pointer h-48 bg-surface-container-lowest overflow-hidden">
+<img id="beforePreview" class="hidden w-full h-full object-cover" />
+<div id="beforePlaceholder">
 <span class="material-symbols-outlined text-4xl text-outline mb-2 group-hover:text-primary transition-colors">add_a_photo</span>
-<span class="text-body-sm font-body-sm text-on-surface-variant font-medium">Upload Before Photo</span>
-<span class="text-label-sm font-label-sm text-outline mt-1">Required for claim</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant font-medium block">Upload Before Photo</span>
+<span class="text-label-sm font-label-sm text-outline mt-1 block">Optional</span>
 </div>
+</label>
+<input type="file" id="beforePhotoInput" accept="image/png,image/jpeg,image/webp" class="hidden" />
+<p id="beforeStatus" class="text-label-sm font-label-sm text-on-surface-variant"></p>
 </div>
 <!-- After Photo -->
 <div class="flex flex-col gap-2">
 <label class="text-label-md font-label-md text-on-surface">Resolution Evidence</label>
-<div class="border-2 border-dashed border-outline-variant/60 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-surface-container-low transition-colors group cursor-pointer h-48 bg-surface-container-lowest">
+<label for="afterPhotoInput" class="border-2 border-dashed border-outline-variant/60 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-surface-container-low transition-colors group cursor-pointer h-48 bg-surface-container-lowest overflow-hidden">
+<img id="afterPreview" class="hidden w-full h-full object-cover" />
+<div id="afterPlaceholder">
 <span class="material-symbols-outlined text-4xl text-outline mb-2 group-hover:text-secondary transition-colors">verified</span>
-<span class="text-body-sm font-body-sm text-on-surface-variant font-medium">Upload After Photo</span>
-<span class="text-label-sm font-label-sm text-outline mt-1">Required for claim</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant font-medium block">Upload After Photo</span>
+<span class="text-label-sm font-label-sm text-outline mt-1 block">Required for claim</span>
+</div>
+</label>
+<input type="file" id="afterPhotoInput" accept="image/png,image/jpeg,image/webp" class="hidden" />
+<p id="afterStatus" class="text-label-sm font-label-sm text-on-surface-variant"></p>
 </div>
 </div>
-</div>
-<!-- Description Input -->
+
 <div class="flex flex-col gap-2">
 <label class="text-label-md font-label-md text-on-surface" for="work-desc">Work Description &amp; Materials Used</label>
 <textarea class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 text-body-md font-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none placeholder:text-outline/70" id="work-desc" placeholder="e.g., Applied 50kg of cold mix asphalt, compacted surface, cleared debris..." rows="4"></textarea>
-<button class="self-start text-primary hover:text-primary-container text-label-sm font-label-sm flex items-center gap-1 mt-1 transition-colors">
-<span class="material-symbols-outlined text-[16px]">add_circle</span> Add Work Description Template
-                                </button>
 </div>
-<!-- Submission Area -->
+
 <div class="mt-auto pt-6 border-t border-outline-variant/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-<!-- Crucial Context Warning -->
 <div class="flex items-start gap-2 bg-surface-variant/50 p-3 rounded-lg border border-outline-variant/20 max-w-md">
 <span class="material-symbols-outlined text-on-surface-variant mt-0.5 text-xl">info</span>
 <p class="text-label-sm font-label-sm text-on-surface-variant leading-relaxed">
-                                        Submitting this claim sends it to dispatch for audit. <strong class="text-on-surface">You do not mark this job as 'Resolved'.</strong> An inspector will verify the documentation.
-                                    </p>
+Submitting this claim sends it to an inspector for verification. <strong class="text-on-surface">It does not mark the job as resolved yet.</strong>
+</p>
 </div>
-<!-- Primary CTA -->
-<button class="w-full sm:w-auto bg-primary hover:bg-primary/90 text-on-primary h-[44px] px-8 rounded-lg text-label-md font-label-md shadow-sm flex items-center justify-center gap-2 transition-colors shrink-0 whitespace-nowrap">
-                                    Submit Resolution Claim <span class="material-symbols-outlined text-sm">send</span>
+<button id="submitClaimBtn" class="w-full sm:w-auto bg-primary hover:bg-primary/90 text-on-primary h-[44px] px-8 rounded-lg text-label-md font-label-md shadow-sm flex items-center justify-center gap-2 transition-colors shrink-0 whitespace-nowrap">
+Submit Resolution Claim <span class="material-symbols-outlined text-sm">send</span>
 </button>
 </div>
+
 </div>
 </div>
 </div>
 </div>
 </div>
 </main>
+
+<script>
+const API_BASE = "http://127.0.0.1:8000/api";
+const API_ROOT = "http://127.0.0.1:8000";
+
+function getToken() {
+  return (
+    localStorage.getItem("civicTraceToken") ||
+    localStorage.getItem("officialToken") ||
+    localStorage.getItem("access_token") ||
+    localStorage.getItem("token")
+  );
+}
+
+function authHeaders() {
+  const token = getToken();
+  return token ? { "Authorization": "Bearer " + token } : {};
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str == null ? "" : String(str);
+  return div.innerHTML;
+}
+
+function formatStatus(status) {
+  if (!status) return "Unknown";
+  return String(status).replace(/_/g, " ").toUpperCase();
+}
+
+let currentUserId = null;
+let assignments = [];
+let selectedCaseId = null;
+let beforeEvidenceId = null;
+let afterEvidenceId = null;
+
+const loginRequired = document.getElementById("loginRequired");
+const loadingState = document.getElementById("loadingState");
+const mainContent = document.getElementById("mainContent");
+
+async function checkAuth() {
+  const token = getToken();
+  if (!token) {
+    loadingState.classList.add("hidden");
+    loginRequired.classList.remove("hidden");
+    return false;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, { headers: authHeaders() });
+    if (!res.ok) throw new Error("Not authenticated");
+    const me = await res.json();
+
+    if (me.role !== "worker") {
+      loadingState.classList.add("hidden");
+      loginRequired.classList.remove("hidden");
+      document.querySelector("#loginRequired p").textContent =
+        `You're signed in as "${me.role}", not a worker. Field assignments are only visible to worker accounts.`;
+      return false;
+    }
+
+    currentUserId = me.id;
+    document.getElementById("userBadge").textContent = me.name || me.email;
+    return true;
+
+  } catch (err) {
+    loadingState.classList.add("hidden");
+    loginRequired.classList.remove("hidden");
+    return false;
+  }
+}
+
+async function loadAssignments() {
+  try {
+    const res = await fetch(`${API_BASE}/workers/me/assignments`, { headers: authHeaders() });
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    assignments = await res.json();
+
+    loadingState.classList.add("hidden");
+    mainContent.classList.remove("hidden");
+
+    renderAssignmentList();
+
+  } catch (err) {
+    console.error(err);
+    loadingState.classList.add("hidden");
+    mainContent.classList.remove("hidden");
+    document.getElementById("assignmentList").innerHTML =
+      `<p class="text-body-sm text-error bg-surface rounded-xl border border-outline-variant p-unit-6">Could not load assignments: ${escapeHtml(err.message)}</p>`;
+  }
+}
+
+function renderAssignmentList() {
+  const list = document.getElementById("assignmentList");
+  const empty = document.getElementById("noAssignments");
+
+  if (!Array.isArray(assignments) || assignments.length === 0) {
+    list.innerHTML = "";
+    empty.classList.remove("hidden");
+    return;
+  }
+
+  empty.classList.add("hidden");
+  list.innerHTML = "";
+
+  assignments.forEach((a) => {
+    const card = document.createElement("button");
+    card.className =
+      "text-left bg-surface rounded-xl border p-unit-4 transition-colors hover:bg-surface-container-low " +
+      (a.case_id === selectedCaseId ? "border-primary ring-1 ring-primary" : "border-outline-variant");
+    card.innerHTML = `
+      <div class="flex justify-between items-start gap-2">
+        <h4 class="font-label-md text-label-md text-on-surface">${escapeHtml(a.title)}</h4>
+        <span class="text-label-sm font-label-sm text-outline font-tabular-nums shrink-0">${escapeHtml(a.case_id)}</span>
+      </div>
+      <p class="text-label-sm font-label-sm text-on-surface-variant mt-1">${escapeHtml(a.location_text || "Location not specified")}</p>
+      <span class="inline-block mt-2 px-2 py-0.5 bg-secondary/10 text-secondary-fixed-variant rounded text-label-sm font-label-sm font-bold border border-secondary/20">${escapeHtml(formatStatus(a.case_status))}</span>
+    `;
+    card.addEventListener("click", () => selectAssignment(a));
+    list.appendChild(card);
+  });
+}
+
+function selectAssignment(a) {
+  selectedCaseId = a.case_id;
+  beforeEvidenceId = null;
+  afterEvidenceId = null;
+
+  document.getElementById("noSelectionCard").classList.add("hidden");
+  document.getElementById("jobPanel").classList.remove("hidden");
+
+  document.getElementById("jobCaseId").textContent = a.case_id;
+  document.getElementById("jobTitle").textContent = a.title;
+  document.getElementById("jobDescription").textContent = a.description || "No description provided.";
+  document.getElementById("jobLocation").textContent = a.location_text || "Location not specified";
+  document.getElementById("work-desc").value = "";
+
+  resetPhotoSlot("before");
+  resetPhotoSlot("after");
+
+  renderAssignmentList();
+}
+
+function resetPhotoSlot(kind) {
+  document.getElementById(`${kind}Preview`).classList.add("hidden");
+  document.getElementById(`${kind}Placeholder`).classList.remove("hidden");
+  document.getElementById(`${kind}Status`).textContent = "";
+  document.getElementById(`${kind}PhotoInput`).value = "";
+}
+
+async function handlePhotoUpload(kind, file) {
+  const statusEl = document.getElementById(`${kind}Status`);
+  const previewEl = document.getElementById(`${kind}Preview`);
+  const placeholderEl = document.getElementById(`${kind}Placeholder`);
+
+  statusEl.textContent = "Uploading...";
+
+  const formData = new FormData();
+  formData.append("case_id", selectedCaseId);
+  formData.append("evidence_type", kind);
+  formData.append("file", file);
+
+  try {
+    const res = await fetch(`${API_BASE}/evidence/upload`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: formData
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+
+    if (kind === "before") {
+      beforeEvidenceId = data.id;
+    } else {
+      afterEvidenceId = data.id;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      previewEl.src = reader.result;
+      previewEl.classList.remove("hidden");
+      placeholderEl.classList.add("hidden");
+    };
+    reader.readAsDataURL(file);
+
+    statusEl.textContent = "Uploaded.";
+    statusEl.classList.remove("text-error");
+
+  } catch (err) {
+    statusEl.textContent = "Upload failed: " + err.message;
+    statusEl.classList.add("text-error");
+  }
+}
+
+document.getElementById("beforePhotoInput").addEventListener("change", (e) => {
+  if (e.target.files[0]) handlePhotoUpload("before", e.target.files[0]);
+});
+
+document.getElementById("afterPhotoInput").addEventListener("change", (e) => {
+  if (e.target.files[0]) handlePhotoUpload("after", e.target.files[0]);
+});
+
+document.getElementById("submitClaimBtn").addEventListener("click", async () => {
+  if (!selectedCaseId) return;
+
+  if (!afterEvidenceId) {
+    alert("Please upload an after-photo before submitting a resolution claim.");
+    return;
+  }
+
+  const description = document.getElementById("work-desc").value.trim();
+  const btn = document.getElementById("submitClaimBtn");
+  btn.disabled = true;
+  btn.textContent = "Submitting...";
+
+  try {
+    const res = await fetch(`${API_BASE}/resolution-claims`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({
+        case_id: selectedCaseId,
+        worker_id: currentUserId,
+        description: description || null,
+        before_evidence_id: beforeEvidenceId,
+        after_evidence_id: afterEvidenceId
+      })
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+
+    alert("Resolution claim submitted. An inspector will verify it shortly.");
+
+    document.getElementById("jobPanel").classList.add("hidden");
+    document.getElementById("noSelectionCard").classList.remove("hidden");
+    selectedCaseId = null;
+
+    await loadAssignments();
+
+  } catch (err) {
+    alert("Could not submit claim: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `Submit Resolution Claim <span class="material-symbols-outlined text-sm">send</span>`;
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem("civicTraceToken");
+  localStorage.removeItem("civicTraceRole");
+  localStorage.removeItem("civicTraceOfficialEmail");
+  window.location.href = "home.html";
+});
+
+(async function start() {
+  const ok = await checkAuth();
+  if (!ok) return;
+  await loadAssignments();
+})();
+</script>
 </body></html>
