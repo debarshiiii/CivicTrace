@@ -3,11 +3,11 @@
 A civic issue reporting and tracking application.
 
 ## Structure
-- ackend/ — FastAPI backend
-- rontend/ — HTML frontend pages
+- ackend/ â€” FastAPI backend
+- rontend/ â€” HTML frontend pages
 
 ## Run locally
-1. Create ackend/.env locally from your own values.
+1. Create backend/.env locally from your own values.
 2. Install backend dependencies:
 
    `ash
