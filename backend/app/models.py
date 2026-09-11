@@ -235,6 +235,46 @@ class Case(Base):
         default=0
     )
 
+    # ---------------------------------------------------
+    # AI photo triage (Gemini vision analysis)
+    # ---------------------------------------------------
+
+    ai_verified = Column(
+        Boolean,
+        nullable=True
+    )
+
+    ai_confidence = Column(
+        Float,
+        nullable=True
+    )
+
+    ai_detected_category = Column(
+        String,
+        nullable=True
+    )
+
+    ai_severity_score = Column(
+        Integer,
+        nullable=True
+    )
+
+    ai_reasoning = Column(
+        Text,
+        nullable=True
+    )
+
+    ai_flagged = Column(
+        Boolean,
+        default=False,
+        nullable=False
+    )
+
+    hotspot_score = Column(
+        Integer,
+        nullable=True
+    )
+
     status = Column(
         Enum(CaseStatus),
         default=CaseStatus.received,

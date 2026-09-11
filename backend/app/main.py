@@ -43,6 +43,7 @@ from .models import (
 from .schemas import (
     UserCreate,
     UserLogin,
+    UserResponse,
     TokenResponse,
     CitizenTokenCreate,
     CitizenTokenResponse,
@@ -52,8 +53,7 @@ from .schemas import (
     AssignmentCreate,
     ResolutionClaimCreate,
     ResolutionVerificationCreate,
-    AuditLogResponse,
-    UserResponse
+    AuditLogResponse
 )
 
 from .auth import (
@@ -64,6 +64,13 @@ from .auth import (
 )
 
 from .audit_service import log_audit
+
+from .ai_service import (
+    analyze_evidence_image,
+    compute_hotspot_score,
+    combine_risk_score,
+    mime_type_for_extension
+)
 
 from .routers import officials
 
@@ -541,6 +548,30 @@ def create_case(
 # GET SINGLE CASE
 # ==================================================
 
+def serialize_case(case: Case) -> dict:
+
+    return {
+        "id": case.id,
+        "title": case.title,
+        "description": case.description,
+        "category": case.category,
+        "location_text": case.location_text,
+        "latitude": case.latitude,
+        "longitude": case.longitude,
+        "risk_score": case.risk_score,
+        "status": case.status.value,
+        "created_at": case.created_at,
+        "updated_at": case.updated_at,
+        "ai_verified": case.ai_verified,
+        "ai_confidence": case.ai_confidence,
+        "ai_detected_category": case.ai_detected_category,
+        "ai_severity_score": case.ai_severity_score,
+        "ai_reasoning": case.ai_reasoning,
+        "ai_flagged": case.ai_flagged,
+        "hotspot_score": case.hotspot_score
+    }
+
+
 @app.get("/api/cases/{case_id}")
 def get_case(
     case_id: str,
@@ -561,19 +592,7 @@ def get_case(
             detail="Case not found"
         )
 
-    return {
-        "id": case.id,
-        "title": case.title,
-        "description": case.description,
-        "category": case.category,
-        "location_text": case.location_text,
-        "latitude": case.latitude,
-        "longitude": case.longitude,
-        "risk_score": case.risk_score,
-        "status": case.status.value,
-        "created_at": case.created_at,
-        "updated_at": case.updated_at
-    }
+    return serialize_case(case)
 
 
 # ==================================================
@@ -609,19 +628,7 @@ def list_cases(
     cases = q.all()
 
     return [
-        {
-            "id": case.id,
-            "title": case.title,
-            "description": case.description,
-            "category": case.category,
-            "location_text": case.location_text,
-            "latitude": case.latitude,
-            "longitude": case.longitude,
-            "risk_score": case.risk_score,
-            "status": case.status.value,
-            "created_at": case.created_at,
-            "updated_at": case.updated_at
-        }
+        serialize_case(case)
         for case in cases
     ]
 
@@ -742,6 +749,8 @@ def create_evidence(
         )
 
     url = ev.url
+    file_bytes = None
+    mime_type = None
 
     if ev.photo_data:
 
@@ -781,6 +790,18 @@ def create_evidence(
                 detail="Invalid base64 photo_data"
             )
 
+        # Hard cap so a citizen (or a script) can't fill the disk with
+        # a single oversized upload. 8 MB is generous for a phone photo.
+        max_photo_bytes = 8 * 1024 * 1024
+
+        if len(file_bytes) > max_photo_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail="Photo is too large (max 8 MB)"
+            )
+
+        mime_type = mime_type_for_extension(extension)
+
         filename = f"{uuid.uuid4().hex}{extension}"
 
         filepath = REPORT_DIR / filename
@@ -811,6 +832,72 @@ def create_evidence(
     db.commit()
     db.refresh(evidence)
 
+    # ------------------------------------------------------------
+    # AI photo triage + hotspot scoring
+    # Only runs for citizen-submitted report photos (the initial
+    # complaint photo) -- not for worker before/after evidence,
+    # which is judged by a human verifier instead, on purpose.
+    # ------------------------------------------------------------
+
+    if (
+        file_bytes is not None
+        and ev.uploaded_by_type == "citizen"
+        and ev.type == "report"
+    ):
+
+        ai_result = analyze_evidence_image(
+            image_bytes=file_bytes,
+            mime_type=mime_type,
+            category=case.category,
+            description=ev.description
+        )
+
+        hotspot_score = compute_hotspot_score(
+            db,
+            category=case.category,
+            latitude=case.latitude,
+            longitude=case.longitude,
+            exclude_case_id=case.id
+        )
+
+        case.hotspot_score = hotspot_score
+        case.risk_score = combine_risk_score(
+            ai_result,
+            hotspot_score
+        )
+
+        if ai_result is not None:
+
+            case.ai_verified = (
+                ai_result["is_civic_issue"]
+                and ai_result["category_match"]
+            )
+            case.ai_confidence = ai_result["confidence"]
+            case.ai_detected_category = ai_result["detected_category"]
+            case.ai_severity_score = ai_result["severity_score"]
+            case.ai_reasoning = ai_result["reasoning"]
+            case.ai_flagged = not case.ai_verified
+
+        db.commit()
+        db.refresh(case)
+
+        log_audit(
+            db,
+            actor_type="system",
+            action=(
+                "case.ai_flagged"
+                if case.ai_flagged
+                else "case.ai_verified"
+            ),
+            entity_type="case",
+            entity_id=case.id,
+            meta={
+                "ai_result": ai_result,
+                "hotspot_score": hotspot_score,
+                "new_risk_score": case.risk_score
+            }
+        )
+
     actor_type = (
         ev.uploaded_by_type
         if ev.uploaded_by_type
@@ -830,7 +917,18 @@ def create_evidence(
         }
     )
 
-    return evidence
+    return {
+        "id": evidence.id,
+        "case_id": evidence.case_id,
+        "type": evidence.type,
+        "url": evidence.url,
+        "uploaded_by_type": evidence.uploaded_by_type,
+        "uploaded_by_id": evidence.uploaded_by_id,
+        "metadata": evidence.meta,
+        "created_at": evidence.created_at,
+        "case_risk_score": case.risk_score,
+        "case_ai_flagged": case.ai_flagged
+    }
 
 
 # ==================================================

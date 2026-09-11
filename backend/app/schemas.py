@@ -88,6 +88,14 @@ class CaseResponse(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
+    ai_verified: Optional[bool] = None
+    ai_confidence: Optional[float] = None
+    ai_detected_category: Optional[str] = None
+    ai_severity_score: Optional[int] = None
+    ai_reasoning: Optional[str] = None
+    ai_flagged: bool = False
+    hotspot_score: Optional[int] = None
+
 
 # =========================================================
 # EVIDENCE
