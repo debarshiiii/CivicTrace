@@ -1,5 +1,3 @@
-# backend/app/main.py
-
 from fastapi import (
     FastAPI,
     Depends,
@@ -75,19 +73,11 @@ from .ai_service import (
 from .routers import officials
 
 
-# ==================================================
-# APP
-# ==================================================
-
 app = FastAPI(
     title="CivicTrace API",
     version="1.0.0"
 )
 
-
-# ==================================================
-# CORS
-# ==================================================
 
 app.add_middleware(
     CORSMiddleware,
@@ -97,10 +87,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# ==================================================
-# UPLOAD DIRECTORIES
-# ==================================================
 
 UPLOAD_DIR = Path("uploads")
 
@@ -121,27 +107,15 @@ app.mount(
 )
 
 
-# ==================================================
-# ROUTERS
-# ==================================================
-
 app.include_router(
     officials.router
 )
 
 
-# ==================================================
-# DATABASE
-# ==================================================
-
 Base.metadata.create_all(
     bind=engine
 )
 
-
-# ==================================================
-# GOVERNMENT AUTHENTICATION
-# ==================================================
 
 def get_current_user(
     request: Request,
@@ -200,10 +174,6 @@ def get_current_user(
     return user
 
 
-# ==================================================
-# GOVERNMENT ROLE GUARD
-# ==================================================
-
 GOV_ROLES = {
     UserRole.supervisor,
     UserRole.admin,
@@ -222,10 +192,6 @@ def require_gov_user(
         )
     return user
 
-
-# ==================================================
-# REGISTER GOVERNMENT USER
-# ==================================================
 
 @app.post(
     "/api/auth/register",
@@ -282,10 +248,6 @@ def register_user(
     return user
 
 
-# ==================================================
-# GOVERNMENT LOGIN
-# ==================================================
-
 @app.post(
     "/api/auth/login",
     response_model=TokenResponse
@@ -338,10 +300,6 @@ def login(
     }
 
 
-# ==================================================
-# CURRENT USER
-# ==================================================
-
 @app.get("/api/auth/me")
 def get_me(
     user: User = Depends(get_current_user)
@@ -353,10 +311,6 @@ def get_me(
         "role": user.role.value
     }
 
-
-# ==================================================
-# CITIZEN TOKEN
-# ==================================================
 
 @app.post(
     "/api/citizens/tokens",
@@ -422,10 +376,6 @@ def create_citizen_token(
         "token": token_str
     }
 
-
-# ==================================================
-# CREATE CASE
-# ==================================================
 
 @app.post("/api/cases")
 def create_case(
@@ -544,10 +494,6 @@ def create_case(
     }
 
 
-# ==================================================
-# GET SINGLE CASE
-# ==================================================
-
 def serialize_case(case: Case) -> dict:
 
     return {
@@ -595,11 +541,6 @@ def get_case(
     return serialize_case(case)
 
 
-# ==================================================
-# GET ALL CASES
-# PUBLIC
-# ==================================================
-
 @app.get("/api/cases")
 def list_cases(
     status_filter: Optional[str] = None,
@@ -632,11 +573,6 @@ def list_cases(
         for case in cases
     ]
 
-
-# ==================================================
-# UPDATE CASE
-# GOVERNMENT ONLY
-# ==================================================
 
 @app.patch("/api/cases/{case_id}")
 def update_case(
@@ -715,12 +651,8 @@ def update_case(
         meta=changes
     )
 
-    return case
+    return serialize_case(case)
 
-
-# ==================================================
-# CREATE EVIDENCE RECORD
-# ==================================================
 
 @app.post("/api/evidence")
 def create_evidence(
@@ -790,8 +722,6 @@ def create_evidence(
                 detail="Invalid base64 photo_data"
             )
 
-        # Hard cap so a citizen (or a script) can't fill the disk with
-        # a single oversized upload. 8 MB is generous for a phone photo.
         max_photo_bytes = 8 * 1024 * 1024
 
         if len(file_bytes) > max_photo_bytes:
@@ -831,13 +761,6 @@ def create_evidence(
     db.add(evidence)
     db.commit()
     db.refresh(evidence)
-
-    # ------------------------------------------------------------
-    # AI photo triage + hotspot scoring
-    # Only runs for citizen-submitted report photos (the initial
-    # complaint photo) -- not for worker before/after evidence,
-    # which is judged by a human verifier instead, on purpose.
-    # ------------------------------------------------------------
 
     if (
         file_bytes is not None
@@ -927,13 +850,15 @@ def create_evidence(
         "metadata": evidence.meta,
         "created_at": evidence.created_at,
         "case_risk_score": case.risk_score,
-        "case_ai_flagged": case.ai_flagged
+        "case_ai_flagged": case.ai_flagged,
+        "case_ai_verified": case.ai_verified,
+        "case_ai_confidence": case.ai_confidence,
+        "case_ai_detected_category": case.ai_detected_category,
+        "case_ai_severity_score": case.ai_severity_score,
+        "case_ai_reasoning": case.ai_reasoning,
+        "case_hotspot_score": case.hotspot_score
     }
 
-
-# ==================================================
-# UPLOAD EVIDENCE IMAGE
-# ==================================================
 
 @app.post("/api/evidence/upload")
 async def upload_evidence(
@@ -1064,10 +989,6 @@ async def upload_evidence(
     }
 
 
-# ==================================================
-# CASE EVIDENCE
-# ==================================================
-
 @app.get(
     "/api/cases/{case_id}/evidence"
 )
@@ -1115,11 +1036,6 @@ def get_case_evidence(
         for item in evidence
     ]
 
-
-# ==================================================
-# ASSIGN WORKER
-# GOVERNMENT ONLY
-# ==================================================
 
 @app.post("/api/assignments")
 def create_assignment(
@@ -1185,12 +1101,14 @@ def create_assignment(
         }
     )
 
-    return assignment
+    return {
+        "id": assignment.id,
+        "case_id": assignment.case_id,
+        "worker_id": assignment.worker_id,
+        "status": assignment.status,
+        "created_at": assignment.created_at
+    }
 
-
-# ==================================================
-# WORKER ASSIGNMENTS
-# ==================================================
 
 @app.get("/api/workers/me/assignments")
 def get_my_assignments(
@@ -1239,10 +1157,6 @@ def get_my_assignments(
 
     return results
 
-
-# ==================================================
-# GET SINGLE WORKER ASSIGNMENT
-# ==================================================
 
 @app.get(
     "/api/workers/me/assignments/{assignment_id}"
@@ -1294,11 +1208,6 @@ def get_my_assignment(
         }
     }
 
-
-# ==================================================
-# RESOLUTION CLAIM
-# WORKER ONLY
-# ==================================================
 
 @app.post(
     "/api/resolution-claims"
@@ -1418,10 +1327,6 @@ def create_resolution_claim(
     }
 
 
-# ==================================================
-# GET RESOLUTION CLAIM
-# ==================================================
-
 @app.get(
     "/api/cases/{case_id}/resolution"
 )
@@ -1495,11 +1400,6 @@ def get_resolution(
         )
     }
 
-
-# ==================================================
-# RESOLUTION VERIFICATION
-# GOVERNMENT VERIFIER ONLY
-# ==================================================
 
 @app.post(
     "/api/resolution-verifications"
@@ -1591,10 +1491,6 @@ def create_resolution_verification(
     }
 
 
-# ==================================================
-# AUDIT LOGS
-# ==================================================
-
 @app.get(
     "/api/audit-logs",
     response_model=List[AuditLogResponse]
@@ -1645,10 +1541,6 @@ def list_audit_logs(
     ]
 
 
-# ==================================================
-# CASE AUDIT LOGS
-# ==================================================
-
 @app.get(
     "/api/cases/{case_id}/audit-logs",
     response_model=List[AuditLogResponse]
@@ -1685,10 +1577,6 @@ def get_case_audit_logs(
         for log in logs
     ]
 
-
-# ==================================================
-# HEALTH CHECK
-# ==================================================
 
 @app.get("/")
 def root():

@@ -300,6 +300,39 @@
       <p id="resultText" class="text-body-md"></p>
     </div>
 
+    <!-- AI Review Card (shown only after a photo report is submitted) -->
+    <div id="aiCard" class="hidden mt-unit-8 p-unit-6 rounded-xl border-2">
+      <div class="flex items-center gap-unit-3 mb-unit-4">
+        <span id="aiStatusIcon" class="material-symbols-outlined text-[32px]"></span>
+        <div>
+          <h3 id="aiStatusTitle" class="text-headline-sm font-headline-sm"></h3>
+          <p id="aiStatusSubtitle" class="text-body-sm font-body-sm text-on-surface-variant"></p>
+        </div>
+      </div>
+
+      <div id="aiSeverityWrap" class="hidden mb-unit-4">
+        <div class="flex justify-between items-baseline mb-1">
+          <span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wide">Severity Score</span>
+          <span id="aiSeverityLabel" class="text-label-md font-label-md font-bold"></span>
+        </div>
+        <div class="w-full h-3 rounded-full bg-surface-variant overflow-hidden">
+          <div id="aiSeverityBar" class="h-full rounded-full transition-all" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div id="aiHotspotWrap" class="hidden mb-unit-4">
+        <p id="aiHotspotText" class="text-body-sm font-body-sm text-on-surface-variant flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">location_on</span>
+        </p>
+      </div>
+
+      <p id="aiReasoningText" class="text-body-sm font-body-sm text-on-surface-variant italic"></p>
+
+      <p class="text-label-sm font-label-sm text-outline mt-unit-4 pt-unit-4 border-t border-outline-variant">
+        Case ID: <span id="aiCaseId" class="font-tabular-nums font-bold text-on-surface"></span> — use this to track your report.
+      </p>
+    </div>
+
   </div>
 </section>
 
@@ -472,6 +505,7 @@
       // (Evidence rows require a url, so a description with no
       // photo is just carried on the case itself, above.)
       const photoFile = photoInput.files?.[0];
+      let evidenceResult = null;
 
       if (photoFile) {
         const photoBase64 = await fileToBase64(photoFile);
@@ -494,9 +528,18 @@
           const errText = await resEv.text();
           throw new Error(errText || `HTTP ${resEv.status}`);
         }
+
+        evidenceResult = await resEv.json();
       }
 
-      showResult(`Report submitted successfully. Case ID: ${dataCase.id}`, false);
+      if (evidenceResult) {
+        showAiCard(evidenceResult, dataCase.id);
+      } else {
+        showResult(
+          `Report submitted successfully. Case ID: ${dataCase.id}. Add a photo next time so our AI can triage it automatically.`,
+          false
+        );
+      }
 
       // Clear form
       tokenInput.value = "";
@@ -525,6 +568,115 @@
     resultBox.classList.toggle("bg-surface-container-low", !isError);
     resultText.classList.toggle("text-error", isError);
     resultText.classList.toggle("text-on-surface", !isError);
+  }
+
+  function severityLabel(score) {
+    if (score >= 76) return "Severe / Urgent";
+    if (score >= 51) return "Serious";
+    if (score >= 21) return "Moderate";
+    return "Minor";
+  }
+
+  function severityColor(score) {
+    if (score >= 76) return "#dc2626"; // red
+    if (score >= 51) return "#ea580c"; // orange
+    if (score >= 21) return "#ca8a04"; // amber
+    return "#16a34a"; // green
+  }
+
+  function showAiCard(evidenceResult, caseId) {
+    const aiCard = document.getElementById("aiCard");
+    const icon = document.getElementById("aiStatusIcon");
+    const title = document.getElementById("aiStatusTitle");
+    const subtitle = document.getElementById("aiStatusSubtitle");
+    const severityWrap = document.getElementById("aiSeverityWrap");
+    const severityBar = document.getElementById("aiSeverityBar");
+    const severityLabelEl = document.getElementById("aiSeverityLabel");
+    const hotspotWrap = document.getElementById("aiHotspotWrap");
+    const hotspotText = document.getElementById("aiHotspotText");
+    const reasoningText = document.getElementById("aiReasoningText");
+    const caseIdEl = document.getElementById("aiCaseId");
+
+    caseIdEl.textContent = caseId;
+
+    const verified = evidenceResult.case_ai_verified;
+    const flagged = evidenceResult.case_ai_flagged;
+    const severity = evidenceResult.case_ai_severity_score;
+    const detectedCategory = evidenceResult.case_ai_detected_category;
+    const reasoning = evidenceResult.case_ai_reasoning;
+    const hotspotScore = evidenceResult.case_hotspot_score;
+
+    // Reset border/background classes, then set per-status below.
+    aiCard.className = "mt-unit-8 p-unit-6 rounded-xl border-2";
+
+    if (verified === true) {
+      aiCard.classList.add("border-tertiary", "bg-tertiary-container/20");
+      icon.textContent = "check_circle";
+      icon.classList.add("text-tertiary");
+      title.textContent = "Report Accepted";
+      subtitle.textContent = detectedCategory
+        ? `Our AI confirmed this photo matches a "${detectedCategory.replace(/_/g, " ")}" issue.`
+        : "Our AI confirmed this photo matches the reported issue.";
+    } else if (verified === false) {
+      aiCard.classList.add("border-secondary", "bg-secondary-container/20");
+      icon.textContent = "flag";
+      icon.classList.add("text-secondary");
+      title.textContent = "Sent for Manual Review";
+      subtitle.textContent = detectedCategory
+        ? `Our AI wasn't confident this matches what you selected (it looks more like "${detectedCategory.replace(/_/g, " ")}"). A municipal officer will take a look.`
+        : "Our AI wasn't confident about this photo. A municipal officer will take a look.";
+    } else {
+      // ai_verified is null -- AI review unavailable (e.g. no API
+      // key configured, or Gemini call failed). Case still exists
+      // and will be reviewed manually, just without an AI opinion.
+      aiCard.classList.add("border-outline-variant", "bg-surface-container-low");
+      icon.textContent = "hourglass_top";
+      icon.classList.add("text-outline");
+      title.textContent = "Report Submitted";
+      subtitle.textContent = "AI review isn't available right now — your report will be reviewed manually.";
+    }
+
+    if (typeof severity === "number") {
+      severityWrap.classList.remove("hidden");
+      severityBar.style.width = `${severity}%`;
+      severityBar.style.backgroundColor = severityColor(severity);
+      severityLabelEl.textContent = `${severity}/100 — ${severityLabel(severity)}`;
+      severityLabelEl.style.color = severityColor(severity);
+    } else {
+      severityWrap.classList.add("hidden");
+    }
+
+    if (typeof hotspotScore === "number" && hotspotScore > 0) {
+      hotspotWrap.classList.remove("hidden");
+      const nearbyCount = Math.round(hotspotScore / 15);
+      hotspotText.innerHTML =
+        `<span class="material-symbols-outlined text-[18px]">location_on</span> ` +
+        `This is at least the ${nearbyCount + 1}${nearbyCount === 0 ? "st" : "th"} report of this issue type near this location — it's been bumped up in priority.`;
+    } else {
+      hotspotWrap.classList.add("hidden");
+    }
+
+    if (reasoning) {
+      reasoningText.textContent = `"${reasoning}"`;
+      reasoningText.classList.remove("hidden");
+    } else {
+      reasoningText.classList.add("hidden");
+    }
+
+    aiCard.classList.remove("hidden");
+    aiCard.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // Reset the form underneath the card.
+    tokenInput.value = "";
+    selectedCategory = null;
+    photoInput.value = "";
+    descInput.value = "";
+    categoryBtns.forEach(b => {
+      b.classList.remove("border-primary", "bg-primary-fixed-dim/20", "text-primary");
+      b.classList.add("border-outline-variant", "text-on-surface-variant");
+    });
+    step2.classList.add("hidden");
+    step1.classList.remove("hidden");
   }
 
   function fileToBase64(file) {

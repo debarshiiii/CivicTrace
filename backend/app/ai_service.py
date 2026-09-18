@@ -1,39 +1,13 @@
 """
-AI photo triage for CivicTrace.
-
-Two separate, deliberately different mechanisms:
-
-1. analyze_evidence_image() -- calls Google's Gemini API (vision-capable,
-   free tier available) to look at a citizen's uploaded photo and judge
-   whether it actually shows the claimed civic issue, plus a visual
-   severity score. This is genuinely something only a vision model can do.
-
-2. compute_hotspot_score() -- NOT an AI call. "Usual hotspots of the city"
-   just means: how many other reports of this same issue type already
-   exist near this location? That's a plain distance query over
-   CivicTrace's own case history. No model can know a city's actual
-   pothole hotspots better than CivicTrace's own accumulated reports do,
-   so this stays deterministic, fast, and free.
-
-combine_risk_score() blends the two into the single risk_score used for
-sorting/prioritizing cases.
-
-IMPORTANT: analyze_evidence_image() never raises. If the API key is
-missing, the network call fails, or the model returns something
-unparseable, it returns None. Callers must treat None as "AI review
-unavailable right now" and fall back gracefully -- an AI hiccup must
-never block or hide a citizen's report.
-
-Auth note: Google's current guidance (2026) is to send the API key via
-the `x-goog-api-key` header rather than a `?key=` query parameter, since
-query params can leak into server/proxy access logs. That's what this
-module does.
+AI photo triage for CivicTrace, using Google's Interactions API
+(the current recommended Gemini API surface, replacing the older
+generateContent REST endpoint).
 """
 
 import base64
 import json
 import math
-import re
+import traceback
 from typing import Any, Dict, Optional
 
 import httpx
@@ -52,51 +26,72 @@ VALID_CATEGORIES = [
     "other",
 ]
 
+INTERACTIONS_URL = "https://generativelanguage.googleapis.com/v1beta/interactions"
 
-ANALYSIS_PROMPT = """
-You are a municipal civic-issue triage assistant for CivicTrace, a public
-infrastructure reporting platform.
-
-A citizen submitted a photo claiming it shows a "{category}" civic issue,
-with this description: "{description}"
-
-Look at the photo and respond with ONLY a single JSON object (no markdown
-fences, no extra commentary) with exactly these fields:
-
-{{
-  "is_civic_issue": true or false,
-  "detected_category": one of {categories},
-  "category_match": true or false,
-  "confidence": a number from 0 to 1,
-  "severity_score": an integer from 1 to 100,
-  "reasoning": a one or two sentence explanation
-}}
-
-Field notes:
-- is_civic_issue: false if the photo shows nothing resembling a real
-  public-infrastructure problem (selfies, memes, unrelated objects, etc).
-- detected_category: your best guess at what the photo actually shows,
-  regardless of what the citizen claimed.
-- category_match: true only if detected_category reasonably matches the
-  claimed category "{category}".
-- severity_score: visual severity ONLY, based on size/scale visible in
-  frame, apparent depth or structural damage, standing water, exposed
-  hazards (rebar, live wires), whether it blocks a path or road, and
-  immediate danger to pedestrians/vehicles.
-  1-20 = cosmetic/minor, 21-50 = moderate, 51-75 = serious,
-  76-100 = severe/urgent hazard.
-
-Return ONLY the JSON object, nothing else.
-"""
+# Structured output schema -- Gemini is instructed to return JSON that
+# matches this exactly, instead of us hoping it follows a plain-text
+# prompt instruction. Much more reliable than free-form parsing.
+RESPONSE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "is_civic_issue": {"type": "boolean"},
+        "detected_category": {
+            "type": "string",
+            "enum": VALID_CATEGORIES
+        },
+        "category_match": {"type": "boolean"},
+        "confidence": {"type": "number"},
+        "severity_score": {"type": "integer"},
+        "reasoning": {"type": "string"}
+    },
+    "required": [
+        "is_civic_issue",
+        "detected_category",
+        "category_match",
+        "confidence",
+        "severity_score",
+        "reasoning"
+    ]
+}
 
 
-def _extract_json(text: str) -> Dict[str, Any]:
+def _prompt(category: str, description: Optional[str]) -> str:
+    return (
+        "You are a municipal civic-issue triage assistant for CivicTrace, "
+        "a public infrastructure reporting platform.\n\n"
+        f'A citizen submitted a photo claiming it shows a "{category}" civic '
+        f'issue, with this description: "{description or "(no description provided)"}"\n\n'
+        "Judge: (1) is_civic_issue -- false if the photo shows nothing resembling "
+        "a real public-infrastructure problem (selfies, memes, unrelated objects); "
+        "(2) detected_category -- your best guess at what it actually shows; "
+        "(3) category_match -- true only if detected_category reasonably matches "
+        f'the claimed category "{category}"; (4) severity_score 1-100, visual '
+        "severity only, based on size/scale in frame, depth or structural damage, "
+        "standing water, exposed hazards (rebar, live wires), whether it blocks a "
+        "path/road, and danger to pedestrians/vehicles "
+        "(1-20 cosmetic, 21-50 moderate, 51-75 serious, 76-100 severe/urgent); "
+        "(5) reasoning -- one or two sentences explaining the severity_score."
+    )
 
-    cleaned = text.strip()
-    cleaned = re.sub(r"^```(json)?", "", cleaned, flags=re.I).strip()
-    cleaned = re.sub(r"```$", "", cleaned).strip()
 
-    return json.loads(cleaned)
+def _extract_output_text(data: Dict[str, Any]) -> Optional[str]:
+    """
+    The Interactions API response shape can expose the final text either
+    as a convenience field or nested inside the steps array, depending
+    on API revision. Try both rather than assuming one.
+    """
+
+    if data.get("output_text"):
+        return data["output_text"]
+
+    for step in data.get("steps", []):
+        if step.get("type") != "model_output":
+            continue
+        for block in step.get("content", []):
+            if block.get("type") == "text" and block.get("text"):
+                return block["text"]
+
+    return None
 
 
 def analyze_evidence_image(
@@ -109,125 +104,83 @@ def analyze_evidence_image(
     api_key = settings.GEMINI_API_KEY
 
     if not api_key:
+        print("[ai_service] GEMINI_API_KEY is not set -- skipping AI analysis.")
         return None
-
-    prompt = ANALYSIS_PROMPT.format(
-        category=category,
-        description=description or "(no description provided)",
-        categories=VALID_CATEGORIES
-    )
 
     image_b64 = base64.b64encode(image_bytes).decode("utf-8")
 
-    url = (
-        "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{settings.GEMINI_MODEL}:generateContent"
-    )
-
     payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": prompt},
-                    {
-                        "inline_data": {
-                            "mime_type": mime_type,
-                            "data": image_b64
-                        }
-                    }
-                ]
-            }
+        "model": settings.GEMINI_MODEL,
+        "input": [
+            {"type": "text", "text": _prompt(category, description)},
+            {"type": "image", "data": image_b64, "mime_type": mime_type}
         ],
-        "generationConfig": {
-            "temperature": 0.1,
-            "response_mime_type": "application/json"
+        "response_format": {
+            "type": "text",
+            "mime_type": "application/json",
+            "schema": RESPONSE_SCHEMA
         }
     }
 
     headers = {
         "x-goog-api-key": api_key,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Api-Revision": "2026-05-20"
     }
 
     try:
-
         response = httpx.post(
-            url,
+            INTERACTIONS_URL,
             headers=headers,
             json=payload,
-            timeout=20.0
+            timeout=30.0
         )
 
-        response.raise_for_status()
+        if response.status_code >= 400:
+            print(
+                f"[ai_service] Gemini Interactions API returned "
+                f"{response.status_code}: {response.text}"
+            )
+            return None
 
         data = response.json()
 
-        text = data["candidates"][0]["content"]["parts"][0]["text"]
+        text = _extract_output_text(data)
 
-        result = _extract_json(text)
+        if not text:
+            # We reached Gemini fine but the response shape wasn't what
+            # we expected -- print the raw JSON so we can see the real
+            # structure and fix parsing in one precise edit next time.
+            print(
+                "[ai_service] Could not find output text in Gemini response. "
+                f"Raw response: {json.dumps(data)[:2000]}"
+            )
+            return None
 
-        # Don't trust the model's shape blindly -- clamp/coerce everything.
-        result["severity_score"] = max(
-            1,
-            min(100, int(result.get("severity_score", 50)))
-        )
+        result = json.loads(text)
 
-        result["confidence"] = max(
-            0.0,
-            min(1.0, float(result.get("confidence", 0.5)))
-        )
-
-        result["is_civic_issue"] = bool(
-            result.get("is_civic_issue", True)
-        )
-
-        result["category_match"] = bool(
-            result.get("category_match", True)
-        )
-
-        result["detected_category"] = str(
-            result.get("detected_category", category)
-        )
-
-        result["reasoning"] = str(
-            result.get("reasoning", "")
-        )[:500]
+        result["severity_score"] = max(1, min(100, int(result.get("severity_score", 50))))
+        result["confidence"] = max(0.0, min(1.0, float(result.get("confidence", 0.5))))
+        result["is_civic_issue"] = bool(result.get("is_civic_issue", True))
+        result["category_match"] = bool(result.get("category_match", True))
+        result["detected_category"] = str(result.get("detected_category", category))
+        result["reasoning"] = str(result.get("reasoning", ""))[:500]
 
         return result
 
-    except Exception as exc:
-
-        # Never let an AI/network hiccup block a citizen's report.
-        print(f"[ai_service] Gemini analysis failed: {exc}")
+    except Exception:
+        print("[ai_service] Gemini analysis failed:")
+        traceback.print_exc()
         return None
 
 
-def _haversine_km(
-    lat1: float,
-    lon1: float,
-    lat2: float,
-    lon2: float
-) -> float:
-
+def _haversine_km(lat1, lon1, lat2, lon2) -> float:
     earth_radius_km = 6371.0
-
-    phi1 = math.radians(lat1)
-    phi2 = math.radians(lat2)
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
     d_phi = math.radians(lat2 - lat1)
     d_lambda = math.radians(lon2 - lon1)
-
-    a = (
-        math.sin(d_phi / 2) ** 2
-        + math.cos(phi1)
-        * math.cos(phi2)
-        * math.sin(d_lambda / 2) ** 2
-    )
-
-    c = 2 * math.atan2(
-        math.sqrt(a),
-        math.sqrt(1 - a)
-    )
-
+    a = math.sin(d_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return earth_radius_km * c
 
 
@@ -254,22 +207,13 @@ def compute_hotspot_score(
         query = query.filter(Case.id != exclude_case_id)
 
     candidates = query.all()
-
     nearby_count = 0
 
     for c in candidates:
-
-        distance_km = _haversine_km(
-            latitude,
-            longitude,
-            c.latitude,
-            c.longitude
-        )
-
+        distance_km = _haversine_km(latitude, longitude, c.latitude, c.longitude)
         if distance_km <= radius_km:
             nearby_count += 1
 
-    # Each nearby prior report of the same issue type bumps the score.
     return min(nearby_count * 15, 100)
 
 
@@ -277,21 +221,13 @@ def combine_risk_score(
     ai_result: Optional[Dict[str, Any]],
     hotspot_score: int
 ) -> int:
-
     if ai_result is None:
-        # Can't assess visual severity -- don't hide the case either.
         return max(30, hotspot_score)
-
     severity = ai_result["severity_score"]
-
-    return round(
-        (0.65 * severity)
-        + (0.35 * hotspot_score)
-    )
+    return round((0.65 * severity) + (0.35 * hotspot_score))
 
 
 def mime_type_for_extension(extension: str) -> str:
-
     return {
         ".png": "image/png",
         ".webp": "image/webp",
