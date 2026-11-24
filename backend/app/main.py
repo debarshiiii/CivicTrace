@@ -1,501 +1,386 @@
+import base64
+import binascii
+import enum
+import logging
+import re
+import secrets
+import time
+import uuid
+from collections import OrderedDict
+from pathlib import Path
+from typing import List, Optional
+
+import httpx
 from fastapi import (
-    FastAPI,
     Depends,
+    FastAPI,
+    File,
+    Form,
+    Header,
     HTTPException,
     Request,
     UploadFile,
-    File,
-    Form
+    Response,
 )
-
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from typing import List, Optional
-
-from pathlib import Path
-import random
-import enum
-import shutil
-import uuid
-import base64
-import binascii
-
-from .database import engine, get_db, Base
-
+from .ai_service import (
+    ALLOWED_CASE_CATEGORIES,
+    analyze_evidence_image,
+    combine_risk_score,
+    compute_hotspot_score,
+)
+from .audit_service import actor_type_for, log_audit
+from .auth import (
+    clear_login_failures,
+    create_access_token,
+    create_case_key,
+    decode_access_token,
+    hash_password,
+    login_blocked_seconds,
+    record_login_failure,
+    verify_case_key,
+    verify_password,
+)
+from .config import settings
+from .database import Base, engine, get_db
 from .models import (
-    User,
-    UserRole,
-    CitizenToken,
-    Case,
-    Evidence,
     Assignment,
+    AuditLog,
+    Case,
+    CaseStatus,
+    CitizenToken,
+    Evidence,
     ResolutionClaim,
     ResolutionVerification,
-    AuditLog,
-    CaseStatus
+    User,
+    UserRole,
 )
-
+from .routers import officials
 from .schemas import (
+    AssignmentCreate,
+    AuditLogResponse,
+    CaseCreate,
+    CaseUpdate,
+    CitizenTokenCreate,
+    CitizenTokenResponse,
+    EvidenceCreate,
+    ResolutionClaimCreate,
+    ResolutionVerificationCreate,
+    TokenResponse,
     UserCreate,
     UserLogin,
     UserResponse,
-    TokenResponse,
-    CitizenTokenCreate,
-    CitizenTokenResponse,
-    CaseCreate,
-    CaseUpdate,
-    EvidenceCreate,
-    AssignmentCreate,
-    ResolutionClaimCreate,
-    ResolutionVerificationCreate,
-    AuditLogResponse
 )
 
-from .auth import (
-    hash_password,
-    verify_password,
-    create_access_token,
-    decode_access_token
-)
+logger = logging.getLogger("civictrace")
 
-from .audit_service import log_audit
-
-from .ai_service import (
-    analyze_evidence_image,
-    compute_hotspot_score,
-    combine_risk_score,
-    mime_type_for_extension
-)
-
-from .routers import officials
+_sk = settings.SECRET_KEY.lower()
+if len(settings.SECRET_KEY) < 32 or "change" in _sk or "your" in _sk or _sk in {"secret", ""}:
+    logger.warning(
+        "SECRET_KEY in .env is weak/placeholder. Anyone who can guess it can forge "
+        "login tokens. Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+    )
 
 
-app = FastAPI(
-    title="CivicTrace API",
-    version="1.0.0"
-)
+app = FastAPI(title="CivicTrace API", version="1.1.0")
 
+_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_origins or ["*"],
+    # Bearer-token auth (no cookies), so credentials are not needed and
+    # "*" + credentials would be an unsafe combination.
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-UPLOAD_DIR = Path("uploads")
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
 
+
+# ----------------------------------------------------------------
+# Uploads
+# ----------------------------------------------------------------
+
+UPLOAD_DIR = Path("uploads")
 BEFORE_DIR = UPLOAD_DIR / "before"
 AFTER_DIR = UPLOAD_DIR / "after"
 CHALLENGE_DIR = UPLOAD_DIR / "challenges"
 REPORT_DIR = UPLOAD_DIR / "reports"
 
-BEFORE_DIR.mkdir(parents=True, exist_ok=True)
-AFTER_DIR.mkdir(parents=True, exist_ok=True)
-CHALLENGE_DIR.mkdir(parents=True, exist_ok=True)
-REPORT_DIR.mkdir(parents=True, exist_ok=True)
+for _d in (BEFORE_DIR, AFTER_DIR, CHALLENGE_DIR, REPORT_DIR):
+    _d.mkdir(parents=True, exist_ok=True)
 
-app.mount(
-    "/uploads",
-    StaticFiles(directory=str(UPLOAD_DIR)),
-    name="uploads"
-)
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
+MAX_PHOTO_BYTES = 8 * 1024 * 1024
+MAX_REPORT_PHOTOS_PER_CASE = 5
 
-app.include_router(
-    officials.router
-)
+app.include_router(officials.router)
+
+Base.metadata.create_all(bind=engine)
 
 
-Base.metadata.create_all(
-    bind=engine
-)
+def sniff_image(data: bytes):
+    """Real image type from the file's own bytes; (ext, mime) or None."""
+    if len(data) < 32:
+        return None
+    if data[:3] == b"\xff\xd8\xff":
+        return ".jpg", "image/jpeg"
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return ".png", "image/png"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return ".webp", "image/webp"
+    return None
 
 
-def get_current_user(
-    request: Request,
-    db: Session = Depends(get_db)
-):
-    auth_header = request.headers.get(
-        "Authorization",
-        ""
-    )
+def clean_text(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", value).strip()
+
+
+# ----------------------------------------------------------------
+# Auth dependencies
+# ----------------------------------------------------------------
+
+GOV_ROLES = {UserRole.supervisor, UserRole.admin, UserRole.auditor, UserRole.official}
+STAFF_ROLES = {UserRole.supervisor, UserRole.admin, UserRole.official}  # auditors are read-only
+
+
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
+    auth_header = request.headers.get("Authorization", "")
 
     if not auth_header.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Missing authentication token"
-        )
+        raise HTTPException(status_code=401, detail="Missing authentication token")
 
-    token = auth_header.split(
-        " ",
-        1
-    )[1]
-
-    payload = decode_access_token(token)
+    payload = decode_access_token(auth_header.split(" ", 1)[1])
 
     if not payload:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired token"
-        )
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    if "sub" not in payload:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid token"
-        )
+    # Case evidence keys carry a "scope" claim and must never log anyone in.
+    if "sub" not in payload or payload.get("scope"):
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
         user_id = int(payload["sub"])
     except (TypeError, ValueError):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid token subject"
-        )
+        raise HTTPException(status_code=401, detail="Invalid token subject")
 
-    user = (
-        db.query(User)
-        .filter(User.id == user_id)
-        .first()
-    )
+    user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=401, detail="User not found")
 
     return user
 
 
-GOV_ROLES = {
-    UserRole.supervisor,
-    UserRole.admin,
-    UserRole.auditor,
-    UserRole.official
-}
-
-
-def require_gov_user(
-    user: User = Depends(get_current_user)
-) -> User:
+def require_gov_user(user: User = Depends(get_current_user)) -> User:
     if user.role not in GOV_ROLES:
-        raise HTTPException(
-            status_code=403,
-            detail="Government access required"
-        )
+        raise HTTPException(status_code=403, detail="Government access required")
     return user
 
 
-@app.post(
-    "/api/auth/register",
-    response_model=UserResponse
-)
-def register_user(
-    user_in: UserCreate,
-    db: Session = Depends(get_db)
-):
+def require_staff(user: User = Depends(get_current_user)) -> User:
+    if user.role not in STAFF_ROLES:
+        raise HTTPException(status_code=403, detail="Official or supervisor access required")
+    return user
 
-    existing = (
-        db.query(User)
-        .filter(User.email == user_in.email)
-        .first()
-    )
 
-    if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="Email already registered"
-        )
+def require_worker(user: User = Depends(get_current_user)) -> User:
+    if user.role != UserRole.worker:
+        raise HTTPException(status_code=403, detail="Worker access required")
+    return user
+
+
+def get_case_or_404(db: Session, case_id: str) -> Case:
+    case = db.query(Case).filter(Case.id == case_id).first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    return case
+
+
+# ----------------------------------------------------------------
+# Accounts
+# ----------------------------------------------------------------
+
+@app.post("/api/auth/register", response_model=UserResponse)
+def register_user(user_in: UserCreate, request: Request, db: Session = Depends(get_db)):
+    """
+    Create a staff/worker account.
+    - Very first account on an empty database: no login needed, always `admin`.
+    - After that: only a signed-in admin can create accounts.
+    """
+
+    bootstrap = db.query(User).count() == 0
+
+    creator = None
+    if not bootstrap:
+        creator = get_current_user(request, db)
+        if creator.role != UserRole.admin:
+            raise HTTPException(status_code=403, detail="Only an admin can create accounts")
 
     try:
-        role_enum = UserRole(
-            user_in.role
-        )
+        role_enum = UserRole(user_in.role)
     except ValueError:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid user role"
-        )
+        raise HTTPException(status_code=400, detail="Invalid user role")
+
+    if bootstrap:
+        role_enum = UserRole.admin
+
+    if db.query(User).filter(func.lower(User.email) == user_in.email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
 
     user = User(
         email=user_in.email,
-        password_hash=hash_password(
-            user_in.password
-        ),
+        password_hash=hash_password(user_in.password),
         role=role_enum,
-        name=user_in.name
+        name=user_in.name,
     )
 
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    db.flush()
 
     log_audit(
         db,
-        actor_type="system",
+        actor_type="gov_user" if creator else "system",
+        actor_id=creator.id if creator else None,
         action="user.created",
         entity_type="user",
-        entity_id=str(user.id)
+        entity_id=str(user.id),
+        meta={"role": role_enum.value, "bootstrap": bootstrap},
+        commit=False,
     )
+
+    db.commit()
+    db.refresh(user)
 
     return user
 
 
-@app.post(
-    "/api/auth/login",
-    response_model=TokenResponse
-)
-def login(
-    user_in: UserLogin,
-    db: Session = Depends(get_db)
-):
+@app.post("/api/auth/login", response_model=TokenResponse)
+def login(user_in: UserLogin, request: Request, db: Session = Depends(get_db)):
 
-    user = (
-        db.query(User)
-        .filter(User.email == user_in.email)
-        .first()
-    )
+    email = user_in.email.strip().lower()
+    ip = request.client.host if request.client else "unknown"
+    key = f"{ip}|{email}"
 
-    if not user:
+    wait = login_blocked_seconds(key)
+    if wait:
         raise HTTPException(
-            status_code=401,
-            detail="Invalid credentials"
+            status_code=429,
+            detail=f"Too many failed attempts. Try again in {wait // 60 + 1} minute(s).",
         )
 
-    if not verify_password(
-        user_in.password,
-        user.password_hash
-    ):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid credentials"
-        )
+    user = db.query(User).filter(func.lower(User.email) == email).first()
 
-    access_token = create_access_token(
-        data={
-            "sub": str(user.id),
-            "role": user.role.value
-        }
-    )
+    if not user or not verify_password(user_in.password, user.password_hash):
+        if record_login_failure(key):
+            log_audit(
+                db,
+                actor_type="system",
+                action="user.login_locked",
+                entity_type="user",
+                entity_id=str(user.id) if user else email,
+                meta={"ip": ip},
+            )
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    clear_login_failures(key)
+
+    access_token = create_access_token(data={"sub": str(user.id), "role": user.role.value})
 
     log_audit(
         db,
-        actor_type="gov_user",
+        actor_type=actor_type_for(user),
         action="user.login",
         entity_type="user",
         entity_id=str(user.id),
-        actor_id=user.id
+        actor_id=user.id,
     )
 
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @app.get("/api/auth/me")
-def get_me(
-    user: User = Depends(get_current_user)
-):
-    return {
-        "id": user.id,
-        "email": user.email,
-        "name": user.name,
-        "role": user.role.value
-    }
+def get_me(user: User = Depends(get_current_user)):
+    return {"id": user.id, "email": user.email, "name": user.name, "role": user.role.value}
 
 
-@app.post(
-    "/api/citizens/tokens",
-    response_model=CitizenTokenResponse
-)
-def create_citizen_token(
-    payload: Optional[CitizenTokenCreate] = None,
-    db: Session = Depends(get_db)
-):
+@app.get("/api/workers")
+def list_workers(user: User = Depends(require_gov_user), db: Session = Depends(get_db)):
+    """Field workers that officials can assign cases to."""
 
-    chars = (
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "0123456789"
+    workers = db.query(User).filter(User.role == UserRole.worker).order_by(User.name.asc()).all()
+
+    counts = dict(
+        db.query(Assignment.worker_id, func.count(Assignment.id))
+        .filter(Assignment.status.in_(["assigned", "in_progress", "resolution_claimed"]))
+        .group_by(Assignment.worker_id)
+        .all()
     )
+
+    return [
+        {"id": w.id, "name": w.name, "email": w.email, "active_assignments": counts.get(w.id, 0)}
+        for w in workers
+    ]
+
+
+# ----------------------------------------------------------------
+# Citizen tokens
+# ----------------------------------------------------------------
+
+@app.post("/api/citizens/tokens", response_model=CitizenTokenResponse)
+def create_citizen_token(payload: Optional[CitizenTokenCreate] = None, db: Session = Depends(get_db)):
+
+    chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
     while True:
-
-        part1 = "".join(
-            random.choices(
-                chars,
-                k=4
-            )
+        token_str = (
+            "CT-"
+            + "".join(secrets.choice(chars) for _ in range(4))
+            + "-"
+            + "".join(secrets.choice(chars) for _ in range(4))
         )
-
-        part2 = "".join(
-            random.choices(
-                chars,
-                k=4
-            )
-        )
-
-        token_str = f"CT-{part1}-{part2}"
-
-        existing = (
-            db.query(CitizenToken)
-            .filter(
-                CitizenToken.token == token_str
-            )
-            .first()
-        )
-
-        if not existing:
+        if not db.query(CitizenToken).filter(CitizenToken.token == token_str).first():
             break
 
-    token = CitizenToken(
-        token=token_str,
-        is_active=True
-    )
-
+    token = CitizenToken(token=token_str, is_active=True)
     db.add(token)
-    db.commit()
-    db.refresh(token)
+    db.flush()
 
     log_audit(
         db,
         actor_type="system",
         action="citizen_token.created",
         entity_type="citizen_token",
-        entity_id=str(token.id)
+        entity_id=str(token.id),
+        commit=False,
     )
 
-    return {
-        "token": token_str
-    }
-
-
-@app.post("/api/cases")
-def create_case(
-    case_in: CaseCreate,
-    db: Session = Depends(get_db)
-):
-
-    reporter_token = None
-
-    if case_in.reporter_token:
-
-        reporter_token = (
-            db.query(CitizenToken)
-            .filter(
-                CitizenToken.token
-                == case_in.reporter_token
-            )
-            .first()
-        )
-
-        if (
-            not reporter_token
-            or not reporter_token.is_active
-        ):
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid citizen token"
-            )
-
-    case_id = case_in.id
-
-    if case_id:
-
-        existing_case = (
-            db.query(Case)
-            .filter(
-                Case.id == case_id
-            )
-            .first()
-        )
-
-        if existing_case:
-            raise HTTPException(
-                status_code=400,
-                detail="Case ID already exists"
-            )
-
-    else:
-
-        chars = "0123456789"
-
-        while True:
-
-            candidate = (
-                "CVT-KOL-"
-                + "".join(
-                    random.choices(
-                        chars,
-                        k=6
-                    )
-                )
-            )
-
-            existing_case = (
-                db.query(Case)
-                .filter(
-                    Case.id == candidate
-                )
-                .first()
-            )
-
-            if not existing_case:
-                case_id = candidate
-                break
-
-    case = Case(
-        id=case_id,
-        title=case_in.title,
-        description=case_in.description,
-        category=case_in.category,
-        location_text=case_in.location_text,
-        latitude=case_in.latitude,
-        longitude=case_in.longitude,
-        risk_score=(
-            case_in.risk_score
-            if case_in.risk_score is not None
-            else 50
-        ),
-        reporter_token_id=(
-            reporter_token.id
-            if reporter_token
-            else None
-        ),
-        status=CaseStatus.received
-    )
-
-    db.add(case)
     db.commit()
-    db.refresh(case)
 
-    log_audit(
-        db,
-        actor_type=(
-            "citizen"
-            if reporter_token
-            else "system"
-        ),
-        action="case.created",
-        entity_type="case",
-        entity_id=case.id
-    )
+    return {"token": token_str}
 
-    return {
-        "id": case.id,
-        "status": case.status.value
-    }
 
+# ----------------------------------------------------------------
+# Cases
+# ----------------------------------------------------------------
 
 def serialize_case(case: Case) -> dict:
-
     return {
         "id": case.id,
         "title": case.title,
@@ -514,332 +399,239 @@ def serialize_case(case: Case) -> dict:
         "ai_severity_score": case.ai_severity_score,
         "ai_reasoning": case.ai_reasoning,
         "ai_flagged": case.ai_flagged,
-        "hotspot_score": case.hotspot_score
+        "hotspot_score": case.hotspot_score,
+    }
+
+
+@app.post("/api/cases")
+def create_case(case_in: CaseCreate, db: Session = Depends(get_db)):
+
+    category = case_in.category.strip().lower()
+    if category not in ALLOWED_CASE_CATEGORIES:
+        raise HTTPException(status_code=400, detail="Unknown issue category")
+
+    reporter_token = None
+
+    if case_in.reporter_token:
+        reporter_token = (
+            db.query(CitizenToken)
+            .filter(CitizenToken.token == case_in.reporter_token.strip())
+            .first()
+        )
+        if not reporter_token or not reporter_token.is_active:
+            raise HTTPException(status_code=400, detail="Invalid citizen token")
+
+    while True:
+        candidate = "CVT-KOL-" + "".join(secrets.choice("0123456789") for _ in range(6))
+        if not db.query(Case).filter(Case.id == candidate).first():
+            case_id = candidate
+            break
+
+    case = Case(
+        id=case_id,
+        title=clean_text(case_in.title),
+        description=clean_text(case_in.description),
+        category=category,
+        location_text=clean_text(case_in.location_text),
+        latitude=case_in.latitude,
+        longitude=case_in.longitude,
+        risk_score=50,  # always server-decided; AI/hotspot refine it later
+        reporter_token_id=reporter_token.id if reporter_token else None,
+        status=CaseStatus.received,
+    )
+
+    db.add(case)
+    db.flush()
+
+    log_audit(
+        db,
+        actor_type="citizen" if reporter_token else "system",
+        action="case.created",
+        entity_type="case",
+        entity_id=case.id,
+        commit=False,
+    )
+
+    db.commit()
+
+    return {
+        "id": case.id,
+        "status": case.status.value,
+        # Short-lived key: lets ONLY the creator attach report photos.
+        "evidence_key": create_case_key(case.id),
     }
 
 
 @app.get("/api/cases/{case_id}")
-def get_case(
-    case_id: str,
-    db: Session = Depends(get_db)
-):
-
-    case = (
-        db.query(Case)
-        .filter(
-            Case.id == case_id
-        )
-        .first()
-    )
-
-    if not case:
-        raise HTTPException(
-            status_code=404,
-            detail="Case not found"
-        )
-
-    return serialize_case(case)
+def get_case(case_id: str, db: Session = Depends(get_db)):
+    return serialize_case(get_case_or_404(db, case_id))
 
 
 @app.get("/api/cases")
 def list_cases(
     status_filter: Optional[str] = None,
-    db: Session = Depends(get_db)
+    limit: int = 500,
+    offset: int = 0,
+    db: Session = Depends(get_db),
 ):
+
+    limit = max(1, min(limit, 1000))
+    offset = max(0, offset)
 
     q = db.query(Case)
 
     if status_filter:
-
         try:
-            status_enum = CaseStatus(
-                status_filter
-            )
-
-            q = q.filter(
-                Case.status == status_enum
-            )
-
+            q = q.filter(Case.status == CaseStatus(status_filter))
         except ValueError:
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid status"
-            )
+            raise HTTPException(status_code=400, detail="Invalid status")
 
-    cases = q.all()
+    cases = q.order_by(Case.created_at.desc()).offset(offset).limit(limit).all()
 
-    return [
-        serialize_case(case)
-        for case in cases
-    ]
+    return [serialize_case(case) for case in cases]
+
+
+# Manual status changes allowed through PATCH. Everything else moves via
+# its own endpoint (assign, claim, verify) so the trail can't be skipped.
+MANUAL_TRANSITIONS = {
+    CaseStatus.received: {CaseStatus.validated, CaseStatus.rejected},
+    CaseStatus.validated: {CaseStatus.rejected},
+    CaseStatus.assigned: {CaseStatus.in_progress},
+    CaseStatus.resolution_claimed: {CaseStatus.verifying},
+}
 
 
 @app.patch("/api/cases/{case_id}")
 def update_case(
     case_id: str,
     case_in: CaseUpdate,
-    user: User = Depends(require_gov_user),
-    db: Session = Depends(get_db)
+    user: User = Depends(require_staff),
+    db: Session = Depends(get_db),
 ):
 
-    case = (
-        db.query(Case)
-        .filter(
-            Case.id == case_id
-        )
-        .first()
-    )
-
-    if not case:
-        raise HTTPException(
-            status_code=404,
-            detail="Case not found"
-        )
-
-    update_data = case_in.model_dump(
-        exclude_unset=True
-    )
+    case = get_case_or_404(db, case_id)
 
     changes = {}
 
-    for field, value in update_data.items():
+    for field, value in case_in.model_dump(exclude_unset=True).items():
 
         if field == "status":
-
             try:
-                value = CaseStatus(value)
+                new_status = CaseStatus(value)
             except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid case status")
+
+            if new_status == case.status:
+                continue
+
+            if new_status not in MANUAL_TRANSITIONS.get(case.status, set()):
                 raise HTTPException(
-                    status_code=400,
-                    detail="Invalid case status"
+                    status_code=409,
+                    detail=(
+                        f"Cannot change status from '{case.status.value}' to "
+                        f"'{new_status.value}' here. Use assignment, resolution "
+                        "claim and verification to move a case forward."
+                    ),
                 )
+            value = new_status
 
-        old = getattr(
-            case,
-            field
-        )
+        elif field == "category":
+            value = (value or "").strip().lower()
+            if value not in ALLOWED_CASE_CATEGORIES:
+                raise HTTPException(status_code=400, detail="Unknown issue category")
 
-        setattr(
-            case,
-            field,
-            value
-        )
+        elif field in ("title", "description", "location_text"):
+            value = clean_text(value)
+            if field == "title" and not value:
+                raise HTTPException(status_code=400, detail="Title cannot be empty")
+
+        old = getattr(case, field)
+        setattr(case, field, value)
 
         changes[field] = {
-            "old": (
-                old.value
-                if isinstance(old, enum.Enum)
-                else old
-            ),
-            "new": (
-                value.value
-                if isinstance(value, enum.Enum)
-                else value
-            )
+            "old": old.value if isinstance(old, enum.Enum) else old,
+            "new": value.value if isinstance(value, enum.Enum) else value,
         }
+
+    if changes:
+        log_audit(
+            db,
+            actor_type=actor_type_for(user),
+            action="case.updated",
+            entity_type="case",
+            entity_id=case_id,
+            actor_id=user.id,
+            meta=changes,
+            commit=False,
+        )
 
     db.commit()
     db.refresh(case)
 
-    log_audit(
-        db,
-        actor_type="gov_user",
-        action="case.updated",
-        entity_type="case",
-        entity_id=case_id,
-        actor_id=user.id,
-        meta=changes
-    )
-
     return serialize_case(case)
 
 
-@app.post("/api/evidence")
-def create_evidence(
-    ev: EvidenceCreate,
-    db: Session = Depends(get_db)
-):
+# ----------------------------------------------------------------
+# AI scoring helper
+# ----------------------------------------------------------------
 
-    case = (
-        db.query(Case)
-        .filter(
-            Case.id == ev.case_id
-        )
-        .first()
+def run_ai_scoring(db: Session, case: Case, image_bytes: bytes, mime_type: str, description, actor: str):
+    """Analyse one photo, update the case, write an audit entry."""
+
+    ai_result = analyze_evidence_image(
+        image_bytes=image_bytes,
+        mime_type=mime_type,
+        category=case.category,
+        description=description,
     )
 
-    if not case:
-        raise HTTPException(
-            status_code=404,
-            detail="Case not found"
-        )
-
-    if not ev.url and not ev.photo_data:
-        raise HTTPException(
-            status_code=400,
-            detail="Either url or photo_data is required"
-        )
-
-    url = ev.url
-    file_bytes = None
-    mime_type = None
-
-    if ev.photo_data:
-
-        raw = ev.photo_data
-
-        extension = ".jpg"
-
-        if raw.startswith("data:"):
-
-            try:
-
-                header, raw = raw.split(",", 1)
-
-                if "image/png" in header:
-                    extension = ".png"
-                elif "image/webp" in header:
-                    extension = ".webp"
-                else:
-                    extension = ".jpg"
-
-            except ValueError:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid photo_data format"
-                )
-
-        try:
-
-            file_bytes = base64.b64decode(
-                raw,
-                validate=True
-            )
-
-        except (binascii.Error, ValueError):
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid base64 photo_data"
-            )
-
-        max_photo_bytes = 8 * 1024 * 1024
-
-        if len(file_bytes) > max_photo_bytes:
-            raise HTTPException(
-                status_code=413,
-                detail="Photo is too large (max 8 MB)"
-            )
-
-        mime_type = mime_type_for_extension(extension)
-
-        filename = f"{uuid.uuid4().hex}{extension}"
-
-        filepath = REPORT_DIR / filename
-
-        with filepath.open("wb") as buffer:
-            buffer.write(file_bytes)
-
-        url = f"/uploads/reports/{filename}"
-
-    meta = ev.metadata or {}
-
-    if ev.description:
-        meta = {
-            **meta,
-            "description": ev.description
-        }
-
-    evidence = Evidence(
-        case_id=ev.case_id,
-        type=ev.type,
-        url=url,
-        uploaded_by_type=ev.uploaded_by_type,
-        uploaded_by_id=ev.uploaded_by_id,
-        meta=meta
+    hotspot_score = compute_hotspot_score(
+        db,
+        category=case.category,
+        latitude=case.latitude,
+        longitude=case.longitude,
+        exclude_case_id=case.id,
     )
 
-    db.add(evidence)
-    db.commit()
-    db.refresh(evidence)
+    case.hotspot_score = hotspot_score
 
-    if (
-        file_bytes is not None
-        and ev.uploaded_by_type == "citizen"
-        and ev.type == "report"
-    ):
-
-        ai_result = analyze_evidence_image(
-            image_bytes=file_bytes,
-            mime_type=mime_type,
-            category=case.category,
-            description=ev.description
-        )
-
-        hotspot_score = compute_hotspot_score(
-            db,
-            category=case.category,
-            latitude=case.latitude,
-            longitude=case.longitude,
-            exclude_case_id=case.id
-        )
-
-        case.hotspot_score = hotspot_score
-        case.risk_score = combine_risk_score(
-            ai_result,
-            hotspot_score
-        )
-
-        if ai_result is not None:
-
-            case.ai_verified = (
-                ai_result["is_civic_issue"]
-                and ai_result["category_match"]
-            )
-            case.ai_confidence = ai_result["confidence"]
-            case.ai_detected_category = ai_result["detected_category"]
-            case.ai_severity_score = ai_result["severity_score"]
-            case.ai_reasoning = ai_result["reasoning"]
-            case.ai_flagged = not case.ai_verified
-
-        db.commit()
-        db.refresh(case)
-
-        log_audit(
-            db,
-            actor_type="system",
-            action=(
-                "case.ai_flagged"
-                if case.ai_flagged
-                else "case.ai_verified"
-            ),
-            entity_type="case",
-            entity_id=case.id,
-            meta={
-                "ai_result": ai_result,
-                "hotspot_score": hotspot_score,
-                "new_risk_score": case.risk_score
-            }
-        )
-
-    actor_type = (
-        ev.uploaded_by_type
-        if ev.uploaded_by_type
-        else "system"
-    )
+    if ai_result is not None:
+        case.risk_score = combine_risk_score(ai_result, hotspot_score)
+        case.ai_verified = ai_result["is_civic_issue"] and ai_result["category_match"]
+        case.ai_confidence = ai_result["confidence"]
+        case.ai_detected_category = ai_result["detected_category"]
+        case.ai_severity_score = ai_result["severity_score"]
+        case.ai_reasoning = ai_result["reasoning"]
+        case.ai_flagged = not case.ai_verified
+    elif case.ai_severity_score is None:
+        case.risk_score = combine_risk_score(None, hotspot_score)
+    # else: a failed re-run must not wipe an earlier good AI score.
 
     log_audit(
         db,
-        actor_type=actor_type,
-        action="evidence.created",
-        entity_type="evidence",
-        entity_id=str(evidence.id),
-        actor_id=ev.uploaded_by_id,
+        actor_type=actor,
+        action=(
+            "case.ai_unavailable"
+            if ai_result is None
+            else ("case.ai_flagged" if case.ai_flagged else "case.ai_verified")
+        ),
+        entity_type="case",
+        entity_id=case.id,
         meta={
-            "case_id": ev.case_id,
-            "type": ev.type
-        }
+            "ai_result": ai_result,
+            "hotspot_score": hotspot_score,
+            "new_risk_score": case.risk_score,
+        },
+        commit=False,
     )
 
+    db.commit()
+    db.refresh(case)
+
+    return ai_result
+
+
+def evidence_payload(evidence: Evidence, case: Case) -> dict:
     return {
         "id": evidence.id,
         "case_id": evidence.case_id,
@@ -856,8 +648,110 @@ def create_evidence(
         "case_ai_detected_category": case.ai_detected_category,
         "case_ai_severity_score": case.ai_severity_score,
         "case_ai_reasoning": case.ai_reasoning,
-        "case_hotspot_score": case.hotspot_score
+        "case_hotspot_score": case.hotspot_score,
     }
+
+
+# ----------------------------------------------------------------
+# Evidence
+# ----------------------------------------------------------------
+
+@app.post("/api/evidence")
+def create_evidence(
+    ev: EvidenceCreate,
+    x_case_key: Optional[str] = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    """
+    Citizen photo for the case they just created. Needs the
+    `evidence_key` from POST /api/cases, sent as the X-Case-Key header.
+    Workers/officials use /api/evidence/upload.
+    """
+
+    case = get_case_or_404(db, ev.case_id)
+
+    if not verify_case_key(x_case_key, case.id):
+        raise HTTPException(
+            status_code=403,
+            detail="Missing or expired case key. Photos can only be added by the person who just created the report.",
+        )
+
+    if ev.type != "report":
+        raise HTTPException(status_code=400, detail="Citizens can only upload 'report' photos")
+
+    if not ev.photo_data:
+        raise HTTPException(status_code=400, detail="photo_data is required")
+
+    existing_photos = (
+        db.query(func.count(Evidence.id))
+        .filter(Evidence.case_id == case.id, Evidence.type == "report")
+        .scalar()
+    )
+    if existing_photos >= MAX_REPORT_PHOTOS_PER_CASE:
+        raise HTTPException(status_code=400, detail="Photo limit reached for this report")
+
+    raw = ev.photo_data.strip()
+    if raw.startswith("data:"):
+        if "," not in raw:
+            raise HTTPException(status_code=400, detail="Invalid photo_data format")
+        raw = raw.split(",", 1)[1]
+
+    if len(raw) > int(MAX_PHOTO_BYTES * 1.4) + 16:
+        raise HTTPException(status_code=413, detail="Photo is too large (max 8 MB)")
+
+    try:
+        file_bytes = base64.b64decode(raw, validate=True)
+    except (binascii.Error, ValueError):
+        raise HTTPException(status_code=400, detail="Invalid base64 photo_data")
+
+    if len(file_bytes) > MAX_PHOTO_BYTES:
+        raise HTTPException(status_code=413, detail="Photo is too large (max 8 MB)")
+
+    sniffed = sniff_image(file_bytes)
+    if not sniffed:
+        raise HTTPException(status_code=400, detail="That file is not a valid JPEG, PNG or WebP image.")
+    extension, mime_type = sniffed
+
+    filename = f"{uuid.uuid4().hex}{extension}"
+    (REPORT_DIR / filename).write_bytes(file_bytes)
+
+    meta = {"content_type": mime_type}
+    description = clean_text(ev.description)
+    if description:
+        meta["description"] = description
+
+    evidence = Evidence(
+        case_id=case.id,
+        type="report",
+        url=f"/uploads/reports/{filename}",
+        uploaded_by_type="citizen",
+        uploaded_by_id=None,
+        meta=meta,
+    )
+
+    db.add(evidence)
+    db.flush()
+
+    log_audit(
+        db,
+        actor_type="citizen",
+        action="evidence.created",
+        entity_type="evidence",
+        entity_id=str(evidence.id),
+        meta={"case_id": case.id, "type": "report"},
+        commit=False,
+    )
+
+    db.commit()
+    db.refresh(evidence)
+
+    # Score only a fresh case, once, so later photos can't overwrite an
+    # official's or earlier AI score.
+    # (hotspot_score stays NULL until the first scoring attempt has run.)
+    if case.status == CaseStatus.received and case.hotspot_score is None:
+        run_ai_scoring(db, case, file_bytes, mime_type, description or case.description, "system")
+
+    return evidence_payload(evidence, case)
 
 
 @app.post("/api/evidence/upload")
@@ -866,159 +760,93 @@ async def upload_evidence(
     evidence_type: str = Form(...),
     file: UploadFile = File(...),
     user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
 
-    case = (
-        db.query(Case)
-        .filter(
-            Case.id == case_id
+    get_case_or_404(db, case_id)
+
+    if evidence_type not in {"before", "after", "challenge", "report"}:
+        raise HTTPException(status_code=400, detail="Invalid evidence type")
+
+    if user.role == UserRole.worker:
+        if evidence_type not in {"before", "after"}:
+            raise HTTPException(status_code=403, detail="Workers can only upload before/after photos")
+
+        active = (
+            db.query(Assignment)
+            .filter(
+                Assignment.case_id == case_id,
+                Assignment.worker_id == user.id,
+                Assignment.status.in_(["assigned", "in_progress"]),
+            )
+            .first()
         )
-        .first()
-    )
+        if not active:
+            raise HTTPException(status_code=403, detail="You are not currently assigned to this case")
 
-    if not case:
-        raise HTTPException(
-            status_code=404,
-            detail="Case not found"
-        )
+    elif user.role not in STAFF_ROLES:
+        raise HTTPException(status_code=403, detail="Not allowed to upload evidence")
 
-    allowed_types = {
-        "before",
-        "after",
-        "challenge",
-        "report"
-    }
+    data = await file.read(MAX_PHOTO_BYTES + 1)
 
-    if evidence_type not in allowed_types:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid evidence type"
-        )
+    if len(data) > MAX_PHOTO_BYTES:
+        raise HTTPException(status_code=413, detail="Photo is too large (max 8 MB)")
 
-    if not file.content_type or not file.content_type.startswith(
-        "image/"
-    ):
-        raise HTTPException(
-            status_code=400,
-            detail="Only image files are allowed"
-        )
+    sniffed = sniff_image(data)
+    if not sniffed:
+        raise HTTPException(status_code=400, detail="Only valid JPEG, PNG or WebP images are allowed")
+    extension, mime_type = sniffed
 
-    extension = Path(
-        file.filename or ""
-    ).suffix.lower()
+    directory = {
+        "before": BEFORE_DIR,
+        "after": AFTER_DIR,
+        "challenge": CHALLENGE_DIR,
+        "report": REPORT_DIR,
+    }[evidence_type]
 
-    if extension not in {
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".webp"
-    }:
-        raise HTTPException(
-            status_code=400,
-            detail="Unsupported image format"
-        )
+    filename = f"{uuid.uuid4().hex}{extension}"
+    (directory / filename).write_bytes(data)
 
-    if evidence_type == "before":
-        directory = BEFORE_DIR
-    elif evidence_type == "after":
-        directory = AFTER_DIR
-    elif evidence_type == "challenge":
-        directory = CHALLENGE_DIR
-    else:
-        directory = UPLOAD_DIR
-
-    filename = (
-        f"{uuid.uuid4().hex}"
-        f"{extension}"
-    )
-
-    filepath = directory / filename
-
-    with filepath.open("wb") as buffer:
-        shutil.copyfileobj(
-            file.file,
-            buffer
-        )
-
-    url = (
-        f"/uploads/"
-        f"{directory.relative_to(UPLOAD_DIR)}/"
-        f"{filename}"
-    )
+    url = f"/uploads/{directory.relative_to(UPLOAD_DIR).as_posix()}/{filename}"
 
     evidence = Evidence(
         case_id=case_id,
         type=evidence_type,
         url=url,
-        uploaded_by_type=(
-            "worker"
-            if user.role == UserRole.worker
-            else "gov_user"
-        ),
+        uploaded_by_type=actor_type_for(user),
         uploaded_by_id=user.id,
-        meta={
-            "original_filename": file.filename,
-            "content_type": file.content_type
-        }
+        meta={"original_filename": (file.filename or "")[:200], "content_type": mime_type},
     )
 
     db.add(evidence)
-    db.commit()
-    db.refresh(evidence)
+    db.flush()
 
     log_audit(
         db,
-        actor_type="gov_user",
+        actor_type=actor_type_for(user),
         action="evidence.uploaded",
         entity_type="evidence",
         entity_id=str(evidence.id),
         actor_id=user.id,
-        meta={
-            "case_id": case_id,
-            "type": evidence_type,
-            "filename": file.filename
-        }
+        meta={"case_id": case_id, "type": evidence_type, "filename": (file.filename or "")[:200]},
+        commit=False,
     )
 
-    return {
-        "id": evidence.id,
-        "case_id": case_id,
-        "type": evidence.type,
-        "url": url
-    }
+    db.commit()
+    db.refresh(evidence)
+
+    return {"id": evidence.id, "case_id": case_id, "type": evidence.type, "url": url}
 
 
-@app.get(
-    "/api/cases/{case_id}/evidence"
-)
-def get_case_evidence(
-    case_id: str,
-    db: Session = Depends(get_db)
-):
+@app.get("/api/cases/{case_id}/evidence")
+def get_case_evidence(case_id: str, db: Session = Depends(get_db)):
 
-    case = (
-        db.query(Case)
-        .filter(
-            Case.id == case_id
-        )
-        .first()
-    )
-
-    if not case:
-        raise HTTPException(
-            status_code=404,
-            detail="Case not found"
-        )
+    get_case_or_404(db, case_id)
 
     evidence = (
         db.query(Evidence)
-        .filter(
-            Evidence.case_id == case_id
-        )
-        .order_by(
-            Evidence.created_at.asc()
-        )
+        .filter(Evidence.case_id == case_id)
+        .order_by(Evidence.created_at.asc(), Evidence.id.asc())
         .all()
     )
 
@@ -1031,114 +859,166 @@ def get_case_evidence(
             "uploaded_by_type": item.uploaded_by_type,
             "uploaded_by_id": item.uploaded_by_id,
             "metadata": item.meta,
-            "created_at": item.created_at
+            "created_at": item.created_at,
         }
         for item in evidence
     ]
 
 
+@app.post("/api/cases/{case_id}/reanalyze")
+def reanalyze_case(case_id: str, user: User = Depends(require_staff), db: Session = Depends(get_db)):
+    """Re-run AI triage on the case's first citizen photo (e.g. after an AI outage)."""
+
+    case = get_case_or_404(db, case_id)
+
+    evidence = (
+        db.query(Evidence)
+        .filter(Evidence.case_id == case_id, Evidence.type == "report")
+        .order_by(Evidence.created_at.asc(), Evidence.id.asc())
+        .first()
+    )
+
+    if not evidence or not evidence.url.startswith("/uploads/reports/"):
+        raise HTTPException(status_code=404, detail="No citizen photo to analyse")
+
+    path = REPORT_DIR / Path(evidence.url).name
+
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Photo file is missing on the server")
+
+    data = path.read_bytes()
+    sniffed = sniff_image(data)
+    if not sniffed:
+        raise HTTPException(status_code=400, detail="Stored file is not a valid image")
+
+    description = (evidence.meta or {}).get("description") or case.description
+
+    ai_result = run_ai_scoring(db, case, data, sniffed[1], description, actor_type_for(user))
+
+    return {"ai_available": ai_result is not None, "case": serialize_case(case)}
+
+
+# ----------------------------------------------------------------
+# Assignments
+# ----------------------------------------------------------------
+
+ACTIVE_ASSIGNMENT = ["assigned", "in_progress"]
+
+
 @app.post("/api/assignments")
 def create_assignment(
     a: AssignmentCreate,
-    user: User = Depends(require_gov_user),
-    db: Session = Depends(get_db)
+    user: User = Depends(require_staff),
+    db: Session = Depends(get_db),
 ):
 
-    case = (
-        db.query(Case)
-        .filter(
-            Case.id == a.case_id
-        )
-        .first()
-    )
+    case = get_case_or_404(db, a.case_id)
 
-    if not case:
+    if case.status not in {
+        CaseStatus.received,
+        CaseStatus.validated,
+        CaseStatus.assigned,
+        CaseStatus.in_progress,
+    }:
         raise HTTPException(
-            status_code=404,
-            detail="Case not found"
+            status_code=409,
+            detail=f"A case that is '{case.status.value}' cannot be (re)assigned.",
         )
 
-    worker = (
-        db.query(User)
-        .filter(
-            User.id == a.worker_id
-        )
-        .first()
+    worker = db.query(User).filter(User.id == a.worker_id).first()
+
+    if not worker or worker.role != UserRole.worker:
+        raise HTTPException(status_code=400, detail="Invalid worker")
+
+    current = (
+        db.query(Assignment)
+        .filter(Assignment.case_id == a.case_id, Assignment.status.in_(ACTIVE_ASSIGNMENT))
+        .all()
     )
 
-    if (
-        not worker
-        or worker.role != UserRole.worker
-    ):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid worker"
-        )
+    if any(x.worker_id == a.worker_id for x in current):
+        raise HTTPException(status_code=409, detail="This worker is already assigned to the case")
 
-    assignment = Assignment(
-        case_id=a.case_id,
-        worker_id=a.worker_id,
-        status="assigned"
-    )
+    for old in current:
+        old.status = "reassigned"
 
+    assignment = Assignment(case_id=a.case_id, worker_id=a.worker_id, status="assigned")
     db.add(assignment)
 
     case.status = CaseStatus.assigned
-
-    db.commit()
-    db.refresh(assignment)
+    db.flush()
 
     log_audit(
         db,
-        actor_type="gov_user",
-        action="case.assigned",
+        actor_type=actor_type_for(user),
+        action="case.reassigned" if current else "case.assigned",
         entity_type="case",
         entity_id=a.case_id,
         actor_id=user.id,
         meta={
             "worker_id": a.worker_id,
-            "worker_email": worker.email
-        }
+            "worker_email": worker.email,
+            "previous_workers": [x.worker_id for x in current],
+        },
+        commit=False,
     )
+
+    db.commit()
+    db.refresh(assignment)
 
     return {
         "id": assignment.id,
         "case_id": assignment.case_id,
         "worker_id": assignment.worker_id,
         "status": assignment.status,
-        "created_at": assignment.created_at
+        "created_at": assignment.created_at,
+    }
+
+
+@app.get("/api/cases/{case_id}/assignment")
+def get_case_assignment(case_id: str, user: User = Depends(require_gov_user), db: Session = Depends(get_db)):
+    """Who the case is currently assigned to (government users only)."""
+
+    get_case_or_404(db, case_id)
+
+    assignment = (
+        db.query(Assignment)
+        .filter(Assignment.case_id == case_id, Assignment.status != "reassigned")
+        .order_by(Assignment.id.desc())
+        .first()
+    )
+
+    if not assignment:
+        return {"assignment": None}
+
+    worker = db.query(User).filter(User.id == assignment.worker_id).first()
+
+    return {
+        "assignment": {
+            "id": assignment.id,
+            "status": assignment.status,
+            "worker_id": assignment.worker_id,
+            "worker_name": worker.name if worker else None,
+            "worker_email": worker.email if worker else None,
+            "created_at": assignment.created_at,
+        }
     }
 
 
 @app.get("/api/workers/me/assignments")
-def get_my_assignments(
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-
-    if user.role != UserRole.worker:
-        raise HTTPException(
-            status_code=403,
-            detail="Worker access required"
-        )
+def get_my_assignments(user: User = Depends(require_worker), db: Session = Depends(get_db)):
 
     assignments = (
         db.query(Assignment)
-        .filter(
-            Assignment.worker_id == user.id
-        )
-        .order_by(
-            Assignment.created_at.desc()
-        )
+        .filter(Assignment.worker_id == user.id, Assignment.status != "reassigned")
+        .order_by(Assignment.created_at.desc())
         .all()
     )
 
     results = []
 
     for assignment in assignments:
-
         case = assignment.case
-
         results.append({
             "assignment_id": assignment.id,
             "assignment_status": assignment.status,
@@ -1152,41 +1032,23 @@ def get_my_assignments(
             "risk_score": case.risk_score,
             "case_status": case.status.value,
             "created_at": case.created_at,
-            "updated_at": case.updated_at
+            "updated_at": case.updated_at,
         })
 
     return results
 
 
-@app.get(
-    "/api/workers/me/assignments/{assignment_id}"
-)
-def get_my_assignment(
-    assignment_id: int,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-
-    if user.role != UserRole.worker:
-        raise HTTPException(
-            status_code=403,
-            detail="Worker access required"
-        )
+@app.get("/api/workers/me/assignments/{assignment_id}")
+def get_my_assignment(assignment_id: int, user: User = Depends(require_worker), db: Session = Depends(get_db)):
 
     assignment = (
         db.query(Assignment)
-        .filter(
-            Assignment.id == assignment_id,
-            Assignment.worker_id == user.id
-        )
+        .filter(Assignment.id == assignment_id, Assignment.worker_id == user.id)
         .first()
     )
 
     if not assignment:
-        raise HTTPException(
-            status_code=404,
-            detail="Assignment not found"
-        )
+        raise HTTPException(status_code=404, detail="Assignment not found")
 
     case = assignment.case
 
@@ -1204,117 +1066,100 @@ def get_my_assignment(
             "risk_score": case.risk_score,
             "status": case.status.value,
             "created_at": case.created_at,
-            "updated_at": case.updated_at
-        }
+            "updated_at": case.updated_at,
+        },
     }
 
 
-@app.post(
-    "/api/resolution-claims"
-)
+# ----------------------------------------------------------------
+# Resolution claim -> verification
+# ----------------------------------------------------------------
+
+@app.post("/api/resolution-claims")
 def create_resolution_claim(
     rc: ResolutionClaimCreate,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    user: User = Depends(require_worker),
+    db: Session = Depends(get_db),
 ):
 
-    if user.role != UserRole.worker:
-        raise HTTPException(
-            status_code=403,
-            detail="Worker access required"
-        )
-
-    case = (
-        db.query(Case)
-        .filter(
-            Case.id == rc.case_id
-        )
-        .first()
-    )
-
-    if not case:
-        raise HTTPException(
-            status_code=404,
-            detail="Case not found"
-        )
+    case = get_case_or_404(db, rc.case_id)
 
     assignment = (
         db.query(Assignment)
         .filter(
             Assignment.case_id == rc.case_id,
-            Assignment.worker_id == user.id
+            Assignment.worker_id == user.id,
+            Assignment.status.in_(ACTIVE_ASSIGNMENT),
         )
+        .order_by(Assignment.id.desc())
         .first()
     )
 
     if not assignment:
+        raise HTTPException(status_code=403, detail="You are not currently assigned to this case")
+
+    if case.status not in {CaseStatus.assigned, CaseStatus.in_progress}:
         raise HTTPException(
-            status_code=403,
-            detail="You are not assigned to this case"
+            status_code=409,
+            detail=f"This case is '{case.status.value}' and cannot take a new resolution claim.",
         )
 
-    if rc.before_evidence_id:
+    if not rc.after_evidence_id:
+        raise HTTPException(status_code=400, detail="An after-photo is required")
 
+    after = (
+        db.query(Evidence)
+        .filter(
+            Evidence.id == rc.after_evidence_id,
+            Evidence.case_id == rc.case_id,
+            Evidence.type == "after",
+            Evidence.uploaded_by_id == user.id,
+        )
+        .first()
+    )
+    if not after:
+        raise HTTPException(status_code=400, detail="Invalid after evidence")
+
+    if rc.before_evidence_id:
         before = (
             db.query(Evidence)
             .filter(
                 Evidence.id == rc.before_evidence_id,
-                Evidence.case_id == rc.case_id
+                Evidence.case_id == rc.case_id,
+                Evidence.type.in_(["before", "report"]),
             )
             .first()
         )
-
         if not before:
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid before evidence"
-            )
-
-    if rc.after_evidence_id:
-
-        after = (
-            db.query(Evidence)
-            .filter(
-                Evidence.id == rc.after_evidence_id,
-                Evidence.case_id == rc.case_id
-            )
-            .first()
-        )
-
-        if not after:
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid after evidence"
-            )
+            raise HTTPException(status_code=400, detail="Invalid before evidence")
 
     claim = ResolutionClaim(
         case_id=rc.case_id,
         worker_id=user.id,
-        description=rc.description,
+        description=clean_text(rc.description),
         before_evidence_id=rc.before_evidence_id,
-        after_evidence_id=rc.after_evidence_id
+        after_evidence_id=rc.after_evidence_id,
     )
 
     db.add(claim)
 
     case.status = CaseStatus.resolution_claimed
-
     assignment.status = "resolution_claimed"
-
-    db.commit()
-    db.refresh(claim)
+    db.flush()
 
     log_audit(
         db,
-        actor_type="gov_user",
+        actor_type="worker",
         action="resolution_claim.submitted",
         entity_type="case",
         entity_id=rc.case_id,
         actor_id=user.id,
-        meta={
-            "claim_id": claim.id
-        }
+        meta={"claim_id": claim.id},
+        commit=False,
     )
+
+    db.commit()
+    db.refresh(claim)
 
     return {
         "id": claim.id,
@@ -1323,59 +1168,41 @@ def create_resolution_claim(
         "description": claim.description,
         "before_evidence_id": claim.before_evidence_id,
         "after_evidence_id": claim.after_evidence_id,
-        "status": case.status.value
+        "status": case.status.value,
     }
 
 
-@app.get(
-    "/api/cases/{case_id}/resolution"
-)
-def get_resolution(
-    case_id: str,
-    db: Session = Depends(get_db)
-):
+@app.get("/api/cases/{case_id}/resolution")
+def get_resolution(case_id: str, db: Session = Depends(get_db)):
+    """
+    Latest claim plus the decision made ON THAT claim. While the latest
+    claim awaits a verdict, `pending` is true and `verification` is null
+    (even if an older claim was rejected) so the review form shows again.
+    """
 
-    case = (
-        db.query(Case)
-        .filter(
-            Case.id == case_id
-        )
-        .first()
-    )
+    case = get_case_or_404(db, case_id)
 
-    if not case:
-        raise HTTPException(
-            status_code=404,
-            detail="Case not found"
-        )
-
-    claim = (
+    claims = (
         db.query(ResolutionClaim)
-        .filter(
-            ResolutionClaim.case_id == case_id
-        )
-        .order_by(
-            ResolutionClaim.created_at.desc()
-        )
-        .first()
+        .filter(ResolutionClaim.case_id == case_id)
+        .order_by(ResolutionClaim.created_at.desc(), ResolutionClaim.id.desc())
+        .all()
     )
 
-    if not claim:
-        return {
-            "claim": None,
-            "verification": None
-        }
+    if not claims:
+        return {"claim": None, "verification": None, "pending": False, "attempts": 0}
 
-    verification = (
-        db.query(ResolutionVerification)
-        .filter(
-            ResolutionVerification.case_id == case_id
+    claim = claims[0]
+    pending = case.status in {CaseStatus.resolution_claimed, CaseStatus.verifying}
+
+    verification = None
+    if not pending:
+        verification = (
+            db.query(ResolutionVerification)
+            .filter(ResolutionVerification.case_id == case_id)
+            .order_by(ResolutionVerification.created_at.desc(), ResolutionVerification.id.desc())
+            .first()
         )
-        .order_by(
-            ResolutionVerification.created_at.desc()
-        )
-        .first()
-    )
 
     return {
         "claim": {
@@ -1385,7 +1212,7 @@ def get_resolution(
             "description": claim.description,
             "before_evidence_id": claim.before_evidence_id,
             "after_evidence_id": claim.after_evidence_id,
-            "created_at": claim.created_at
+            "created_at": claim.created_at,
         },
         "verification": (
             {
@@ -1393,93 +1220,96 @@ def get_resolution(
                 "verifier_id": verification.verifier_id,
                 "decision": verification.decision,
                 "notes": verification.notes,
-                "created_at": verification.created_at
+                "created_at": verification.created_at,
             }
             if verification
             else None
-        )
+        ),
+        "pending": pending,
+        "attempts": len(claims),
     }
 
 
-@app.post(
-    "/api/resolution-verifications"
-)
+@app.post("/api/resolution-verifications")
 def create_resolution_verification(
     rv: ResolutionVerificationCreate,
-    user: User = Depends(require_gov_user),
-    db: Session = Depends(get_db)
+    user: User = Depends(require_staff),
+    db: Session = Depends(get_db),
 ):
 
-    case = (
-        db.query(Case)
-        .filter(
-            Case.id == rv.case_id
-        )
-        .first()
-    )
+    case = get_case_or_404(db, rv.case_id)
 
-    if not case:
-        raise HTTPException(
-            status_code=404,
-            detail="Case not found"
-        )
+    if rv.decision not in {"accepted", "rejected"}:
+        raise HTTPException(status_code=400, detail="Decision must be accepted or rejected")
 
-    if rv.decision not in {
-        "accepted",
-        "rejected"
-    }:
-        raise HTTPException(
-            status_code=400,
-            detail="Decision must be accepted or rejected"
-        )
+    notes = clean_text(rv.notes)
+
+    if rv.decision == "rejected" and not notes:
+        raise HTTPException(status_code=400, detail="Explain what is still wrong when rejecting")
+
+    if case.status not in {CaseStatus.resolution_claimed, CaseStatus.verifying}:
+        raise HTTPException(status_code=409, detail="There is no pending resolution claim to verify for this case.")
 
     claim = (
         db.query(ResolutionClaim)
-        .filter(
-            ResolutionClaim.case_id == rv.case_id
-        )
-        .order_by(
-            ResolutionClaim.created_at.desc()
-        )
+        .filter(ResolutionClaim.case_id == rv.case_id)
+        .order_by(ResolutionClaim.created_at.desc(), ResolutionClaim.id.desc())
         .first()
     )
 
     if not claim:
-        raise HTTPException(
-            status_code=400,
-            detail="No resolution claim exists"
-        )
+        raise HTTPException(status_code=400, detail="No resolution claim exists")
 
     verification = ResolutionVerification(
         case_id=rv.case_id,
         verifier_id=user.id,
         decision=rv.decision,
-        notes=rv.notes
+        notes=notes,
     )
 
     db.add(verification)
 
+    assignment = (
+        db.query(Assignment)
+        .filter(
+            Assignment.case_id == rv.case_id,
+            Assignment.worker_id == claim.worker_id,
+            Assignment.status == "resolution_claimed",
+        )
+        .order_by(Assignment.id.desc())
+        .first()
+    )
+
     if rv.decision == "accepted":
         case.status = CaseStatus.resolved
+        if assignment:
+            assignment.status = "completed"
     else:
-        case.status = CaseStatus.rejected
+        # Sent back for rework: the same worker can submit a new claim.
+        case.status = CaseStatus.in_progress
+        if assignment:
+            assignment.status = "in_progress"
 
-    db.commit()
-    db.refresh(verification)
+    db.flush()
 
     log_audit(
         db,
-        actor_type="gov_user",
+        actor_type=actor_type_for(user),
         action="resolution_verification.performed",
         entity_type="case",
         entity_id=rv.case_id,
         actor_id=user.id,
         meta={
             "decision": rv.decision,
-            "notes": rv.notes,
-            "verification_id": verification.id
-        }
+            "notes": notes,
+            "verification_id": verification.id,
+            "claim_id": claim.id,
+        },
+        commit=False,
     )
+
+    db.commit()
+    db.refresh(verification)
 
     return {
         "id": verification.id,
@@ -1487,100 +1317,131 @@ def create_resolution_verification(
         "verifier_id": verification.verifier_id,
         "decision": verification.decision,
         "notes": verification.notes,
-        "status": case.status.value
+        "status": case.status.value,
     }
 
 
-@app.get(
-    "/api/audit-logs",
-    response_model=List[AuditLogResponse]
-)
+# ----------------------------------------------------------------
+# Audit logs (government users only)
+# ----------------------------------------------------------------
+
+def serialize_log(log: AuditLog) -> dict:
+    return {
+        "id": log.id,
+        "actor_type": log.actor_type,
+        "actor_id": log.actor_id,
+        "action": log.action,
+        "entity_type": log.entity_type,
+        "entity_id": log.entity_id,
+        "metadata": log.meta,
+        "timestamp": log.timestamp,
+    }
+
+
+@app.get("/api/audit-logs", response_model=List[AuditLogResponse])
 def list_audit_logs(
     entity_type: Optional[str] = None,
     entity_id: Optional[str] = None,
     actor_type: Optional[str] = None,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    limit: int = 500,
+    offset: int = 0,
+    user: User = Depends(require_gov_user),
+    db: Session = Depends(get_db),
 ):
 
     q = db.query(AuditLog)
 
     if entity_type:
-        q = q.filter(
-            AuditLog.entity_type == entity_type
-        )
-
+        q = q.filter(AuditLog.entity_type == entity_type)
     if entity_id:
-        q = q.filter(
-            AuditLog.entity_id == entity_id
-        )
-
+        q = q.filter(AuditLog.entity_id == entity_id)
     if actor_type:
-        q = q.filter(
-            AuditLog.actor_type == actor_type
-        )
-
-    q = q.order_by(
-        AuditLog.timestamp.desc()
-    )
-
-    logs = q.all()
-
-    return [
-        {
-            "id": log.id,
-            "actor_type": log.actor_type,
-            "actor_id": log.actor_id,
-            "action": log.action,
-            "entity_type": log.entity_type,
-            "entity_id": log.entity_id,
-            "metadata": log.meta,
-            "timestamp": log.timestamp
-        }
-        for log in logs
-    ]
-
-
-@app.get(
-    "/api/cases/{case_id}/audit-logs",
-    response_model=List[AuditLogResponse]
-)
-def get_case_audit_logs(
-    case_id: str,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
+        q = q.filter(AuditLog.actor_type == actor_type)
 
     logs = (
-        db.query(AuditLog)
-        .filter(
-            AuditLog.entity_type == "case",
-            AuditLog.entity_id == case_id
-        )
-        .order_by(
-            AuditLog.timestamp.desc()
-        )
+        q.order_by(AuditLog.timestamp.desc(), AuditLog.id.desc())
+        .offset(max(0, offset))
+        .limit(max(1, min(limit, 2000)))
         .all()
     )
 
-    return [
-        {
-            "id": log.id,
-            "actor_type": log.actor_type,
-            "actor_id": log.actor_id,
-            "action": log.action,
-            "entity_type": log.entity_type,
-            "entity_id": log.entity_id,
-            "metadata": log.meta,
-            "timestamp": log.timestamp
-        }
-        for log in logs
-    ]
+    return [serialize_log(log) for log in logs]
+
+
+@app.get("/api/cases/{case_id}/audit-logs", response_model=List[AuditLogResponse])
+def get_case_audit_logs(case_id: str, user: User = Depends(require_gov_user), db: Session = Depends(get_db)):
+
+    logs = (
+        db.query(AuditLog)
+        .filter(AuditLog.entity_type == "case", AuditLog.entity_id == case_id)
+        .order_by(AuditLog.timestamp.desc(), AuditLog.id.desc())
+        .all()
+    )
+
+    return [serialize_log(log) for log in logs]
+
+
+# ----------------------------------------------------------------
+# Map tile proxy -- keeps the map provider key on the server.
+# The browser only ever sees /api/map/tiles/{z}/{x}/{y}.
+# ----------------------------------------------------------------
+
+_tile_cache: "OrderedDict[str, tuple]" = OrderedDict()
+_TILE_CACHE_MAX = 800
+_tile_rate: dict = {}
+
+
+def _tile_rate_ok(ip: str) -> bool:
+    now = time.time()
+    start, count = _tile_rate.get(ip, (now, 0))
+    if now - start > 60:
+        start, count = now, 0
+    count += 1
+    _tile_rate[ip] = (start, count)
+    if len(_tile_rate) > 5000:
+        _tile_rate.clear()
+    return count <= settings.MAP_TILES_PER_MINUTE
+
+
+@app.get("/api/map/tiles/{z}/{x}/{y}")
+def map_tile(z: int, x: int, y: int, request: Request):
+
+    if not (0 <= z <= 19) or not (0 <= x < 2 ** z) or not (0 <= y < 2 ** z):
+        raise HTTPException(status_code=404, detail="No such tile")
+
+    ip = request.client.host if request.client else "unknown"
+    if not _tile_rate_ok(ip):
+        raise HTTPException(status_code=429, detail="Too many map requests")
+
+    key = f"{z}/{x}/{y}"
+    hit = _tile_cache.get(key)
+
+    if hit is None:
+        url = (
+            settings.MAP_TILE_URL
+            .replace("{z}", str(z)).replace("{x}", str(x)).replace("{y}", str(y))
+            .replace("{key}", settings.MAP_API_KEY or "")
+        )
+        try:
+            upstream = httpx.get(url, timeout=8, headers={"User-Agent": "CivicTrace/1.1"})
+        except Exception as exc:
+            # never log the URL: it can contain the provider key
+            logger.warning("Map tile fetch failed: %s", type(exc).__name__)
+            raise HTTPException(status_code=502, detail="Map tiles unavailable")
+
+        ctype = upstream.headers.get("content-type", "")
+        if upstream.status_code != 200 or not ctype.startswith("image/") or len(upstream.content) > 400_000:
+            logger.warning("Map provider answered HTTP %s", upstream.status_code)
+            raise HTTPException(status_code=502, detail="Map tiles unavailable")
+
+        hit = (upstream.content, ctype)
+        _tile_cache[key] = hit
+        if len(_tile_cache) > _TILE_CACHE_MAX:
+            _tile_cache.popitem(last=False)
+
+    return Response(content=hit[0], media_type=hit[1], headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/")
 def root():
-    return {
-        "message": "CivicTrace API is running",
-        "status": "ok"
-    }
+    return {"message": "CivicTrace API is running", "status": "ok"}

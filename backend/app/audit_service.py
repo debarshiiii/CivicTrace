@@ -4,7 +4,12 @@ from typing import Optional, Dict, Any
 
 from sqlalchemy.orm import Session
 
-from .models import AuditLog
+from .models import AuditLog, User, UserRole
+
+
+def actor_type_for(user: User) -> str:
+    """Audit label for a signed-in user ("worker" or "gov_user")."""
+    return "worker" if user.role == UserRole.worker else "gov_user"
 
 
 def log_audit(
@@ -14,21 +19,16 @@ def log_audit(
     entity_type: str,
     entity_id: str,
     actor_id: Optional[int] = None,
-    meta: Optional[Dict[str, Any]] = None
+    meta: Optional[Dict[str, Any]] = None,
+    commit: bool = True
 ):
     """
     Create a permanent accountability/audit log entry.
 
-    Every important action in CivicTrace can call this function.
-
-    Examples:
-        case.created
-        case.updated
-        case.assigned
-        evidence.uploaded
-        resolution_claim.submitted
-        resolution_verification.performed
-        user.login
+    commit=True  (default): the entry is committed immediately.
+    commit=False: the entry joins the caller's open transaction, so the
+                  action and its audit record are saved atomically
+                  (either both exist or neither does).
     """
 
     audit = AuditLog(
@@ -41,7 +41,9 @@ def log_audit(
     )
 
     db.add(audit)
-    db.commit()
-    db.refresh(audit)
+
+    if commit:
+        db.commit()
+        db.refresh(audit)
 
     return audit

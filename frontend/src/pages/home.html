@@ -12,13 +12,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
 <!-- Leaflet CSS -->
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-  crossorigin=""
-/>
-
 <script id="tailwind-config">
 tailwind.config = {
   darkMode: "class",
@@ -218,15 +211,13 @@ tailwind.config = {
       >
         Track
       </a>
-
       <a
         class="text-secondary dark:text-secondary-fixed-dim font-medium text-label-md font-label-md hover:text-primary-container transition-colors"
         href="about.html"
       >
         About
       </a>
-
-    </nav>
+</nav>
 
   </div>
 
@@ -243,6 +234,7 @@ tailwind.config = {
       class="hover:text-primary-container transition-colors"
       title="Notifications"
       type="button"
+      onclick="alert('You have no new notifications.')"
     >
 
       <span
@@ -434,6 +426,18 @@ tailwind.config = {
 
         </label>
 
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input
+            checked
+            class="rounded border-outline text-primary focus:ring-primary cat-filter"
+            data-cat="streetlight"
+            type="checkbox"
+          />
+          <span class="text-body-sm font-body-sm">
+            Streetlights
+          </span>
+        </label>
+
       </div>
 
     </div>
@@ -581,950 +585,389 @@ tailwind.config = {
 </main>
 
 
-<!-- ========================================================= -->
-<!-- LEAFLET JS -->
-<!-- ========================================================= -->
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!-- Leaflet Heatmap -->
-
-<script src="https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
 
 
 <!-- ========================================================= -->
-<!-- APPLICATION JAVASCRIPT -->
+<!-- APPLICATION JAVASCRIPT (Leaflet + OpenStreetMap, no API key) -->
 <!-- ========================================================= -->
 
 <script>
+// ---------------------------------------------------------
+// SETTINGS
+// ---------------------------------------------------------
+const API_BASE = "http://127.0.0.1:8000/api";
 
-if (typeof L === 'undefined') {
+const KOLKATA = { lat: 22.5726, lng: 88.3639 };
 
-  document.body.innerHTML = `
-    <div style="
-      padding:24px;
-      font-family:system-ui,sans-serif;
-    ">
-      Map library failed to load.
-      Check your internet connection and browser console.
+// ---------------------------------------------------------
+// HELPERS
+// ---------------------------------------------------------
+function esc(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function riskLevel(score) {
+  const s = score || 0;
+  if (s >= 75) return "critical";
+  if (s >= 50) return "high";
+  if (s >= 25) return "moderate";
+  return "low";
+}
+
+function riskLabel(score) {
+  return riskLevel(score).toUpperCase();
+}
+
+function riskClass(score) {
+  switch (riskLevel(score)) {
+    case "critical": return "bg-error text-on-error";
+    case "high": return "bg-orange-500 text-white";
+    case "moderate": return "bg-yellow-500 text-white";
+    default: return "bg-tertiary text-on-tertiary";
+  }
+}
+
+function riskColor(score) {
+  switch (riskLevel(score)) {
+    case "critical": return "#dc2626";
+    case "high": return "#f97316";
+    case "moderate": return "#eab308";
+    default: return "#16a34a";
+  }
+}
+
+function formatTime(iso) {
+  if (!iso) return "";
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function hasLocation(c) {
+  return typeof c.latitude === "number" && typeof c.longitude === "number";
+}
+
+// ---------------------------------------------------------
+// STATE
+// ---------------------------------------------------------
+const feedList = document.getElementById("feedList");
+const riskFilters = document.querySelectorAll(".risk-filter");
+const catFilters = document.querySelectorAll(".cat-filter");
+
+let allCases = [];
+let map = null;
+let items = [];          // { c, marker, halo }
+let mapReady = false;
+
+// ---------------------------------------------------------
+// MAP MESSAGE (shown instead of the map only if it truly can't load)
+// ---------------------------------------------------------
+function showMapMessage(html) {
+  const el = document.getElementById("map");
+  el.innerHTML =
+    '<div style="height:100%;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:system-ui,sans-serif;background:#f1f5f9;color:#334155;">' +
+    '<div style="max-width:420px">' + html + "</div></div>";
+}
+
+// ---------------------------------------------------------
+// LOAD LEAFLET (tries three different CDNs, so one being blocked
+// does not break the map)
+// ---------------------------------------------------------
+const LEAFLET_SOURCES = [
+  // your own copy first (vendor folder): works even if CDNs are blocked
+  { css: "vendor/leaflet.css", js: "vendor/leaflet.js" },
+  { css: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css",
+    js:  "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" },
+  { css: "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css",
+    js:  "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" },
+  { css: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+    js:  "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" }
+];
+
+function loadLeaflet() {
+  return new Promise((resolve, reject) => {
+    if (window.L) { resolve(); return; }
+
+    let index = 0;
+
+    function tryNext() {
+      if (index >= LEAFLET_SOURCES.length) { reject(new Error("all CDNs failed")); return; }
+      const src = LEAFLET_SOURCES[index++];
+
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = src.css;
+      document.head.appendChild(css);
+
+      const js = document.createElement("script");
+      js.src = src.js;
+      js.onload = () => (window.L ? resolve() : tryNext());
+      js.onerror = () => { css.remove(); js.remove(); tryNext(); };
+      document.head.appendChild(js);
+    }
+
+    tryNext();
+  });
+}
+
+// ---------------------------------------------------------
+// MAP (OpenStreetMap tiles; switches to a backup tile server
+// automatically if the first one doesn't load)
+// ---------------------------------------------------------
+const TILE_SERVERS = [
+  // 1) Your own backend passes the tiles on, so no map key is ever in the browser.
+  { url: API_BASE + "/map/tiles/{z}/{x}/{y}",
+    attribution: "Map data &copy; OpenStreetMap contributors", subdomains: "" },
+  // 2) Keyless public backups if the backend can't supply tiles.
+  { url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: "&copy; OpenStreetMap contributors", subdomains: "abc" },
+  { url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    attribution: "&copy; OpenStreetMap contributors &copy; CARTO", subdomains: "abcd" }
+];
+
+function initMap() {
+  map = L.map("map", { center: [KOLKATA.lat, KOLKATA.lng], zoom: 12, zoomControl: false });
+  L.control.zoom({ position: "topright" }).addTo(map);
+
+  let serverIndex = 0;
+  let tileLayer = null;
+  let timer = null;
+
+  function nextServer() {
+    if (serverIndex < TILE_SERVERS.length - 1) {
+      serverIndex++;
+      useTileServer(serverIndex);
+    } else {
+      showTileWarning();
+    }
+  }
+
+  function showTileWarning() {
+    if (document.getElementById("tileWarn")) return;
+    const d = document.createElement("div");
+    d.id = "tileWarn";
+    d.style.cssText = "position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:1000;background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:8px 12px;font:13px system-ui,sans-serif;color:#334155;box-shadow:0 1px 4px rgba(0,0,0,.2)";
+    d.textContent = "Map background could not load (check internet / ad-blocker). Report markers still work.";
+    document.getElementById("map").parentElement.appendChild(d);
+  }
+
+  function useTileServer(i) {
+    if (tileLayer) map.removeLayer(tileLayer);
+    clearTimeout(timer);
+
+    const t = TILE_SERVERS[i];
+    let loaded = 0;
+    let errors = 0;
+    let switched = false;
+
+    function giveUp() {
+      if (switched || loaded > 0) return;
+      switched = true;
+      nextServer();
+    }
+
+    tileLayer = L.tileLayer(t.url, {
+      maxZoom: 19,
+      subdomains: t.subdomains || "abc",
+      attribution: t.attribution,
+      referrerPolicy: "origin"
+    }).addTo(map);
+
+    tileLayer.on("tileload", () => { loaded++; });
+    tileLayer.on("tileerror", () => {
+      errors++;
+      if (errors >= 3) giveUp();
+    });
+
+    // nothing at all after 6 seconds -> try the next server
+    timer = setTimeout(giveUp, 6000);
+  }
+
+  useTileServer(0);
+
+  mapReady = true;
+
+  // make sure Leaflet measures the container after the page layout settles
+  setTimeout(() => map.invalidateSize(), 200);
+  window.addEventListener("resize", () => map.invalidateSize());
+
+  renderAll();
+}
+
+// ---------------------------------------------------------
+// LOAD CASES + MAP
+// ---------------------------------------------------------
+(async function start() {
+  // Map and cases load independently: the feed works even if the map can't.
+  loadLeaflet()
+    .then(initMap)
+    .catch(() => {
+      showMapMessage(
+        "<b>The map could not load.</b><br><br>" +
+        "Your browser couldn't download the map library. Check your internet connection or ad-blocker and reload. " +
+        "The live feed on the left still works."
+      );
+    });
+
+  try {
+    const res = await fetch(`${API_BASE}/cases`);
+    if (!res.ok) throw new Error("Server returned " + res.status);
+    allCases = await res.json();
+    setupFilterListeners();
+    renderAll();
+  } catch (err) {
+    console.error(err);
+    feedList.innerHTML =
+      '<div class="text-body-sm text-error">Error loading cases: ' + esc(err.message) +
+      ". Is the backend running on port 8000?</div>";
+  }
+})();
+
+// ---------------------------------------------------------
+// FILTERS
+// ---------------------------------------------------------
+function setupFilterListeners() {
+  riskFilters.forEach(cb => cb.addEventListener("change", renderAll));
+  catFilters.forEach(cb => cb.addEventListener("change", renderAll));
+}
+
+function passesFilters(c) {
+  const risks = Array.from(riskFilters).filter(cb => cb.checked).map(cb => cb.dataset.risk);
+  const cats = Array.from(catFilters).filter(cb => cb.checked).map(cb => cb.dataset.cat);
+
+  const riskOk = risks.length === 0 || risks.includes(riskLevel(c.risk_score));
+  const catOk = cats.length === 0 || cats.includes(c.category || "");
+  return riskOk && catOk;
+}
+
+// ---------------------------------------------------------
+// RENDER (feed + map)
+// ---------------------------------------------------------
+function clearMapItems() {
+  items.forEach(it => {
+    it.marker.remove();
+    it.halo.remove();
+  });
+  items = [];
+}
+
+function popupFor(c) {
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "min-width:180px;font-family:system-ui,sans-serif;color:#0f172a;";
+
+  const addLine = (text, style) => {
+    const d = document.createElement("div");
+    d.style.cssText = style;
+    d.textContent = text;
+    wrap.appendChild(d);
+  };
+
+  addLine(c.title || "", "font-weight:700;margin-bottom:4px;");
+  addLine("ID: " + c.id, "font-size:12px;margin-bottom:2px;");
+  addLine("Category: " + (c.category || ""), "font-size:12px;margin-bottom:2px;");
+  addLine("Status: " + (c.status || ""), "font-size:12px;margin-bottom:2px;");
+  addLine("Risk: " + (c.risk_score ?? "--") + "/100 (" + riskLabel(c.risk_score) + ")", "font-size:12px;margin-bottom:6px;");
+
+  const a = document.createElement("a");
+  a.href = "track-report.html?id=" + encodeURIComponent(c.id);
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.textContent = "Track this case";
+  a.style.cssText = "font-size:12px;color:#1d4ed8;";
+  wrap.appendChild(a);
+
+  return wrap;
+}
+
+function renderAll() {
+  const visible = allCases.filter(passesFilters);
+
+  // ----- feed -----
+  feedList.innerHTML = "";
+
+  if (allCases.length === 0) {
+    feedList.innerHTML =
+      '<div class="text-body-sm text-on-surface-variant">No cases yet. Be the first to report!</div>';
+  } else if (visible.length === 0) {
+    feedList.innerHTML =
+      '<div class="text-body-sm text-on-surface-variant">No cases match the selected filters.</div>';
+  }
+
+  // ----- map -----
+  if (mapReady) clearMapItems();
+
+  visible.forEach(c => {
+    let item = null;
+
+    if (mapReady && hasLocation(c)) {
+      const pos = [c.latitude, c.longitude];
+      const color = riskColor(c.risk_score);
+
+      // soft translucent halo (about 100-300 m) = lightweight "heat" effect
+      const halo = L.circle(pos, {
+        radius: 80 + (c.risk_score || 50) * 2,
+        stroke: false,
+        fillColor: color,
+        fillOpacity: 0.18,
+        interactive: false
+      }).addTo(map);
+
+      const marker = L.circleMarker(pos, {
+        radius: 9,
+        color: "#ffffff",
+        weight: 3,
+        fillColor: color,
+        fillOpacity: 1
+      }).addTo(map);
+
+      marker.bindPopup(popupFor(c));
+
+      item = { c, marker, halo };
+      items.push(item);
+    }
+
+    feedList.appendChild(createFeedCard(c, item));
+  });
+}
+
+function createFeedCard(c, item) {
+  const card = document.createElement("div");
+  card.className =
+    "bg-white rounded-lg border border-outline-variant p-3 shadow-sm hover:border-primary cursor-pointer transition-colors";
+
+  card.innerHTML = `
+    <div class="flex justify-between items-start mb-2">
+      <span class="${riskClass(c.risk_score)} text-label-sm font-label-sm px-2 py-0.5 rounded font-bold">
+        ${riskLabel(c.risk_score)}
+      </span>
+      <span class="text-label-sm font-label-sm text-outline">${esc(formatTime(c.created_at))}</span>
+    </div>
+    <h4 class="text-label-md font-label-md font-bold mb-1">${esc(c.title)}</h4>
+    <p class="text-body-sm font-body-sm text-on-surface-variant mb-2">${esc(c.description || "")}</p>
+    <div class="text-label-sm font-label-sm text-outline font-mono">
+      ID: ${esc(c.id)}${item ? "" : " · no location"}
     </div>
   `;
 
-} else {
-
-  // =========================================================
-  // API
-  // =========================================================
-
-  const API_BASE = "http://127.0.0.1:8000/api";
-
-
-  // =========================================================
-  // CREATE MAP
-  // =========================================================
-
-  const map = L.map("map", {
-
-    center: [22.5726, 88.3639],
-
-    zoom: 12,
-
-    zoomControl: {
-      position: "bottomright"
+  card.addEventListener("click", () => {
+    if (item && mapReady) {
+      map.setView(item.marker.getLatLng(), 16);
+      item.marker.openPopup();
+    } else {
+      window.location.href = "track-report.html?id=" + encodeURIComponent(c.id);
     }
-
   });
 
-
-  // =========================================================
-  // OPENSTREETMAP
-  // =========================================================
-
-  L.tileLayer(
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    {
-      maxZoom: 19,
-
-      attribution:
-        "© OpenStreetMap contributors"
-    }
-  ).addTo(map);
-
-
-  // =========================================================
-  // ELEMENTS
-  // =========================================================
-
-  const feedList =
-    document.getElementById("feedList");
-
-  const riskFilters =
-    document.querySelectorAll(".risk-filter");
-
-  const catFilters =
-    document.querySelectorAll(".cat-filter");
-
-
-  // =========================================================
-  // VARIABLES
-  // =========================================================
-
-  let allCases = [];
-
-  let markers = [];
-
-  let heatLayer = null;
-
-
-  // =========================================================
-  // LOAD CASES FROM BACKEND
-  // =========================================================
-
-  (async () => {
-
-    try {
-
-      const res =
-        await fetch(`${API_BASE}/cases`);
-
-      if (!res.ok) {
-
-        throw new Error(
-          "Failed to load cases"
-        );
-
-      }
-
-      const cases =
-        await res.json();
-
-      allCases = cases;
-
-      initMapData(cases);
-
-      setupFilterListeners();
-
-    }
-
-    catch (err) {
-
-      console.error(err);
-
-      feedList.innerHTML = `
-        <div class="text-body-sm text-error">
-          Error loading cases:
-          ${err.message}
-        </div>
-      `;
-
-    }
-
-  })();
-
-
-  // =========================================================
-  // INITIALIZE MAP DATA
-  // =========================================================
-
-  function initMapData(cases) {
-
-    const heatPoints = [];
-
-    feedList.innerHTML = "";
-
-
-    // Remove existing markers
-
-    markers.forEach(
-      m => m.marker.remove()
-    );
-
-    markers = [];
-
-
-    // Create marker for every case
-
-    cases.forEach(c => {
-
-      let lat = c.latitude;
-
-      let lng = c.longitude;
-
-
-      // If location doesn't exist,
-      // temporarily place around Kolkata
-
-      if (
-        lat == null ||
-        lng == null
-      ) {
-
-        const dLat =
-          (Math.random() - 0.5) * 0.05;
-
-        const dLng =
-          (Math.random() - 0.5) * 0.05;
-
-        lat =
-          22.5726 + dLat;
-
-        lng =
-          88.3639 + dLng;
-
-      }
-
-
-      // Risk intensity
-
-      const intensity =
-        (c.risk_score || 50) / 100;
-
-
-      heatPoints.push([
-        lat,
-        lng,
-        intensity
-      ]);
-
-
-      // =====================================================
-      // MARKER
-      // =====================================================
-
-      const marker =
-        L.marker([lat, lng])
-        .addTo(map);
-
-
-      // =====================================================
-      // POPUP
-      // =====================================================
-
-      const popupContent = `
-
-        <div style="min-width:180px;">
-
-          <div
-            style="
-              font-weight:bold;
-              margin-bottom:4px;
-            "
-          >
-            ${c.title}
-          </div>
-
-
-          <div
-            style="
-              font-size:12px;
-              margin-bottom:2px;
-            "
-          >
-            ID: ${c.id}
-          </div>
-
-
-          <div
-            style="
-              font-size:12px;
-              margin-bottom:2px;
-            "
-          >
-            Category: ${c.category}
-          </div>
-
-
-          <div
-            style="
-              font-size:12px;
-              margin-bottom:4px;
-            "
-          >
-            Status: ${c.status}
-          </div>
-
-
-          <a
-            href="track-report.html?id=${c.id}"
-            target="_blank"
-            style="font-size:12px;"
-          >
-            Track this case
-          </a>
-
-        </div>
-
-      `;
-
-
-      marker.bindPopup(
-        popupContent
-      );
-
-
-      // Store marker
-
-      markers.push({
-
-        marker: marker,
-
-        case: c,
-
-        lat: lat,
-
-        lng: lng
-
-      });
-
-
-      // Create feed card
-
-      const card =
-        createFeedCard(
-          c,
-          lat,
-          lng,
-          marker
-        );
-
-
-      feedList.appendChild(card);
-
-    });
-
-
-    // =====================================================
-    // HEATMAP
-    // =====================================================
-
-    if (heatLayer) {
-
-      map.removeLayer(
-        heatLayer
-      );
-
-    }
-
-
-    if (heatPoints.length > 0) {
-
-      heatLayer =
-        L.heatLayer(
-          heatPoints,
-          {
-
-            radius: 25,
-
-            blur: 15,
-
-            maxZoom: 15,
-
-            gradient: {
-
-              0.0: "white",
-
-              0.3: "yellow",
-
-              0.6: "orange",
-
-              1.0: "red"
-
-            }
-
-          }
-        ).addTo(map);
-
-    }
-
-
-    // No cases
-
-    if (cases.length === 0) {
-
-      feedList.innerHTML = `
-
-        <div
-          class="text-body-sm text-on-surface-variant"
-        >
-          No cases yet.
-          Be the first to report!
-        </div>
-
-      `;
-
-    }
-
-
-    applyFilters();
-
-  }
-
-
-  // =========================================================
-  // CREATE FEED CARD
-  // =========================================================
-
-  function createFeedCard(
-    c,
-    lat,
-    lng,
-    marker
-  ) {
-
-    const card =
-      document.createElement("div");
-
-
-    card.className =
-      "bg-white rounded-lg border border-outline-variant p-3 shadow-sm hover:border-primary cursor-pointer transition-colors";
-
-
-    const riskLabel =
-      getRiskLabel(
-        c.risk_score
-      );
-
-
-    const riskClass =
-      getRiskClass(
-        c.risk_score
-      );
-
-
-    card.innerHTML = `
-
-      <div
-        class="flex justify-between items-start mb-2"
-      >
-
-        <span
-          class="${riskClass}
-          text-label-sm
-          font-label-sm
-          px-2
-          py-0.5
-          rounded
-          font-bold"
-        >
-          ${riskLabel}
-        </span>
-
-
-        <span
-          class="text-label-sm
-          font-label-sm
-          text-outline"
-        >
-          ${formatTime(c.created_at)}
-        </span>
-
-      </div>
-
-
-      <h4
-        class="text-label-md
-        font-label-md
-        font-bold
-        mb-1"
-      >
-        ${c.title}
-      </h4>
-
-
-      <p
-        class="text-body-sm
-        font-body-sm
-        text-on-surface-variant
-        mb-2"
-      >
-        ${c.description}
-      </p>
-
-
-      <div
-        class="text-label-sm
-        font-label-sm
-        text-outline
-        font-mono"
-      >
-        ID: ${c.id}
-      </div>
-
-    `;
-
-
-    // Click card -> map marker
-
-    card.addEventListener(
-      "click",
-      () => {
-
-        map.setView(
-          [lat, lng],
-          15
-        );
-
-        marker.openPopup();
-
-      }
-    );
-
-
-    return card;
-
-  }
-
-
-  // =========================================================
-  // FILTER LISTENERS
-  // =========================================================
-
-  function setupFilterListeners() {
-
-    riskFilters.forEach(
-      cb =>
-        cb.addEventListener(
-          "change",
-          applyFilters
-        )
-    );
-
-
-    catFilters.forEach(
-      cb =>
-        cb.addEventListener(
-          "change",
-          applyFilters
-        )
-    );
-
-  }
-
-
-  // =========================================================
-  // APPLY FILTERS
-  // =========================================================
-
-  function applyFilters() {
-
-    const selectedRisks =
-      Array.from(riskFilters)
-
-        .filter(
-          cb => cb.checked
-        )
-
-        .map(
-          cb => cb.dataset.risk
-        );
-
-
-    const selectedCats =
-      Array.from(catFilters)
-
-        .filter(
-          cb => cb.checked
-        )
-
-        .map(
-          cb => cb.dataset.cat
-        );
-
-
-    // Filter markers
-
-    markers.forEach(
-      ({
-        marker,
-        case: c
-      }) => {
-
-        const riskOk =
-          riskMatches(
-            c,
-            selectedRisks
-          );
-
-
-        const catOk =
-          catMatches(
-            c,
-            selectedCats
-          );
-
-
-        if (
-          riskOk &&
-          catOk
-        ) {
-
-          if (
-            !map.hasLayer(marker)
-          ) {
-
-            marker.addTo(map);
-
-          }
-
-        } else {
-
-          if (
-            map.hasLayer(marker)
-          ) {
-
-            marker.remove();
-
-          }
-
-        }
-
-      }
-    );
-
-
-    // =====================================================
-    // REBUILD FEED
-    // =====================================================
-
-    feedList.innerHTML = "";
-
-
-    markers.forEach(
-      ({
-        marker,
-        case: c,
-        lat,
-        lng
-      }) => {
-
-        if (
-          !map.hasLayer(marker)
-        ) {
-
-          return;
-
-        }
-
-
-        const card =
-          createFeedCard(
-            c,
-            lat,
-            lng,
-            marker
-          );
-
-
-        feedList.appendChild(card);
-
-      }
-    );
-
-
-    // =====================================================
-    // UPDATE HEATMAP
-    // =====================================================
-
-    const visiblePoints =
-      markers
-
-        .filter(
-          ({ marker }) =>
-            map.hasLayer(marker)
-        )
-
-        .map(
-          ({
-            case: c,
-            lat,
-            lng
-          }) => {
-
-            const intensity =
-              (c.risk_score || 50)
-              / 100;
-
-            return [
-              lat,
-              lng,
-              intensity
-            ];
-
-          }
-        );
-
-
-    if (heatLayer) {
-
-      map.removeLayer(
-        heatLayer
-      );
-
-    }
-
-
-    if (
-      visiblePoints.length > 0
-    ) {
-
-      heatLayer =
-        L.heatLayer(
-          visiblePoints,
-          {
-
-            radius: 25,
-
-            blur: 15,
-
-            maxZoom: 15,
-
-            gradient: {
-
-              0.0: "white",
-
-              0.3: "yellow",
-
-              0.6: "orange",
-
-              1.0: "red"
-
-            }
-
-          }
-        ).addTo(map);
-
-    }
-
-  }
-
-
-  // =========================================================
-  // RISK MATCH
-  // =========================================================
-
-  function riskMatches(
-    c,
-    selectedRisks
-  ) {
-
-    const score =
-      c.risk_score || 0;
-
-
-    let riskLevel;
-
-
-    if (score >= 75) {
-
-      riskLevel = "critical";
-
-    }
-
-    else if (score >= 50) {
-
-      riskLevel = "high";
-
-    }
-
-    else if (score >= 25) {
-
-      riskLevel = "moderate";
-
-    }
-
-    else {
-
-      riskLevel = "low";
-
-    }
-
-
-    return (
-      selectedRisks.length === 0 ||
-      selectedRisks.includes(
-        riskLevel
-      )
-    );
-
-  }
-
-
-  // =========================================================
-  // CATEGORY MATCH
-  // =========================================================
-
-  function catMatches(
-    c,
-    selectedCats
-  ) {
-
-    const cat =
-      c.category || "";
-
-
-    return (
-      selectedCats.length === 0 ||
-      selectedCats.includes(cat)
-    );
-
-  }
-
-
-  // =========================================================
-  // RISK LABEL
-  // =========================================================
-
-  function getRiskLabel(
-    score
-  ) {
-
-    if (!score) {
-
-      return "LOW";
-
-    }
-
-
-    if (score >= 75) {
-
-      return "CRITICAL";
-
-    }
-
-
-    if (score >= 50) {
-
-      return "HIGH";
-
-    }
-
-
-    if (score >= 25) {
-
-      return "MODERATE";
-
-    }
-
-
-    return "LOW";
-
-  }
-
-
-  // =========================================================
-  // RISK CSS
-  // =========================================================
-
-  function getRiskClass(
-    score
-  ) {
-
-    if (!score) {
-
-      return "bg-tertiary text-on-tertiary";
-
-    }
-
-
-    if (score >= 75) {
-
-      return "bg-error text-on-error";
-
-    }
-
-
-    if (score >= 50) {
-
-      return "bg-orange-500 text-white";
-
-    }
-
-
-    if (score >= 25) {
-
-      return "bg-yellow-500 text-white";
-
-    }
-
-
-    return "bg-tertiary text-on-tertiary";
-
-  }
-
-
-  // =========================================================
-  // FORMAT TIME
-  // =========================================================
-
-  function formatTime(
-    isoString
-  ) {
-
-    if (!isoString) {
-
-      return "";
-
-    }
-
-
-    const d =
-      new Date(isoString);
-
-
-    const now =
-      new Date();
-
-
-    const diffMs =
-      now - d;
-
-
-    const mins =
-      Math.floor(
-        diffMs / 60000
-      );
-
-
-    if (mins < 1) {
-
-      return "Just now";
-
-    }
-
-
-    if (mins < 60) {
-
-      return `${mins}m ago`;
-
-    }
-
-
-    const hrs =
-      Math.floor(
-        mins / 60
-      );
-
-
-    if (hrs < 24) {
-
-      return `${hrs}h ago`;
-
-    }
-
-
-    const days =
-      Math.floor(
-        hrs / 24
-      );
-
-
-    return `${days}d ago`;
-
-  }
-
+  return card;
 }
-
 </script>
-
 </body>
 </html>
