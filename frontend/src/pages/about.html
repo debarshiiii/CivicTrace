@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>About CivicTrace</title>
+<style>
+  :root { --bg:#f8fafc; --card:#fff; --ink:#0f172a; --muted:#475569; --line:#e2e8f0; --brand:#1d4ed8; --brand-soft:#eff6ff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0b1220; --card:#111a2e; --ink:#e5edf9; --muted:#9fb0c8; --line:#22304a; --brand:#7aa2ff; --brand-soft:#16233f; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  header { background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:10; }
+  .bar { max-width:1000px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+  .logo { font-weight:800; font-size:20px; color:var(--brand); text-decoration:none; }
+  nav { display:flex; gap:18px; flex:1; flex-wrap:wrap; }
+  nav a { color:var(--muted); text-decoration:none; font-weight:500; font-size:15px; }
+  nav a:hover, nav a.on { color:var(--brand); }
+  nav a.on { font-weight:700; border-bottom:2px solid var(--brand); }
+  .login { color:var(--brand); font-weight:600; text-decoration:none; font-size:15px; }
+  main { max-width:1000px; margin:0 auto; padding:32px 20px 64px; }
+  h1 { font-size:34px; line-height:1.2; margin:0 0 8px; }
+  h2 { font-size:22px; margin:40px 0 12px; }
+  h3 { font-size:17px; margin:0 0 6px; }
+  p { margin:0 0 12px; color:var(--muted); }
+  .lead { font-size:18px; color:var(--ink); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; }
+  .grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); }
+  .steps { counter-reset:s; display:grid; gap:12px; padding:0; list-style:none; }
+  .steps li { counter-increment:s; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px 14px 56px; position:relative; color:var(--muted); }
+  .steps li::before { content:counter(s); position:absolute; left:16px; top:14px; width:28px; height:28px; border-radius:50%; background:var(--brand); color:#fff; font-weight:700; display:grid; place-items:center; font-size:14px; }
+  .steps b { color:var(--ink); }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; font-size:15px; }
+  th, td { text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top; color:var(--muted); }
+  th { background:var(--brand-soft); color:var(--ink); }
+  td:first-child { color:var(--ink); font-weight:600; white-space:nowrap; }
+  tr:last-child td { border-bottom:0; }
+  .tag { display:inline-block; background:var(--brand-soft); color:var(--brand); border-radius:999px; padding:2px 10px; font-size:13px; font-weight:600; margin:0 6px 6px 0; }
+  code { background:var(--brand-soft); padding:1px 6px; border-radius:5px; font-size:.92em; color:var(--ink); }
+  .flow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .flow span { background:var(--brand-soft); color:var(--ink); border-radius:8px; padding:6px 12px; font-size:14px; font-weight:600; }
+  .flow i { color:var(--muted); font-style:normal; }
+  .cta { display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; }
+  .btn { display:inline-block; padding:10px 18px; border-radius:10px; font-weight:600; text-decoration:none; border:1px solid var(--brand); color:var(--brand); }
+  .btn.primary { background:var(--brand); color:#fff; }
+  footer { border-top:1px solid var(--line); padding:24px 20px; text-align:center; color:var(--muted); font-size:14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <a class="logo" href="home.html">CivicTrace</a>
+    <nav>
+      <a href="home.html">Map</a>
+      <a href="report.html">Report</a>
+      <a href="track-report.html">Track</a>
+      <a href="about.html" class="on">About</a>
+    </nav>
+    <a class="login" href="login.html">Official / Worker Login</a>
+  </div>
+</header>
+
+<main>
+
+  <h1>About CivicTrace</h1>
+  <p class="lead">CivicTrace is a civic-issue reporting and accountability platform. Citizens report problems such as potholes, garbage, water leaks and broken streetlights with a photo. The city can then see, prioritise, fix and prove the fix, and every step is recorded permanently.</p>
+  <p>Created and built by <b style="color:var(--ink)">Debarshi Patikar</b>.</p>
+
+  <div class="cta">
+    <a class="btn primary" href="report.html">Report an issue</a>
+    <a class="btn" href="track-report.html">Track a report</a>
+    <a class="btn" href="home.html">View the live map</a>
+  </div>
+
+  <h2>The problem</h2>
+  <div class="grid">
+    <div class="card"><h3>Reports vanish</h3><p>Complaints are made by phone, paper or social media, and nobody can see what happened to them afterwards.</p></div>
+    <div class="card"><h3>No priority</h3><p>A tiny crack and a dangerous crater look the same in a queue, so urgent issues wait.</p></div>
+    <div class="card"><h3>No proof</h3><p>An issue can be marked "fixed" without anyone checking, and there is no record of who did what.</p></div>
+    <div class="card"><h3>Privacy fear</h3><p>People hesitate to report when they must give personal details.</p></div>
+  </div>
+
+  <h2>How CivicTrace solves it</h2>
+  <div class="grid">
+    <div class="card"><h3>Anonymous reporting</h3><p>Citizens never create an account. They get a private token like <code>CT-AB12-CD34</code> and a case ID to follow their report.</p></div>
+    <div class="card"><h3>AI triage</h3><p>Google Gemini looks at the photo, checks it really shows the reported issue, and scores how severe it is.</p></div>
+    <div class="card"><h3>Hotspot ranking</h3><p>Many open reports of the same kind in one small area raise that area's priority.</p></div>
+    <div class="card"><h3>Proof of repair</h3><p>A worker submits an after-photo, and a different official must verify it before the case can close.</p></div>
+    <div class="card"><h3>Permanent audit trail</h3><p>Every action is logged with who did it and when, so there is full accountability.</p></div>
+    <div class="card"><h3>Live public map</h3><p>Everyone can see reported issues by risk level, which keeps the work visible.</p></div>
+  </div>
+
+  <h2>The life of a report</h2>
+  <ol class="steps">
+    <li><b>Report.</b> A citizen chooses the issue type, marks the location, adds a description and uploads a photo. The server creates a case ID such as <code>CVT-KOL-123456</code>.</li>
+    <li><b>AI check.</b> The photo is checked to be a real JPEG, PNG or WebP image, then analysed by Gemini. The citizen immediately sees whether it was accepted, flagged for review, and how risky it looks.</li>
+    <li><b>Validate.</b> An official reviews the case and validates it, or rejects it if it is invalid.</li>
+    <li><b>Assign.</b> An official assigns the case to a field worker from the case page.</li>
+    <li><b>Fix.</b> The worker sees the job in the field app, does the repair, and uploads an after-photo with a note. This is a <i>resolution claim</i>.</li>
+    <li><b>Verify.</b> An official compares the before and after photos and accepts the repair, or rejects it with a reason. A rejection sends the case back to the worker for rework.</li>
+    <li><b>Resolved.</b> Only an accepted verification closes the case. Nothing can skip these steps.</li>
+  </ol>
+  <div class="card" style="margin-top:14px">
+    <h3>Case status flow</h3>
+    <div class="flow">
+      <span>received</span><i>→</i><span>validated</span><i>→</i><span>assigned</span><i>→</i><span>in progress</span><i>→</i><span>resolution claimed</span><i>→</i><span>resolved</span>
+    </div>
+    <p style="margin-top:10px">A report can be <b>rejected</b> by an official early on, and a rejected repair returns to <b>in progress</b> for rework.</p>
+  </div>
+
+  <h2>How the AI risk score works</h2>
+  <div class="card">
+    <p><b style="color:var(--ink)">1. Severity (0–100).</b> Gemini rates the visible danger: size, depth, standing water, exposed hazards, whether it blocks a road, and risk to people and vehicles.</p>
+    <p><b style="color:var(--ink)">2. Hotspot (0–100).</b> The server counts other open reports of the same kind within 300 metres from the last 60 days. Each one adds 15 points, up to 100.</p>
+    <p><b style="color:var(--ink)">3. Final risk score</b> = 65% severity + 35% hotspot. Scores of 75+ are <i>critical</i>, 50+ <i>high</i>, 25+ <i>moderate</i>, and the rest <i>low</i>.</p>
+    <p>If the photo does not match the reported issue, the report is <b>flagged for manual review</b>. If the AI is unavailable, the report is still saved with a default score and an official can re-run the analysis later. The AI only advises: humans make every decision.</p>
+  </div>
+
+  <h2>Who can do what</h2>
+  <table>
+    <tr><th>Role</th><th>Signs in?</th><th>Can do</th></tr>
+    <tr><td>Citizen</td><td>No (anonymous token)</td><td>Report issues, track a case by ID, view the public map.</td></tr>
+    <tr><td>Field worker</td><td>Yes</td><td>See assigned jobs, upload before/after photos, submit a repair claim.</td></tr>
+    <tr><td>Official / Supervisor</td><td>Yes</td><td>Everything in the command center: validate, reject, assign, verify, re-run AI.</td></tr>
+    <tr><td>Auditor</td><td>Yes</td><td>Read-only access to cases and the audit log.</td></tr>
+    <tr><td>Admin</td><td>Yes</td><td>All official powers, plus creating accounts.</td></tr>
+  </table>
+
+  <h2>Security by design</h2>
+  <div class="grid">
+    <div class="card"><h3>Closed registration</h3><p>Only an admin can create staff and worker accounts.</p></div>
+    <div class="card"><h3>Hashed passwords</h3><p>Passwords are stored with Argon2 and must be 8+ characters. Repeated wrong logins lock the account temporarily.</p></div>
+    <div class="card"><h3>Signed sessions</h3><p>Logins use short-lived signed tokens, and each action checks the user's role on the server.</p></div>
+    <div class="card"><h3>Server-decided data</h3><p>Citizens cannot choose their own case ID or risk score. The server does.</p></div>
+    <div class="card"><h3>Safe uploads</h3><p>Files are checked by their real contents, limited in size, and renamed. Only the person who just created a report can attach its photo.</p></div>
+    <div class="card"><h3>Hidden keys</h3><p>The AI and map keys stay on the server. The browser never sees them.</p></div>
+    <div class="card"><h3>No skipped steps</h3><p>The server enforces the status flow, so a case cannot be marked resolved without a verified repair.</p></div>
+    <div class="card"><h3>Atomic audit log</h3><p>An action and its audit record are saved together, so nothing happens without a record.</p></div>
+  </div>
+
+  <h2>Built with</h2>
+  <p>
+    <span class="tag">FastAPI (Python)</span><span class="tag">PostgreSQL</span><span class="tag">SQLAlchemy</span>
+    <span class="tag">JWT + Argon2</span><span class="tag">Google Gemini</span><span class="tag">Leaflet + OpenStreetMap</span>
+    <span class="tag">HTML + Tailwind CSS</span><span class="tag">Vanilla JavaScript</span>
+  </p>
+
+  <h2>Pages</h2>
+  <table>
+    <tr><th>Page</th><th>For</th><th>What it does</th></tr>
+    <tr><td><a href="home.html">Map (home)</a></td><td>Everyone</td><td>Live risk map and feed of reported issues, with filters.</td></tr>
+    <tr><td><a href="report.html">Report</a></td><td>Citizens</td><td>Step-by-step form with photo upload and instant AI result.</td></tr>
+    <tr><td><a href="track-report.html">Track</a></td><td>Citizens</td><td>Look up a case by ID and see its timeline.</td></tr>
+    <tr><td><a href="login.html">Login</a></td><td>Staff and workers</td><td>Sign in; sends you to the right dashboard.</td></tr>
+    <tr><td>Command center</td><td>Officials</td><td>All cases, statistics, status changes.</td></tr>
+    <tr><td>Case details</td><td>Officials</td><td>AI assessment, evidence, assign workers, review repairs.</td></tr>
+    <tr><td>Verify resolution</td><td>Officials</td><td>Compare before/after photos and accept or reject.</td></tr>
+    <tr><td>Field app</td><td>Workers</td><td>Assigned jobs, photo upload, repair claims.</td></tr>
+    <tr><td>Audit logs</td><td>Government users</td><td>Permanent record of every action.</td></tr>
+  </table>
+
+  <h2>Contact</h2>
+  <p>CivicTrace is a project by <b style="color:var(--ink)">Debarshi Patikar</b>.</p>
+
+</main>
+
+<footer>&copy; CivicTrace &middot; Built by Debarshi Patikar</footer>
+
+</body>
+</html>

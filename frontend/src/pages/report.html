@@ -139,14 +139,14 @@
       <a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="home.html">Map</a>
       <a class="text-primary border-b-2 border-primary pb-1 font-bold opacity-80 transition-opacity text-label-md font-label-md" href="report.html">Report</a>
       <a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="track-report.html">Track</a>
-      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#" onclick="event.preventDefault(); alert('About page is coming soon.');">About</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="about.html">About</a>
     </nav>
   </div>
   <div class="flex items-center gap-unit-4">
-    <button class="text-on-surface-variant hover:text-primary transition-colors">
+    <button type="button" onclick="alert('You have no new notifications.')" title="Notifications" class="text-on-surface-variant hover:text-primary transition-colors">
       <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
     </button>
-    <button class="text-on-surface-variant hover:text-primary transition-colors">
+    <button type="button" onclick="window.location.href='login.html'" title="Official sign in" class="text-on-surface-variant hover:text-primary transition-colors">
       <span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
     </button>
   </div>
@@ -450,6 +450,19 @@
     });
   }
 
+  // Turn a FastAPI error response into a readable sentence.
+  async function readError(res) {
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      if (typeof data.detail === "string") return data.detail;
+      if (Array.isArray(data.detail)) {
+        return data.detail.map(d => d.msg || JSON.stringify(d)).join("; ");
+      }
+    } catch (_) {}
+    return text || `HTTP ${res.status}`;
+  }
+
   // Submit
   submitBtn.addEventListener("click", async () => {
     resultBox.classList.add("hidden");
@@ -483,7 +496,6 @@
         location_text: "Auto-detected location",
         latitude: loc.lat,
         longitude: loc.lng,
-        risk_score: 50,
         reporter_token: token
       };
 
@@ -494,8 +506,7 @@
       });
 
       if (!resCase.ok) {
-        const errText = await resCase.text();
-        throw new Error(errText || `HTTP ${resCase.status}`);
+        throw new Error(await readError(resCase));
       }
 
       const dataCase = await resCase.json();
@@ -513,20 +524,24 @@
         const evidencePayload = {
           case_id: dataCase.id,
           type: "report",
-          uploaded_by_type: "citizen",
           description: descriptionText || "Photo evidence",
           photo_data: photoBase64
         };
 
         const resEv = await fetch(`${API_BASE}/evidence`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-Case-Key": dataCase.evidence_key
+          },
           body: JSON.stringify(evidencePayload)
         });
 
         if (!resEv.ok) {
-          const errText = await resEv.text();
-          throw new Error(errText || `HTTP ${resEv.status}`);
+          throw new Error(
+            `Your report was saved (Case ID: ${dataCase.id}) but the photo was rejected: ` +
+            (await readError(resEv))
+          );
         }
 
         evidenceResult = await resEv.json();
@@ -607,6 +622,7 @@
     const hotspotScore = evidenceResult.case_hotspot_score;
 
     // Reset border/background classes, then set per-status below.
+    icon.className = "material-symbols-outlined text-[32px]";
     aiCard.className = "mt-unit-8 p-unit-6 rounded-xl border-2";
 
     if (verified === true) {
@@ -651,7 +667,7 @@
       const nearbyCount = Math.round(hotspotScore / 15);
       hotspotText.innerHTML =
         `<span class="material-symbols-outlined text-[18px]">location_on</span> ` +
-        `This is at least the ${nearbyCount + 1}${nearbyCount === 0 ? "st" : "th"} report of this issue type near this location — it's been bumped up in priority.`;
+        `${nearbyCount} other open report${nearbyCount === 1 ? "" : "s"} of this issue type ${nearbyCount === 1 ? "is" : "are"} already nearby — this location has been bumped up in priority.`;
     } else {
       hotspotWrap.classList.add("hidden");
     }

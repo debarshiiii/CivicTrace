@@ -1400,45 +1400,18 @@ function emptyEvidence(message) {
 
 async function acceptResolution() {
 
-    const confirmed =
-        confirm(
-            "Accept this resolution claim and mark the case as resolved?"
-        );
-
-
-    if (!confirmed) return;
-
+    if (!confirm("Accept this resolution claim and mark the case as resolved?")) return;
 
     setReviewButtons(true);
 
-
     try {
-
-        await updateCaseStatus(
-            "resolved"
-        );
-
-
-        showToast(
-            "Resolution accepted. Case marked as resolved.",
-            "success"
-        );
-
-
+        await submitVerification("accepted", null);
+        showToast("Resolution accepted. Case marked as resolved.", "success");
         await loadEverything();
-
-
     } catch (error) {
-
-        showToast(
-            error.message,
-            "error"
-        );
-
+        showToast(error.message, "error");
         setReviewButtons(false);
-
     }
-
 }
 
 
@@ -1448,108 +1421,75 @@ async function acceptResolution() {
 
 async function rejectResolution() {
 
-    const confirmed =
-        confirm(
-            "Reject the resolution evidence and reopen this case?"
-        );
+    const notes = prompt("What is still wrong? (required)");
 
-
-    if (!confirmed) return;
-
+    if (!notes || !notes.trim()) return;
 
     setReviewButtons(true);
 
-
     try {
-
-        /*
-           We use the existing PATCH /cases/{case_id}
-           endpoint.
-
-           Your backend already exposes this endpoint.
-        */
-
-        await updateCaseStatus(
-            "rejected"
-        );
-
-
-        showToast(
-            "Resolution rejected. Case reopened.",
-            "success"
-        );
-
-
+        await submitVerification("rejected", notes.trim());
+        showToast("Resolution rejected. Case sent back for rework.", "success");
         await loadEverything();
-
-
     } catch (error) {
-
-        showToast(
-            error.message,
-            "error"
-        );
-
+        showToast(error.message, "error");
         setReviewButtons(false);
-
     }
-
 }
 
 
 /* ============================================================
-   REQUEST MORE EVIDENCE
+   VERIFY (uses the real claim -> verification endpoint)
+============================================================ */
+
+async function submitVerification(decision, notes) {
+
+    const token = getToken();
+
+    const headers = { "Content-Type": "application/json", "Accept": "application/json" };
+
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(`${API_BASE}/resolution-verifications`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ case_id: CASE_ID, decision, notes })
+    });
+
+    if (!response.ok) {
+        let detail = `Request failed (${response.status})`;
+        try {
+            const data = await response.json();
+            if (typeof data.detail === "string") detail = data.detail;
+        } catch (_) {}
+        throw new Error(detail);
+    }
+
+    return await response.json();
+}
+
+
+/* ============================================================
+   REQUEST MORE EVIDENCE (not supported by the backend workflow)
 ============================================================ */
 
 async function requestMoreEvidence() {
 
-    const confirmed =
-        confirm(
-            "Request more evidence from the field team?"
-        );
+    const notes = prompt("What additional evidence do you need from the field team? (required)");
 
-
-    if (!confirmed) return;
-
+    if (!notes || !notes.trim()) return;
 
     setReviewButtons(true);
 
-
     try {
-
-        /*
-           We use "assigned" here because it is a status
-           supported by your existing case workflow.
-
-           If your backend later gets a dedicated
-           "more_evidence" status, change this one value.
-        */
-
-        await updateCaseStatus(
-            "assigned"
-        );
-
-
-        showToast(
-            "Case returned for additional evidence.",
-            "success"
-        );
-
-
+        // Sends the case back to the assigned worker for rework.
+        await submitVerification("rejected", "More evidence requested: " + notes.trim());
+        showToast("Case returned to the field team for more evidence.", "success");
         await loadEverything();
-
-
     } catch (error) {
-
-        showToast(
-            error.message,
-            "error"
-        );
-
+        showToast(error.message, "error");
         setReviewButtons(false);
-
     }
-
 }
 
 

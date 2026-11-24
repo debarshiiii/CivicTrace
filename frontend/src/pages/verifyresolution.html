@@ -348,7 +348,9 @@ async function loadCaseAndResolution() {
 
     renderTimeline(evidenceList, resolution);
 
-    if (resolution.verification) {
+    // `pending` is true while the LATEST claim still awaits a verdict, so a
+    // reworked claim shows the form again even if an older one was rejected.
+    if (!resolution.pending && resolution.verification) {
       document.getElementById("verifyForm").classList.add("hidden");
       const banner = document.getElementById("alreadyVerifiedBanner");
       const text = document.getElementById("alreadyVerifiedText");
@@ -375,8 +377,8 @@ function renderEvidenceImage(imgId, emptyId, evidenceId) {
   const item = evidenceId ? evidenceById[evidenceId] : null;
 
   if (item && item.url) {
-    const fullUrl = item.url.startsWith("http") ? item.url : `${API_ROOT}${item.url}`;
-    img.src = fullUrl;
+    const rawUrl = String(item.url);
+    img.src = rawUrl.startsWith("/uploads/") ? `${API_ROOT}${rawUrl}` : "";
     img.classList.remove("hidden");
     empty.classList.add("hidden");
   } else {
@@ -454,7 +456,12 @@ async function submitVerification(decision, notes) {
       })
     });
 
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const t = await res.text();
+      let msg = t;
+      try { const d = JSON.parse(t); if (typeof d.detail === "string") msg = d.detail; } catch (_) {}
+      throw new Error(msg || `HTTP ${res.status}`);
+    }
 
     alert(decision === "accepted" ? "Marked as resolved." : "Resolution rejected — case sent back for rework.");
     window.location.href = `casedetails.html?id=${encodeURIComponent(caseId)}`;

@@ -210,6 +210,16 @@ Loading case...
 </div>
 </section>
 
+<!-- AI assessment -->
+<section id="aiCard" class="hidden bg-surface rounded-xl border border-outline-variant p-unit-6 flex flex-col gap-2">
+<h4 class="text-label-md font-label-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">auto_awesome</span> AI Assessment
+</h4>
+<p id="aiVerdict" class="text-body-md font-body-md font-bold"></p>
+<p id="aiNumbers" class="text-label-sm font-label-sm text-on-surface-variant"></p>
+<p id="aiReasoning" class="text-body-sm font-body-sm text-on-surface-variant italic"></p>
+</section>
+
 <!-- Evidence -->
 <section class="bg-surface rounded-xl border border-outline-variant flex flex-col overflow-hidden">
 <div class="border-b border-outline-variant px-unit-4 py-unit-3 flex items-center gap-2 bg-surface-container-lowest">
@@ -280,9 +290,22 @@ function authHeaders() {
 }
 
 function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str == null ? "" : String(str);
-  return div.innerHTML;
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+async function readError(res) {
+  const text = await res.text();
+  try {
+    const data = JSON.parse(text);
+    if (typeof data.detail === "string") return data.detail;
+    if (Array.isArray(data.detail)) return data.detail.map((d) => d.msg || JSON.stringify(d)).join("; ");
+  } catch (_) {}
+  return text || `Server returned ${res.status}`;
 }
 
 function formatCategory(category) {
@@ -366,7 +389,8 @@ async function loadCase() {
       ? new Date(c.created_at).toLocaleString()
       : "Unknown date";
     document.getElementById("caseRiskScore").innerHTML =
-      `${c.risk_score ?? "--"}<span class="text-headline-md text-outline">/100</span>`;
+      `${Number.isFinite(Number(c.risk_score)) ? Number(c.risk_score) : "--"}<span class="text-headline-md text-outline">/100</span>`;
+    renderAi(c);
     document.getElementById("caseDescription").textContent =
       c.description || "No description provided.";
     document.getElementById("caseLocation").textContent =
@@ -396,59 +420,182 @@ async function loadCase() {
   }
 }
 
-function renderOfficerActions(c) {
-  if (!currentUserRole || currentUserRole === "worker") return;
+function renderAi(c) {
+  const card = document.getElementById("aiCard");
+  const hasAi = c.ai_severity_score != null || c.ai_verified != null;
+  if (!hasAi) { card.classList.add("hidden"); return; }
 
-  const card = document.getElementById("officerActionsCard");
-  const buttonsWrap = document.getElementById("officerActionsButtons");
   card.classList.remove("hidden");
-  buttonsWrap.innerHTML = "";
+  const verdict = document.getElementById("aiVerdict");
 
-  const actionsByStatus = {
-    received: [{ label: "Validate Issue", icon: "check_circle", newStatus: "validated" }],
-    validated: [{ label: "Mark In Progress", icon: "engineering", newStatus: "in_progress" }],
-    assigned: [{ label: "Mark In Progress", icon: "engineering", newStatus: "in_progress" }]
-  };
+  if (c.ai_verified === true) {
+    verdict.textContent = "AI confirmed this photo matches the reported issue.";
+    verdict.className = "text-body-md font-body-md font-bold text-tertiary";
+  } else {
+    verdict.textContent = "AI flagged this report for manual review" +
+      (c.ai_detected_category ? ` (looks like: ${String(c.ai_detected_category).replace(/_/g, " ")}).` : ".");
+    verdict.className = "text-body-md font-body-md font-bold text-error";
+  }
 
-  const actions = actionsByStatus[c.status] || [];
+  const parts = [];
+  if (c.ai_severity_score != null) parts.push(`Severity ${c.ai_severity_score}/100`);
+  if (c.ai_confidence != null) parts.push(`Confidence ${Math.round(c.ai_confidence * 100)}%`);
+  if (c.hotspot_score != null) parts.push(`Hotspot ${c.hotspot_score}/100`);
+  document.getElementById("aiNumbers").textContent = parts.join("  •  ");
+  document.getElementById("aiReasoning").textContent = c.ai_reasoning ? `"${c.ai_reasoning}"` : "";
+}
 
-  if (actions.length === 0) {
-    const msg = document.getElementById("officerActionsMessage");
-    msg.textContent = "No status actions available for this case right now.";
-    msg.classList.remove("hidden");
+function actionButton(label, icon, handler, secondary) {
+  const btn = document.createElement("button");
+  btn.className = secondary
+    ? "w-full h-[40px] border border-outline hover:bg-surface-container-low text-primary rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors"
+    : "w-full h-[44px] bg-primary hover:bg-primary/90 text-on-primary rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors shadow-sm";
+  btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">${icon}</span> ${escapeHtml(label)}`;
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    try {
+      await handler();
+      await loadCase();
+    } catch (err) {
+      alert("Could not complete that action: " + err.message);
+      btn.disabled = false;
+    }
+  });
+  return btn;
+}
+
+async function patchStatus(newStatus) {
+  const res = await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ status: newStatus })
+  });
+  if (!res.ok) throw new Error(await readError(res));
+}
+
+async function renderAssignPanel(wrap, c) {
+  const assignable = ["received", "validated", "assigned", "in_progress"];
+  if (!assignable.includes(c.status)) return;
+
+  const box = document.createElement("div");
+  box.className = "flex flex-col gap-2 border-t border-outline-variant pt-3";
+  box.innerHTML = `<label class="text-label-sm font-label-sm text-on-surface-variant" for="workerSelect">Assign to field worker</label>`;
+
+  let workers = [];
+  let current = null;
+  try {
+    const [wr, ar] = await Promise.all([
+      fetch(`${API_BASE}/workers`, { headers: authHeaders() }),
+      fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}/assignment`, { headers: authHeaders() })
+    ]);
+    if (wr.ok) workers = await wr.json();
+    if (ar.ok) current = (await ar.json()).assignment;
+  } catch (_) {}
+
+  if (current) {
+    const who = document.createElement("p");
+    who.className = "text-label-sm font-label-sm text-tertiary";
+    who.textContent = `Currently: ${current.worker_name || current.worker_email} (${String(current.status).replace(/_/g, " ")})`;
+    box.appendChild(who);
+  }
+
+  if (workers.length === 0) {
+    const none = document.createElement("p");
+    none.className = "text-label-sm font-label-sm text-on-surface-variant";
+    none.textContent = "No worker accounts exist yet. Create one with create_admin.py (role: worker).";
+    box.appendChild(none);
+    wrap.appendChild(box);
     return;
   }
 
-  actions.forEach((action) => {
-    const btn = document.createElement("button");
-    btn.className =
-      "w-full h-[44px] bg-primary hover:bg-primary/90 text-on-primary rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors shadow-sm";
-    btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">${action.icon}</span> ${escapeHtml(action.label)}`;
-    btn.addEventListener("click", async () => {
-      btn.disabled = true;
-      btn.textContent = "Updating...";
-      try {
-        const res = await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", ...authHeaders() },
-          body: JSON.stringify({ status: action.newStatus })
-        });
-        if (!res.ok) throw new Error(await res.text());
-        await loadCase();
-      } catch (err) {
-        alert("Could not update case: " + err.message);
-        btn.disabled = false;
-      }
-    });
-    buttonsWrap.appendChild(btn);
+  const select = document.createElement("select");
+  select.id = "workerSelect";
+  select.className = "w-full h-[40px] rounded-lg border border-outline-variant bg-surface px-2 text-body-sm";
+  workers.forEach((w) => {
+    const opt = document.createElement("option");
+    opt.value = w.id;
+    opt.textContent = `${w.name} (${w.active_assignments} active)`;
+    select.appendChild(opt);
   });
+  box.appendChild(select);
 
-  buttonsWrap.insertAdjacentHTML(
-    "beforeend",
-    `<a href="municipalcommandcenter.html" class="w-full h-[40px] border border-outline hover:bg-surface-container-low text-primary rounded-lg text-label-md font-label-md flex items-center justify-center gap-2 transition-colors">
-      <span class="material-symbols-outlined text-[18px]">assignment_ind</span> Assign in Command Center
-    </a>`
+  box.appendChild(
+    actionButton(current ? "Reassign Worker" : "Assign Worker", "assignment_ind", async () => {
+      const res = await fetch(`${API_BASE}/assignments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ case_id: caseId, worker_id: Number(select.value) })
+      });
+      if (!res.ok) throw new Error(await readError(res));
+    })
   );
+
+  wrap.appendChild(box);
+}
+
+function renderOfficerActions(c) {
+  const card = document.getElementById("officerActionsCard");
+  const wrap = document.getElementById("officerActionsButtons");
+  const msg = document.getElementById("officerActionsMessage");
+
+  const staff = ["admin", "supervisor", "official"];
+  if (!currentUserRole || !staff.includes(currentUserRole)) {
+    card.classList.add("hidden");
+    return;
+  }
+
+  card.classList.remove("hidden");
+  wrap.innerHTML = "";
+  msg.classList.add("hidden");
+
+  let any = false;
+
+  if (c.status === "received") {
+    wrap.appendChild(actionButton("Validate Issue", "check_circle", () => patchStatus("validated")));
+    wrap.appendChild(actionButton("Reject Report", "block", () => {
+      if (!confirm("Reject this report as invalid?")) return;
+      return patchStatus("rejected");
+    }, true));
+    any = true;
+  }
+  if (c.status === "validated") {
+    wrap.appendChild(actionButton("Reject Report", "block", () => {
+      if (!confirm("Reject this report as invalid?")) return;
+      return patchStatus("rejected");
+    }, true));
+    any = true;
+  }
+  if (c.status === "assigned") {
+    wrap.appendChild(actionButton("Mark In Progress", "engineering", () => patchStatus("in_progress")));
+    any = true;
+  }
+  if (c.status === "resolution_claimed") {
+    wrap.insertAdjacentHTML("beforeend",
+      `<a href="verifyresolution.html?id=${encodeURIComponent(caseId)}" class="w-full h-[44px] bg-primary text-on-primary rounded-lg text-label-md font-label-md flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">fact_check</span> Review &amp; Verify</a>`);
+    any = true;
+  }
+
+  // Re-run the AI when it is missing (e.g. Gemini was down at submission time).
+  if (c.ai_severity_score == null && c.status !== "resolved" && c.status !== "rejected") {
+    wrap.appendChild(actionButton("Run AI Analysis Again", "auto_awesome", async () => {
+      const res = await fetch(`${API_BASE}/cases/${encodeURIComponent(caseId)}/reanalyze`, {
+        method: "POST",
+        headers: authHeaders()
+      });
+      if (!res.ok) throw new Error(await readError(res));
+      const data = await res.json();
+      if (!data.ai_available) throw new Error("The AI service is still unavailable. Try again later.");
+    }, true));
+    any = true;
+  }
+
+  renderAssignPanel(wrap, c);
+
+  if (!any) {
+    msg.textContent = "No status actions available for this case right now.";
+    msg.classList.remove("hidden");
+  }
 }
 
 async function loadEvidence() {
@@ -465,16 +612,18 @@ async function loadEvidence() {
 
     grid.innerHTML = "";
     items.forEach((item) => {
-      const fullUrl = item.url.startsWith("http") ? item.url : `${API_ROOT}${item.url}`;
+      const rawUrl = String(item.url || "");
+      const fullUrl = rawUrl.startsWith("/uploads/") ? `${API_ROOT}${rawUrl}` : "";
       const div = document.createElement("div");
       div.className = "rounded-lg overflow-hidden border border-outline-variant flex flex-col";
       div.innerHTML = `
-        <img class="w-full h-40 object-cover bg-surface-variant" src="${escapeHtml(fullUrl)}" alt="Evidence photo" />
+        <img class="w-full h-40 object-cover bg-surface-variant" alt="Evidence photo" />
         <div class="p-2 text-label-sm font-label-sm text-on-surface-variant flex justify-between">
           <span class="uppercase">${escapeHtml(item.type)}</span>
           <span>${item.created_at ? new Date(item.created_at).toLocaleDateString() : ""}</span>
         </div>
       `;
+      if (fullUrl) div.querySelector("img").src = fullUrl;
       grid.appendChild(div);
     });
   } catch (err) {
@@ -495,11 +644,18 @@ async function loadResolution(c) {
     const link = document.getElementById("verifyResolutionLink");
     card.classList.remove("hidden");
 
-    if (data.verification) {
-      summary.textContent = `Verification decision: ${data.verification.decision.toUpperCase()}${data.verification.notes ? " — " + data.verification.notes : ""}`;
+    link.classList.add("hidden");
+
+    if (!data.pending && data.verification) {
+      summary.textContent = `Verification decision: ${data.verification.decision.toUpperCase()}${data.verification.notes ? " — " + data.verification.notes : ""}` +
+        (data.verification.decision === "rejected" ? " (sent back to the worker for rework)" : "");
+    } else if (!data.pending) {
+      summary.textContent = "No decision recorded yet.";
     } else {
-      summary.textContent = "A worker has submitted a resolution claim awaiting verification.";
-      if (currentUserRole && currentUserRole !== "worker") {
+      summary.textContent = data.attempts > 1
+        ? `Rework submitted (attempt ${data.attempts}) — awaiting verification.`
+        : "A worker has submitted a resolution claim awaiting verification.";
+      if (currentUserRole && ["admin", "supervisor", "official"].includes(currentUserRole)) {
         link.href = `verifyresolution.html?id=${encodeURIComponent(caseId)}`;
         link.classList.remove("hidden");
       }

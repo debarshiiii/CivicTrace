@@ -2751,6 +2751,8 @@ function populateCaseModal(
     ).value =
         caseData.status;
 
+    restrictStatusOptions(caseData.status);
+
 
     renderEvidence(
         evidence || []
@@ -3248,6 +3250,28 @@ ${escapeHtml(
             `
         ).join("");
 
+}
+
+
+/* ============================================================
+   ONLY OFFER STATUS CHANGES THE SERVER ALLOWS
+   (assign / claim / verify happen in their own workflows)
+   ============================================================ */
+
+const ALLOWED_STATUS_CHANGES = {
+    received: ["validated", "rejected"],
+    validated: ["rejected"],
+    assigned: ["in_progress"],
+    resolution_claimed: ["verifying"]
+};
+
+function restrictStatusOptions(currentStatus) {
+    const select = document.getElementById("modalStatusSelect");
+    const allowed = ALLOWED_STATUS_CHANGES[currentStatus] || [];
+
+    Array.from(select.options).forEach(opt => {
+        opt.disabled = !(opt.value === currentStatus || allowed.includes(opt.value));
+    });
 }
 
 

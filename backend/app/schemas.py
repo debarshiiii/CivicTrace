@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Optional, Any, Dict
 from datetime import datetime
 
@@ -8,15 +8,31 @@ from datetime import datetime
 # =========================================================
 
 class UserCreate(BaseModel):
-    email: str
-    password: str
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=8, max_length=128)
     role: str
-    name: Optional[str] = None
+    name: str = Field(min_length=1, max_length=100)
+
+    @field_validator("email")
+    @classmethod
+    def _email(cls, v: str) -> str:
+        v = v.strip().lower()
+        if "@" not in v or v.startswith("@") or v.endswith("@"):
+            raise ValueError("Enter a valid email address")
+        return v
+
+    @field_validator("name")
+    @classmethod
+    def _name(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Name is required")
+        return v
 
 
 class UserLogin(BaseModel):
-    email: str
-    password: str
+    email: str = Field(max_length=254)
+    password: str = Field(max_length=128)
 
 
 class UserResponse(BaseModel):
@@ -51,25 +67,26 @@ class CitizenTokenResponse(BaseModel):
 # =========================================================
 
 class CaseCreate(BaseModel):
-    id: Optional[str] = None
-    title: str
-    description: Optional[str] = None
-    category: str
-    location_text: Optional[str] = None
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    risk_score: int = 0
-    reporter_token: Optional[str] = None
+    # "id" and "risk_score" are deliberately NOT accepted from the client;
+    # the server generates the ID and computes the risk score. Unknown
+    # fields sent by older clients are ignored.
+    title: str = Field(min_length=1, max_length=120)
+    description: Optional[str] = Field(default=None, max_length=2000)
+    category: str = Field(max_length=40)
+    location_text: Optional[str] = Field(default=None, max_length=300)
+    latitude: Optional[float] = Field(default=None, ge=-90, le=90)
+    longitude: Optional[float] = Field(default=None, ge=-180, le=180)
+    reporter_token: Optional[str] = Field(default=None, max_length=40)
 
 
 class CaseUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    category: Optional[str] = None
-    location_text: Optional[str] = None
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    risk_score: Optional[int] = None
+    title: Optional[str] = Field(default=None, min_length=1, max_length=120)
+    description: Optional[str] = Field(default=None, max_length=2000)
+    category: Optional[str] = Field(default=None, max_length=40)
+    location_text: Optional[str] = Field(default=None, max_length=300)
+    latitude: Optional[float] = Field(default=None, ge=-90, le=90)
+    longitude: Optional[float] = Field(default=None, ge=-180, le=180)
+    risk_score: Optional[int] = Field(default=None, ge=0, le=100)
     status: Optional[str] = None
 
 
@@ -102,14 +119,12 @@ class CaseResponse(BaseModel):
 # =========================================================
 
 class EvidenceCreate(BaseModel):
-    case_id: str
+    # Public citizen photo upload. The server decides who uploaded it, so
+    # "url", "uploaded_by_type" and "uploaded_by_id" are ignored.
+    case_id: str = Field(max_length=64)
     type: str = "report"
-    url: Optional[str] = None
-    uploaded_by_type: str = "citizen"
-    uploaded_by_id: Optional[int] = None
-    description: Optional[str] = None
+    description: Optional[str] = Field(default=None, max_length=1000)
     photo_data: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
 
 
 class EvidenceResponse(BaseModel):
@@ -140,8 +155,8 @@ class AssignmentCreate(BaseModel):
 
 class ResolutionClaimCreate(BaseModel):
     case_id: str
-    worker_id: int
-    description: Optional[str] = None
+    worker_id: Optional[int] = None  # ignored; the signed-in worker is used
+    description: Optional[str] = Field(default=None, max_length=2000)
     before_evidence_id: Optional[int] = None
     after_evidence_id: Optional[int] = None
 
@@ -152,9 +167,9 @@ class ResolutionClaimCreate(BaseModel):
 
 class ResolutionVerificationCreate(BaseModel):
     case_id: str
-    verifier_id: Optional[int] = None
+    verifier_id: Optional[int] = None  # ignored; the signed-in official is used
     decision: str
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(default=None, max_length=2000)
 
 
 # =========================================================
