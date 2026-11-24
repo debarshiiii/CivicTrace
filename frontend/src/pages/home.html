@@ -722,16 +722,24 @@ function loadLeaflet() {
 // MAP (OpenStreetMap tiles; switches to a backup tile server
 // automatically if the first one doesn't load)
 // ---------------------------------------------------------
+
+
+const CARTO_API_KEY = "cb1_57po_2_ba2250c1e849b24a0f015eb3";
+
 const TILE_SERVERS = [
-  // 1) Your own backend passes the tiles on, so no map key is ever in the browser.
-  { url: API_BASE + "/map/tiles/{z}/{x}/{y}",
-    attribution: "Map data &copy; OpenStreetMap contributors", subdomains: "" },
-  // 2) Keyless public backups if the backend can't supply tiles.
-  { url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution: "&copy; OpenStreetMap contributors", subdomains: "abc" },
-  { url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-    attribution: "&copy; OpenStreetMap contributors &copy; CARTO", subdomains: "abcd" }
+  {
+    url: `https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=${CARTO_API_KEY}`,
+    attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+    subdomains: ""
+  },
+  {
+    url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: "&copy; OpenStreetMap contributors",
+    subdomains: ""
+  }
 ];
+
+
 
 function initMap() {
   map = L.map("map", { center: [KOLKATA.lat, KOLKATA.lng], zoom: 12, zoomControl: false });
